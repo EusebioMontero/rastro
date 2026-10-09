@@ -241,6 +241,15 @@ button{font-family:inherit}
 
     <section id="v-set" class="view" hidden>
       <div class="sec-h"><h2>Ajustes</h2><span id="setSum" class="mono"></span></div>
+      <div class="card" id="acct">
+        <h2>Cuenta</h2>
+        <p class="sub" id="acctTxt">Comprobando…</p>
+        <div class="row">
+          <button class="btn primary" id="btnLogin" type="button" hidden>Entrar con Google</button>
+          <button class="btn" id="btnLogout" type="button" hidden>Cerrar sesión</button>
+        </div>
+        <p class="sub warn" id="acctMsg" role="status"></p>
+      </div>
       <div class="card">
         <h2>IA del escáner</h2>
         <div class="provs" id="provs">
@@ -256,7 +265,7 @@ button{font-family:inherit}
         </div>
         <div class="row"><button class="btn primary" id="saveCfg" type="button">Guardar</button></div>
         <p class="ok-msg" id="cfgMsg" role="status"></p>
-        <p class="note">La clave se guarda solo en este navegador y viaja directamente al proveedor elegido. Dentro de la app de Claude las páginas no pueden llamar a otros servidores, así que los proveedores con clave solo funcionan con la página abierta fuera de Claude.</p>
+        <p class="note" id="keyWhere">La clave se guarda solo en este navegador y viaja directamente al proveedor elegido.</p>
       </div>
     </section>
   </main>
@@ -279,6 +288,7 @@ button{font-family:inherit}
   </div>
 </nav>
 
+<script src="config.js"></script>
 <script>
 (function(){
 'use strict';
@@ -309,7 +319,11 @@ var PROVS={
 };
 var cfg={prov:'',keys:{},models:{}};
 function loadCfg(){try{var r=JSON.parse(localStorage.getItem(LS_AI)||'null');if(r&&typeof r==='object'){cfg.prov=PROVS[r.prov]?r.prov:'';cfg.keys=r.keys||{};cfg.models=r.models||{};}}catch(e){}}
-function saveCfg(){try{localStorage.setItem(LS_AI,JSON.stringify(cfg));return true;}catch(e){return false;}}
+function cfgData(){return {prov:cfg.prov,keys:cfg.keys,models:cfg.models,t:Date.now()};}
+function saveCfg(){
+  if(fb.user)return fbDoc('config').set(cfgData()).then(function(){return true;},function(){return false;});
+  try{localStorage.setItem(LS_AI,JSON.stringify(cfg));return Promise.resolve(true);}catch(e){return Promise.resolve(false);}
+}
 function modelOf(p){return clean(cfg.models[p],80)||PROVS[p].model;}
 
 var PROMPT=[
@@ -372,6 +386,7 @@ function persist(){
     dirty=false;inflight++;
     var data=snapshot();
     return Promise.resolve().then(function(){
+      if(mode==='firebase'&&fb.user)return fbDoc('save').set(data);
       if(mode==='cloud'&&ref)return ref.set(data);
       localStorage.setItem(LS,JSON.stringify(data));
     }).then(function(){saveState='ok';},function(){saveState='err';}).then(function(){inflight--;renderHeader();});
@@ -408,6 +423,112 @@ async function initStore(){
   mode='local';
   try{var raw=localStorage.getItem(LS);if(raw){merge(JSON.parse(raw));}saveState='ok';}catch(e){saveState='err';}
 }
+/* ---------- Cuenta (Firebase) ---------- */
+var FB_V='https://www.gstatic.com/firebasejs/10.12.2/';
+var fb={state:'',auth:null,db:null,user:null,busy:false};
+function fbDoc(name){return fb.db.collection('users').doc(fb.user.uid).collection('rastro').doc(name);}
+function loadScript(src){
+  return new Promise(function(res,rej){
+    var s=document.createElement('script');s.src=src;s.async=false;
+    s.onload=function(){res();};s.onerror=function(){rej(new Error('script'));};
+    document.head.appendChild(s);
+  });
+}
+function freshState(){
+  state={inv:{},disc:{},day:{d:'',n:0},xp:0};
+  MATS.forEach(function(m){state.inv[m.id]=0;});
+}
+function loadLocal(){
+  freshState();
+  try{var raw=localStorage.getItem(LS);if(raw)merge(JSON.parse(raw));}catch(e){}
+  cfg={prov:'',keys:{},models:{}};loadCfg();
+  if(!cfg.prov)cfg.prov=visorOk?'visor':'gemini';
+}
+async function initFirebase(){
+  var c=window.RASTRO_FIREBASE;
+  if(window.claude){fb.state='en-claude';renderAcct();return;}
+  if(!c||!c.apiKey||!c.projectId){fb.state='sin-config';renderAcct();return;}
+  try{
+    await loadScript(FB_V+'firebase-app-compat.js');
+    await Promise.all([loadScript(FB_V+'firebase-auth-compat.js'),loadScript(FB_V+'firebase-firestore-compat.js')]);
+    firebase.initializeApp(c);
+    fb.auth=firebase.auth();fb.db=firebase.firestore();
+  }catch(e){fb.state='error';renderAcct();return;}
+  fb.state='listo';
+  try{await fb.auth.getRedirectResult();}catch(e){acctError(e);}
+  fb.auth.onAuthStateChanged(function(u){onUser(u);});
+}
+async function onUser(u){
+  if(u&&fb.user&&u.uid===fb.user.uid)return;
+  fb.user=u||null;
+  if(!u){
+    if(mode==='firebase'){mode='local';loadLocal();}
+    refreshAi();renderAcct();renderAll();showIdle();setButtons();renderSet();
+    return;
+  }
+  fb.busy=true;renderAcct();
+  try{
+    var r=await Promise.all([fbDoc('save').get(),fbDoc('config').get()]);
+    var sv=r[0],cf=r[1];
+    if(sv.exists){freshState();merge(sv.data());}
+    else{await fbDoc('save').set(snapshot());}
+    if(cf.exists){
+      var d=cf.data()||{};
+      cfg={prov:PROVS[d.prov]?d.prov:(cfg.prov||'gemini'),keys:d.keys||{},models:d.models||{}};
+    }else{
+      if(cfg.prov==='visor'&&!visorOk)cfg.prov='gemini';
+      await fbDoc('config').set(cfgData());
+    }
+    mode='firebase';saveState='ok';
+  }catch(e){
+    saveState='err';acctError(e);
+  }
+  fb.busy=false;
+  refreshAi();renderAcct();renderAll();showIdle();setButtons();renderSet();
+}
+function acctError(e){
+  var code=e&&e.code||'';
+  var t='No se pudo completar. Inténtalo otra vez.';
+  if(code==='auth/unauthorized-domain')t='Este dominio no está autorizado en Firebase (Authentication → Settings → Authorized domains).';
+  else if(code==='auth/popup-closed-by-user'||code==='auth/cancelled-popup-request')t='';
+  else if(code==='auth/network-request-failed')t='Sin conexión. Revisa la red.';
+  else if(code==='permission-denied')t='Firestore ha rechazado el acceso. Revisa las reglas de seguridad.';
+  else if(code==='auth/operation-not-allowed')t='El inicio con Google no está activado en Firebase.';
+  $('#acctMsg').textContent=t;
+}
+function renderAcct(){
+  var txt=$('#acctTxt'),li=$('#btnLogin'),lo=$('#btnLogout');
+  li.hidden=true;lo.hidden=true;
+  if(fb.state==='en-claude'){txt.textContent='Dentro de Claude la partida se guarda en tu cuenta de Claude.';}
+  else if(fb.state==='sin-config'){txt.textContent='El inicio de sesión aún no está configurado. Mientras, todo se guarda solo en este navegador.';}
+  else if(fb.state==='error'){txt.textContent='No se pudo cargar el inicio de sesión. Todo se guarda en este navegador.';}
+  else if(fb.state!=='listo'){txt.textContent='Comprobando…';}
+  else if(fb.busy){txt.textContent='Cargando tu partida…';}
+  else if(fb.user){
+    txt.textContent='Has entrado como '+(fb.user.email||fb.user.displayName||'usuario')+'. Tu clave y tu partida se guardan en tu cuenta y te siguen a cualquier dispositivo.';
+    lo.hidden=false;
+  }else{
+    txt.textContent='Entra para guardar tu clave de IA y tu partida en tu cuenta. Sin sesión, todo queda solo en este navegador.';
+    li.hidden=false;
+  }
+  var kw=$('#keyWhere');
+  if(kw)kw.textContent=fb.user?'La clave se guarda en tu cuenta, solo tú puedes leerla, y viaja directamente al proveedor elegido.':'La clave se guarda solo en este navegador y viaja directamente al proveedor elegido.';
+}
+$('#btnLogin').addEventListener('click',function(){
+  if(!fb.auth)return;
+  $('#acctMsg').textContent='';
+  var p=new firebase.auth.GoogleAuthProvider();
+  fb.auth.signInWithPopup(p).catch(function(e){
+    var c=e&&e.code||'';
+    if(c==='auth/popup-blocked'||c==='auth/operation-not-supported-in-this-environment'){
+      fb.auth.signInWithRedirect(p).catch(acctError);
+    }else acctError(e);
+  });
+});
+$('#btnLogout').addEventListener('click',function(){
+  if(fb.auth)fb.auth.signOut().catch(acctError);
+});
+
 async function initVisor(){
   aiWhy='';visorOk=false;
   if(!(window.claude&&window.claude.use)){aiWhy='sin-claude';return;}
@@ -446,7 +567,7 @@ function renderHeader(){
   var s=$('#save');
   if(!ready){s.textContent='Cargando';s.dataset.s='';}
   else if(saveState==='err'){s.textContent='Sin guardar';s.dataset.s='err';}
-  else if(mode==='cloud'){s.textContent='En tu cuenta';s.dataset.s='ok';}
+  else if(mode==='cloud'||mode==='firebase'){s.textContent='En tu cuenta';s.dataset.s='ok';}
   else{s.textContent='Solo aquí';s.dataset.s='';}
   $('#diag').textContent=ready?('IA: '+(cfg.prov?PROVS[cfg.prov].n:'?')+(cfg.prov&&cfg.prov!=='visor'?' · '+modelOf(cfg.prov):'')+' · '+(aiOk?'lista':'no lista')+(cfg.prov==='visor'&&aiWhy?' ('+aiWhy+')':'')):'';
 }
@@ -725,6 +846,7 @@ function renderSet(){
   document.querySelectorAll('input[name="prov"]').forEach(function(r){r.checked=(r.value===p);});
   $('#visorTag').textContent=visorOk?'disponible aquí':'no disponible aquí';
   $('#visorTag').style.color=visorOk?'':'var(--ink-2)';
+  $('#p-visor').closest('.prov').hidden=!window.claude;
   var P=PROVS[p];
   $('#keyBox').hidden=!P.key;
   if(P.key){
@@ -749,10 +871,13 @@ $('#saveCfg').addEventListener('click',function(){
     cfg.keys[p]=clean($('#f-key').value,400);
     cfg.models[p]=clean($('#f-model').value,80);
   }
-  var ok=saveCfg();
   refreshAi();renderSet();renderHeader();setButtons();showIdle();
-  $('#cfgMsg').textContent=!ok?'No se pudo guardar en este navegador; vale solo hasta que cierres la página.'
-    :(aiOk?'Guardado. IA lista: '+PROVS[p].n+'.':'Guardado, pero falta '+(p==='visor'?'abrir la página dentro de Claude':'la clave')+'.');
+  $('#cfgMsg').textContent='Guardando…';
+  saveCfg().then(function(ok){
+    var where=fb.user?' en tu cuenta':'';
+    $('#cfgMsg').textContent=!ok?(fb.user?'No se pudo guardar en tu cuenta. Revisa la conexión.':'No se pudo guardar en este navegador; vale solo hasta que cierres la página.')
+      :(aiOk?'Guardado'+where+'. IA lista: '+PROVS[p].n+'.':'Guardado'+where+', pero falta '+(p==='visor'?'abrir la página dentro de Claude':'la clave')+'.');
+  });
 });
 
 /* ---------- Eventos ---------- */
@@ -779,9 +904,11 @@ document.addEventListener('paste',function(e){
 
 /* ---------- Arranque ---------- */
 renderAll();showIdle();setButtons();
+renderAcct();
 Promise.all([withTimeout(initStore(),12000),withTimeout(initAI(),12000)]).then(function(){
   ready=true;
   renderAll();showIdle();setButtons();
+  initFirebase();
 });
 })();
 </script>
