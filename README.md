@@ -35,10 +35,11 @@ Las reglas de `firestore.rules` permiten que cada jugador solo toque su partida 
 ## Juego
 
 - **Escanear**: la IA identifica el objeto, sus materiales y las piezas que lleva (tornillos, muelles, motor, cable, bisagras, neodimio, lentes, chips, LED).
-- **Extraer**: tras escanear eliges herramientas y modo (rápida 20 % del tiempo y 30 % del material, media 50 %/60 %, completa). El tiempo depende de talla, complejidad y herramientas; sigue avanzando con la app cerrada; hasta 3 a la vez. Solo la extracción completa da planos (y la herramienta real, la primera vez). Las piezas solo salen con su herramienta (destornillador: tornillos, muelles y motores; pelacables: cable; palanca: bisagras; imán: neodimio; lupa: lentes; kit: chips y LED).
-- **Taller**: herramientas que dan más material o materiales raros (Cobre, Silicio, Resina, Cristal óptico); se gastan con el uso. Planos por fragmentos al escanear, comprándolos en la tienda, o escaneando la herramienta real (la primera vez te la llevas con su plano). El catálogo está en `catalogo.js`.
-- **Tienda**: vender materiales por monedas y comprar planos.
-- **Mercado**: un jugador publica una cantidad de material por un precio; otro la compra y el intercambio es inmediato. El vendedor cobra al abrir Rastro.
+- **Extraer**: tras escanear eliges herramientas y modo (rápida 20 % del tiempo y 30 % del material, media 50 %/60 %, completa). El tiempo depende de talla, complejidad y herramientas; sigue avanzando con la app cerrada; hasta 3 a la vez. Solo la extracción completa da planos; si el objeto es una herramienta básica de verdad, su primera extracción completa te da su plano (nunca la herramienta). Las piezas solo salen con su herramienta (destornillador: tornillos, muelles y motores; pelacables: cable; palanca: bisagras; imán: neodimio; lupa: lentes; kit: chips y LED).
+- **Taller**: fabricar herramientas que dan más material, piezas o materiales raros (Cobre, Silicio, Resina, Cristal óptico); se gastan con el uso. Planos por fragmentos en extracciones completas, en la Tienda o extrayendo la herramienta real (solo las básicas). Las avanzadas (Lupa, Kit de precisión) se entienden estudiando su tecnología.
+- **Tecnología**: árbol de 9 tecnologías en 4 niveles con requisitos; se estudian con materiales, monedas y tiempo. Dan más material (madera, metal, vidrio, orgánico), más piezas, menos tiempo, menos pérdida al repetir y planos (Óptica → Lupa, Microelectrónica → Kit).
+- **Tienda**: vender materiales y piezas por monedas, comprar planos y el **Mercado** entre jugadores (un jugador publica una cantidad por un precio; otro la compra al momento; el vendedor cobra al abrir Rastro).
+- Todo el equilibrio (tiempos, modos, piezas, herramientas, tecnologías, precios) está en `catalogo.js`.
 
 ## Hoja de ruta
 1. Cámara, identificación, tamaño y materiales (hecho)

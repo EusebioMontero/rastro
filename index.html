@@ -177,7 +177,7 @@ button{font-family:inherit}
 
 /* Pestañas */
 .tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
-.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr)}
 /* Ajustes */
 .provs{display:grid;gap:8px}
 .prov{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:var(--r);padding:12px;cursor:pointer;background:var(--surface)}
@@ -286,6 +286,18 @@ button{font-family:inherit}
 .mat-lente{background:radial-gradient(circle at 40% 40%,#ffffff 0 12%,#bfe6f5 13% 55%,#7fb9d1 56%)}
 .mat-chip{background:linear-gradient(90deg,transparent 0 20%,#c9a648 20% 24%,transparent 24% 76%,#c9a648 76% 80%,transparent 80%),linear-gradient(#222 0 100%)}
 .mat-led{background:radial-gradient(circle at 50% 40%,#fff6a8 0 18%,#ff4d4d 19% 45%,#5a1a1a 46%)}
+.gear{flex:none;width:36px;height:36px;margin-left:8px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.gear svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.gear:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+@media (max-width:420px){.save{font-size:0;gap:0}.coins+.save{margin-left:8px}}
+.segs.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.lvl-h{font:800 18px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin-top:6px}
+.plano.tech.hecha{border-color:var(--good);border-style:solid}
+.plano.tech.disponible{border-style:solid}
+.plano.tech.bloqueada{opacity:.7}
+.pill.off{opacity:.7}
+.chip i.coin{border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe28a 0 30%,var(--hi) 31%);border-color:#9a7400}
+@media (max-width:420px){.tab{font-size:10.5px;padding-inline:2px}.tab svg{width:20px;height:20px}}
 .linkbtn{background:none;border:0;padding:4px 0;color:var(--accent);font:500 14px var(--f-body);text-decoration:underline;cursor:pointer;justify-self:start}
 .adv{border-top:1px solid var(--line);padding-top:10px}
 .adv summary{cursor:pointer;font-weight:600;color:var(--ink-2);padding:6px 0}
@@ -341,6 +353,7 @@ button{font-family:inherit}
       <h1>Rastro</h1>
       <span class="coins" title="Monedas"><i></i><b id="coins">0</b></span>
       <span id="save" class="save" data-s="">Cargando</span>
+      <button class="gear" id="btnGear" type="button" aria-label="Ajustes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
     </div>
     <div class="lvl"><span id="lvl">Nv 1</span><div class="bar"><i id="bar"></i></div><span id="xp">0 / 20 XP</span><span id="left">Hoy 0/20</span></div>
   </header>
@@ -369,6 +382,16 @@ button{font-family:inherit}
     <section id="v-taller" class="view" hidden>
       <div class="sec-h"><h2>Taller</h2><span id="tallerSum" class="mono"></span></div>
       <div id="tallerBody" class="tbody"></div>
+    </section>
+
+    <section id="v-tec" class="view" hidden>
+      <div class="sec-h"><h2>Tecnología</h2><span id="tecSum" class="mono"></span></div>
+      <div id="tecBody" class="tbody"></div>
+    </section>
+
+    <section id="v-tienda" class="view" hidden>
+      <div class="sec-h"><h2>Tienda</h2><span id="tiendaSum" class="mono"></span></div>
+      <div id="tiendaBody" class="tbody"></div>
       <section id="mercado" class="tbody" hidden>
         <div class="sec-h sub-h"><h2>Mercado</h2><span class="mono">entre jugadores</span></div>
         <form id="mkForm" class="card provs" novalidate>
@@ -451,12 +474,16 @@ button{font-family:inherit}
     <button class="tab" id="t-taller" role="tab" aria-selected="false" data-v="taller" type="button">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7L4 14v6h6l7-7"/></svg>Taller<i class="dot" id="tallerDot" hidden></i>
     </button>
+    <button class="tab" id="t-tec" role="tab" aria-selected="false" data-v="tec" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M12 7v4M12 11L6 16.5M12 11l6 5.5"/></svg>Tecnología
+    </button>
+    <button class="tab" id="t-tienda" role="tab" aria-selected="false" data-v="tienda" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9h16v11H4z"/><path d="M9 14h6"/></svg>Tienda
+    </button>
     <button class="tab" id="t-log" role="tab" aria-selected="false" data-v="log" type="button">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M8 4v16M11 8h5"/></svg>Diario
     </button>
-    <button class="tab" id="t-set" role="tab" aria-selected="false" data-v="set" type="button">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Ajustes
-    </button>
+
   </div>
 </nav>
 
@@ -477,6 +504,8 @@ CAT.raros.forEach(function(m){MATS.push({id:m.id,n:m.n,rare:true});});
 (CAT.piezas||[]).forEach(function(m){MATS.push({id:m.id,n:m.n,pieza:true,tool:m.herramienta});});
 var MAT_BY={};MATS.forEach(function(m){MAT_BY[m.id]=m;});
 var TOOLS=CAT.herramientas||[],TOOL_BY={};TOOLS.forEach(function(t){TOOL_BY[t.id]=t;});
+var TECHS=CAT.tecnologias||[],TECH_BY={};TECHS.forEach(function(t){TECH_BY[t.id]=t;});
+function tech(id){return !!(state&&state.tech&&state.tech[id]);}
 var SIZES=[
   {id:'XS',max:5,base:1,range:'<5 cm',h:16},
   {id:'S',max:20,base:2,range:'5–20 cm',h:28},
@@ -524,7 +553,7 @@ var PROMPT=[
 ].join('\n');
 
 /* ---------- Estado ---------- */
-var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[]};
+var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},estudio:null};
 MATS.forEach(function(m){state.inv[m.id]=0;});
 var ready=false,aiOk=false,aiWhy='',visorOk=false,busy=false,sampleFn=null,ctl=null,lastBlob=null,previewUrl=null;
 var mode='local',ref=null,unsub=null,saveState='',dirty=false,inflight=0,chain=Promise.resolve();
@@ -550,7 +579,7 @@ function hace(ts){
 }
 
 /* ---------- Guardado ---------- */
-function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,t:Date.now()};}
+function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,tech:state.tech,estudio:state.estudio,t:Date.now()};}
 function merge(d){
   if(!d||typeof d!=='object')return;
   var inv={};
@@ -567,6 +596,8 @@ function merge(d){
   state.planos=pl;state.tools=tl;
   state.monedas=Math.max(0,Math.floor(Number(d.monedas)||0));
   state.cola=(d.cola&&TOOL_BY[d.cola.id]&&Number(d.cola.fin)>0)?{id:String(d.cola.id),fin:Number(d.cola.fin)}:null;
+  var tc={},dtc=d.tech||{};TECHS.forEach(function(t){if(dtc[t.id])tc[t.id]=true;});state.tech=tc;
+  state.estudio=(d.estudio&&TECH_BY[d.estudio.id]&&Number(d.estudio.fin)>0)?{id:String(d.estudio.id),fin:Number(d.estudio.fin)}:null;
   state.extr=(Array.isArray(d.extr)?d.extr:[]).filter(function(e){return e&&e.id&&e.clave&&Array.isArray(e.mats)&&Number(e.fin)>0;}).slice(0,10);
 }
 function persist(){
@@ -627,7 +658,7 @@ function loadScript(src){
   });
 }
 function freshState(){
-  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[]};
+  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},estudio:null};
   MATS.forEach(function(m){state.inv[m.id]=0;});
 }
 function loadLocal(){
@@ -868,7 +899,7 @@ function renderLog(){
       '<div class="chips">'+mats+'</div></li>';
   }).join('');
 }
-function renderAll(){renderHeader();renderInv();renderLog();renderTaller();renderMarket();renderExtr();}
+function renderAll(){renderHeader();renderInv();renderLog();renderTaller();renderTec();renderTienda();renderMarket();renderExtr();}
 function setPanel(html){$('#panel').innerHTML=html;}
 function setButtons(){
   var off=busy;
@@ -892,7 +923,7 @@ function showIdle(){
     return;
   }
   setPanel('<div class="card"><h2>Cuanto más grande, más material</h2>'+ladder(null)+
-    '<ul class="tips"><li>Un solo objeto por foto.</li><li>Una mano o una moneda al lado afina el tamaño.</li><li>Repetir el mismo objeto rinde menos cada vez.</li><li>Tras escanear eliges herramientas y modo: la extracción rápida da menos y nunca planos.</li><li>Las herramientas del Taller dan más material y materiales raros.</li><li>La foto no se guarda.</li></ul></div>');
+    '<ul class="tips"><li>Un solo objeto por foto.</li><li>Una mano o una moneda al lado afina el tamaño.</li><li>Repetir el mismo objeto rinde menos cada vez.</li><li>Tras escanear eliges herramientas y modo: la extracción rápida da menos y nunca planos.</li><li>Las herramientas del Taller dan más material y piezas; estudiar Tecnologías te hace sacar aún más.</li><li>La foto no se guarda.</li></ul></div>');
 }
 function setPreview(blob,scanning){
   if(previewUrl)URL.revokeObjectURL(previewUrl);
@@ -926,7 +957,7 @@ function craft(id){
   toast('Fabricando '+t.n+'. Tardará '+fmtT(t.tiempo)+'.');
 }
 function buyPlano(id){
-  var t=TOOL_BY[id];if(!t||known(t))return;
+  var t=TOOL_BY[id];if(!t||known(t)||(t.tech&&!tech(t.tech)))return;
   var pr=precioPlano(t);if(state.monedas<pr)return;
   state.monedas-=pr;state.planos[id]=t.frags;
   persist();renderAll();
@@ -936,7 +967,7 @@ var sellArm='';
 function sell(id,all){
   var q=state.inv[id]||0;if(!q)return;
   var n=all?q:1,pr=VENTA[id]||1;
-  if(all&&q>1&&sellArm!==id){sellArm=id;renderTaller();return;}
+  if(all&&q>1&&sellArm!==id){sellArm=id;renderTienda();return;}
   sellArm='';
   state.inv[id]=q-n;state.monedas+=n*pr;
   persist();renderAll();
@@ -973,10 +1004,11 @@ function planoCard(t){
     h+='<div class="chips">'+recetaChips(t)+'</div><p class="mono">'+fmtT(t.tiempo)+' · '+t.usos+' usos'+(own?' · tienes '+own:'')+'</p>';
     var dis=!!state.cola||!canPay(t);
     h+='<button class="btn primary" type="button" data-craft="'+t.id+'"'+(dis?' disabled':'')+'>'+(state.cola?'El taller está ocupado':(canPay(t)?'Fabricar':'Faltan materiales'))+'</button>';
+  }else if(t.tech&&!tech(t.tech)){
+    h+='<p class="hint">Herramienta avanzada: estudia <b>'+esc(TECH_BY[t.tech]?TECH_BY[t.tech].n:t.tech)+'</b> en Tecnología para entender cómo funciona y conseguir su plano.</p>';
   }else{
-    var pr=precioPlano(t);
-    h+='<p class="hint">Fragmentos al escanear objetos de '+t.afin.map(matName).join(', ').toLowerCase()+'. Si fotografías '+esc(t.pista)+' de verdad, te llevas la herramienta y el plano.</p>';
-    h+='<button class="btn" type="button" data-buy="'+t.id+'"'+(state.monedas<pr?' disabled':'')+'>Comprar plano · '+pr+' monedas</button>';
+    h+='<p class="hint">Fragmentos en extracciones completas de objetos de '+t.afin.map(matName).join(', ').toLowerCase()+'.'+(t.basica?' Si extraes por completo '+esc(t.pista)+' de verdad, entiendes su plano.':'')+'</p>';
+    h+='<button class="btn" type="button" data-goshop="1">En la Tienda · '+precioPlano(t)+' monedas</button>';
   }
   return h+'</article>';
 }
@@ -995,21 +1027,93 @@ function renderTaller(){
   }).join('')+'</ul>':'<p class="sub">Aún no tienes ninguna. Fabrica unos Guantes de trabajo para empezar: el plano ya es tuyo.</p>')+'</div>';
   var order=TOOLS.slice().sort(function(a,b){return (known(b)-known(a))||((state.planos[b.id]||0)/b.frags-(state.planos[a.id]||0)/a.frags);});
   h+='<div class="sec-h sub-h"><h2>Planos</h2><span class="mono">'+nk+' / '+TOOLS.length+'</span></div><div class="planos">'+order.map(planoCard).join('')+'</div>';
+  el.innerHTML=h;
+  el.querySelectorAll('[data-craft]').forEach(function(b){b.addEventListener('click',function(){craft(b.dataset.craft);});});
+  el.querySelectorAll('[data-goshop]').forEach(function(b){b.addEventListener('click',function(){show('tienda');});});
+  var canMake=TOOLS.some(function(t){return known(t)&&!state.cola&&canPay(t)&&!has(t.id);});
+  $('#tallerDot').hidden=!canMake;
+}
+function renderTienda(){
+  var el=$('#tiendaBody');if(!el)return;
+  $('#tiendaSum').textContent=state.monedas+' monedas';
   var sellable=MATS.filter(function(m){return (state.inv[m.id]||0)>0;});
-  h+='<div class="sec-h sub-h"><h2>Tienda</h2><span class="mono">vender materiales</span></div><div class="card shop">'+
+  var h='<div class="card shop"><h2>Vender</h2>'+
     (sellable.length?'<ul class="sell">'+sellable.map(function(m){
       var q=state.inv[m.id],pr=VENTA[m.id]||1;
       return '<li><span class="sw mat-'+m.id+'"></span><div class="sn"><b>'+m.n+'</b><span class="mono">'+q+' · '+pr+' c/u</span></div>'+
         '<button class="btn sm" type="button" data-sell="'+m.id+'">Vender 1</button>'+
         (q>1?'<button class="btn sm'+(sellArm===m.id?' primary':'')+'" type="button" data-sellall="'+m.id+'">'+(sellArm===m.id?'¿Seguro? '+(q*pr):'Todo · '+(q*pr))+'</button>':'')+'</li>';
     }).join('')+'</ul>':'<p class="sub">No tienes materiales para vender. Escanea objetos para conseguirlos.</p>')+'</div>';
+  var plans=TOOLS.filter(function(t){return !known(t);});
+  h+='<div class="card"><h2>Planos a la venta</h2>'+(plans.length?'<ul class="sell">'+plans.map(function(t){
+    var lock=t.tech&&!tech(t.tech),pr=precioPlano(t),fr=state.planos[t.id]||0;
+    return '<li><div class="sn"><b>'+esc(t.n)+'</b><span class="mono">'+(lock?'Requiere '+esc(TECH_BY[t.tech].n):(fr?'tienes '+fr+'/'+t.frags+' fragmentos':esc(t.efecto)))+'</span></div>'+
+      '<button class="btn sm'+(lock?'':' primary')+'" type="button" data-buy="'+t.id+'"'+(lock||state.monedas<pr?' disabled':'')+'>'+(lock?'Bloqueado':pr+' monedas')+'</button></li>';
+  }).join('')+'</ul>':'<p class="sub">Ya tienes todos los planos.</p>')+'</div>';
   el.innerHTML=h;
-  el.querySelectorAll('[data-craft]').forEach(function(b){b.addEventListener('click',function(){craft(b.dataset.craft);});});
-  el.querySelectorAll('[data-buy]').forEach(function(b){b.addEventListener('click',function(){buyPlano(b.dataset.buy);});});
   el.querySelectorAll('[data-sell]').forEach(function(b){b.addEventListener('click',function(){sell(b.dataset.sell,false);});});
   el.querySelectorAll('[data-sellall]').forEach(function(b){b.addEventListener('click',function(){sell(b.dataset.sellall,true);});});
-  var canMake=TOOLS.some(function(t){return known(t)&&!state.cola&&canPay(t)&&!has(t.id);});
-  $('#tallerDot').hidden=!canMake;
+  el.querySelectorAll('[data-buy]').forEach(function(b){b.addEventListener('click',function(){buyPlano(b.dataset.buy);});});
+}
+function techState(t){
+  if(tech(t.id))return 'hecha';
+  if(state.estudio&&state.estudio.id===t.id)return 'estudiando';
+  return t.req.every(tech)?'disponible':'bloqueada';
+}
+function techPay(t){return Object.keys(t.coste||{}).every(function(k){return (state.inv[k]||0)>=t.coste[k];})&&state.monedas>=(t.monedas||0);}
+function startStudy(id){
+  var t=TECH_BY[id];
+  if(!t||state.estudio||techState(t)!=='disponible'||!techPay(t))return;
+  Object.keys(t.coste||{}).forEach(function(k){state.inv[k]-=t.coste[k];});
+  state.monedas-=(t.monedas||0);
+  state.estudio={id:id,fin:Date.now()+t.tiempo*1000};
+  persist();renderAll();
+  toast('Estudiando '+t.n+'. Tardará '+fmtT(t.tiempo)+'.');
+}
+function tickStudy(){
+  if(!state.estudio)return;
+  var t=TECH_BY[state.estudio.id];
+  if(!t){state.estudio=null;persist();return;}
+  if(Date.now()>=state.estudio.fin){
+    state.tech[t.id]=true;state.estudio=null;
+    (t.planos||[]).forEach(function(pid){var tl=TOOL_BY[pid];if(tl)state.planos[pid]=tl.frags||0;});
+    persist();renderAll();
+    toast('Has estudiado '+t.n+(t.planos&&t.planos.length?': ya tienes el plano de '+t.planos.map(function(p){return TOOL_BY[p]?TOOL_BY[p].n:p;}).join(', '):'')+'.');
+    return;
+  }
+  var bar=$('#stBar'),left=$('#stLeft');
+  if(bar)bar.style.width=Math.min(100,100*(1-(state.estudio.fin-Date.now())/(t.tiempo*1000)))+'%';
+  if(left)left.textContent='Faltan '+fmtT((state.estudio.fin-Date.now())/1000);
+}
+setInterval(tickStudy,1000);
+function renderTec(){
+  var el=$('#tecBody');if(!el)return;
+  var h='';
+  if(state.estudio&&TECH_BY[state.estudio.id]){
+    var t0=TECH_BY[state.estudio.id],pct=Math.min(100,100*(1-(state.estudio.fin-Date.now())/(t0.tiempo*1000)));
+    h+='<div class="card cola"><h2>Estudiando: '+esc(t0.n)+'</h2><div class="bar big"><i id="stBar" style="width:'+pct+'%"></i></div><p class="mono" id="stLeft">Faltan '+fmtT((state.estudio.fin-Date.now())/1000)+'</p></div>';
+  }
+  var done=TECHS.filter(function(t){return tech(t.id);}).length;
+  $('#tecSum').textContent=done+' / '+TECHS.length;
+  h+='<p class="sub">Estudiar te enseña cómo funcionan las cosas: sacas más de cada objeto y entiendes planos nuevos.</p>';
+  var niveles={};TECHS.forEach(function(t){(niveles[t.nivel||1]=niveles[t.nivel||1]||[]).push(t);});
+  Object.keys(niveles).sort().forEach(function(nv){
+    h+='<h3 class="lvl-h">Nivel '+nv+'</h3><div class="planos">'+niveles[nv].map(function(t){
+      var st=techState(t),pay=techPay(t);
+      var pill={hecha:'<span class="pill r2">Estudiada</span>',estudiando:'<span class="pill r3">Estudiando</span>',disponible:'<span class="pill r1">Disponible</span>',bloqueada:'<span class="pill r1 off">Bloqueada</span>'}[st];
+      var req=t.req.length?'<p class="mono">Requiere: '+t.req.map(function(r){return (tech(r)?'✓ ':'✗ ')+esc(TECH_BY[r]?TECH_BY[r].n:r);}).join(' · ')+'</p>':'';
+      var cost='';
+      if(st!=='hecha'){
+        cost='<div class="chips">'+Object.keys(t.coste||{}).map(function(k){var got=state.inv[k]||0,need=t.coste[k];return '<span class="chip'+(got<need?' short':'')+'"><i class="mat-'+k+'"></i>'+matName(k)+' '+got+'/'+need+'</span>';}).join('')+
+          '<span class="chip'+(state.monedas<(t.monedas||0)?' short':'')+'"><i class="coin"></i>'+(t.monedas||0)+' monedas</span></div><p class="mono">'+fmtT(t.tiempo)+' de estudio</p>';
+      }
+      var btn='';
+      if(st==='disponible')btn='<button class="btn primary" type="button" data-study="'+t.id+'"'+(state.estudio||!pay?' disabled':'')+'>'+(state.estudio?'Ya estás estudiando otra':(pay?'Estudiar':'Te falta material o monedas'))+'</button>';
+      return '<article class="plano tech '+st+'"><div class="ph"><h3>'+esc(t.n)+'</h3>'+pill+'</div><p class="eff">'+esc(t.efecto)+'</p>'+req+cost+btn+'</article>';
+    }).join('')+'</div>';
+  });
+  el.innerHTML=h;
+  el.querySelectorAll('[data-study]').forEach(function(b){b.addEventListener('click',function(){startStudy(b.dataset.study);});});
 }
 function realTool(r){
   var nm=norm(r.nombre);
@@ -1177,8 +1281,9 @@ function dropFragment(r,first){
   if(Math.random()>=(first?0.7:0.4))return null;
   var cands=[],sum=0;
   TOOLS.forEach(function(t){
-    if(known(t))return;
+    if(known(t)||(t.tech&&!tech(t.tech)))return;
     var w=0;r.mats.forEach(function(m){if((t.afin||[]).indexOf(m.id)>=0)w+=m.peso;});
+    if(w>0&&tech('carp')&&(t.afin||[]).indexOf('madera')>=0)w*=2;
     if(w>0&&state.planos[t.id])w*=1.5;
     if(w>0){cands.push({t:t,w:w});sum+=w;}
   });
@@ -1320,6 +1425,7 @@ function extTime(o,tools,modo){
   if(T.palanca&&sizeById(o.size).base>=8)f*=0.75;
   if(T.destornillador&&o.comp>=3)f*=0.75;
   if(T.sierra&&hasMat(o,'madera'))f*=0.8;
+  if(tech('mec')&&o.comp>=3)f*=0.85;
   return Math.max(5,Math.round(base*f*modo.tiempo));
 }
 // Rendimiento. roll=false: lo seguro, y lo probable en "posibles"
@@ -1331,27 +1437,35 @@ function yieldOf(o,tools,modo,roll){
   var rar=RAR[comp-1],mult=1;
   if(T.guantes){mult*=1.2;eff.push(['guantes','+20 % de todo']);}
   if(T.palanca&&size.base>=8){mult*=1.4;eff.push(['palanca','+40 % por ser grande']);}
+  if(tech('obs')){mult*=1.1;eff.push(['@obs','+10 %']);}
   var gm={};
   distribute(o.mats,size.base*rar.m*(o.decay||1)*mult*q).forEach(function(g){gm[g.id]=g.amt;});
   var add=function(id,n){gm[id]=(gm[id]||0)+n;};
   var bump=function(id,k){var v=gm[id]||0,nv=Math.ceil(v*k);gm[id]=nv;return nv-v;};
+  if(tech('carp')&&gm.madera){var dc=bump('madera',1.25);if(dc)eff.push(['@carp','+'+dc+' madera']);}
+  if(tech('metal')&&gm.metal){var dm=bump('metal',1.25);if(dm)eff.push(['@metal','+'+dm+' metal']);}
+  if(tech('opt')&&gm.vidrio){var dv=bump('vidrio',1.25);if(dv)eff.push(['@opt','+'+dv+' vidrio']);}
+  if(tech('quim')&&gm.organico){var dq=bump('organico',1.25);if(dq)eff.push(['@quim','+'+dq+' orgánico']);}
+  if(tech('elec')&&gm.electronica){add('electronica',1);eff.push(['@elec','+1 electrónica']);}
   if(T.sierra&&gm.madera)eff.push(['sierra','+'+bump('madera',1.5)+' madera']);
   if(T.iman&&gm.metal)eff.push(['iman','+'+bump('metal',1.5)+' metal']);
   if(T.destornillador&&comp>=3){var de=Math.max(1,Math.round(2*q));add('electronica',de);add('metal',1);eff.push(['destornillador','+'+de+' electrónica, +1 metal']);}
   if(T.navaja&&(gm.madera||gm.organico)){
     var rs=((gm.madera||0)+(gm.organico||0))>=8?2:1;
-    if(chance(0.5)){add('resina',rs);eff.push(['navaja','+'+rs+' resina']);}else if(!roll)pos.push(rs+' resina');
+    if(tech('quim')||chance(0.5)){add('resina',rs);eff.push(['navaja','+'+rs+' resina']);}else if(!roll)pos.push(rs+' resina');
   }
-  if(T.pelacables&&gm.electronica){var cu=Math.max(1,Math.floor(gm.electronica/2));add('cobre',cu);eff.push(['pelacables','+'+cu+' cobre']);}
+  if(T.pelacables&&gm.electronica){var cu=Math.max(1,Math.floor(gm.electronica/2))*(tech('elec')?2:1);add('cobre',cu);eff.push(['pelacables','+'+cu+' cobre']);}
   if(T.lupa&&gm.vidrio){if(chance(0.4)){add('cristal',1);eff.push(['lupa','+1 cristal óptico']);}else if(!roll)pos.push('1 cristal óptico');}
   if(T.kit&&gm.electronica){var si=comp>=4?2:1;add('silicio',si);eff.push(['kit','+'+si+' silicio']);}
   (o.piezas||[]).forEach(function(pz){
     var tl=MAT_BY[pz.id]&&MAT_BY[pz.id].tool;
-    if(tl&&T[tl]){var n=Math.max(1,Math.round(pz.cant*q));add(pz.id,n);eff.push([tl,'+'+n+' '+MAT_BY[pz.id].n.toLowerCase()]);}
+    if(tl&&T[tl]){var pk=(tech('mec')&&['tornillos','muelle','motor','bisagra'].indexOf(pz.id)>=0)||(tech('micro')&&['chip','led'].indexOf(pz.id)>=0)?1.5:1;
+      var n=Math.max(1,Math.round(pz.cant*q*pk));add(pz.id,n);eff.push([tl,'+'+n+' '+MAT_BY[pz.id].n.toLowerCase()]);}
   });
   Object.keys(gm).forEach(function(k){if(!(gm[k]>0)||!MAT_BY[k])delete gm[k];});
   return {gm:gm,comp:comp,eff:eff,pos:pos,mult:mult};
 }
+function effName(k){return k.charAt(0)==='@'?(TECH_BY[k.slice(1)]?TECH_BY[k.slice(1)].n:k):(TOOL_BY[k]?TOOL_BY[k].n:k);}
 function gainsList(gm){
   return Object.keys(gm).map(function(id){return {id:id,amt:gm[id]};})
     .sort(function(a,b){var ka=MAT_BY[a.id].pieza?2:MAT_BY[a.id].rare?1:0,kb=MAT_BY[b.id].pieza?2:MAT_BY[b.id].rare?1:0;return (ka-kb)||(b.amt-a.amt);});
@@ -1365,7 +1479,7 @@ function applyScan(out){
   state.day.n=(state.day.d===today()?state.day.n:0)+1;state.day.d=today();
   var prev=state.disc[r.clave],n=prev&&prev.n?prev.n:0;
   pend={id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),nombre:r.nombre,clave:r.clave,cm:r.cm,size:sizeFor(r.cm).id,comp:r.comp,
-    mats:r.mats,piezas:r.piezas,dato:r.dato,decay:Math.max(0.2,1-0.25*n),
+    mats:r.mats,piezas:r.piezas,dato:r.dato,decay:Math.max(0.2,1-(tech('recic')?0.15:0.25)*n),
     first:!prev&&!state.extr.some(function(e){return e.clave===r.clave;}),tools:[],modo:'completa'};
   pend.tools=TOOLS.filter(function(t){return has(t.id)&&applies(t.id,pend);}).map(function(t){return t.id;});
   persist();renderHeader();
@@ -1399,7 +1513,7 @@ function renderSetup(){
     '<h3 class="st-h">Extracción</h3><div class="segs" role="group" aria-label="Modo de extracción">'+md+'</div>'+
     '<div class="sum"><p><b>'+fmtT(secs)+'</b> · '+esc(modo.n.toLowerCase())+'</p><div class="chips">'+gl+'</div>'+
     (y.pos.length?'<p class="mono">Posible: '+esc(y.pos.join(', '))+'</p>':'')+
-    '<p class="mono">'+(modo.planos?'Puede dar fragmentos de plano'+(realTool(o)&&!(state.disc[o.clave]&&state.disc[o.clave].herr)?' y la herramienta real':'')+'.':'Sin planos: solo la extracción completa los da.')+'</p></div>'+
+    '<p class="mono">'+(modo.planos?'Puede dar fragmentos de plano'+(function(){var rt=realTool(o);return rt&&rt.basica&&!known(rt)&&!(state.disc[o.clave]&&state.disc[o.clave].herr)?' y el plano de '+rt.n:'';})()+'.':'Sin planos: solo la extracción completa los da.')+'</p></div>'+
     (o.tools.length?'<p class="note">Cada herramienta elegida gasta 1 uso al empezar.</p>':'')+
     '<div class="row"><button class="btn primary" id="exStart" type="button"'+(full?' disabled':'')+'>'+(full?'Ya tienes '+MAXE+' extracciones en marcha':'Empezar extracción')+'</button><button class="btn" id="exDrop" type="button">Descartar</button></div>'+
     '</article>');
@@ -1462,8 +1576,9 @@ function collect(id){
   var lvlBefore=levelFor(state.xp);state.xp+=xpGain;
   var real=null,frag=null;
   if(modo.planos){
-    real=(prev&&prev.herr)?null:realTool(o);
-    if(real){state.tools[real.id]=(state.tools[real.id]||0)+real.usos;if(real.frags)state.planos[real.id]=real.frags;state.disc[o.clave].herr=true;}
+    var rt=(prev&&prev.herr)?null:realTool(o);
+    if(rt&&rt.basica&&!known(rt)){state.planos[rt.id]=rt.frags;state.disc[o.clave].herr=true;real={t:rt,ok:true};}
+    else if(rt&&!rt.basica&&!known(rt))real={t:rt,ok:false};
     frag=dropFragment(o,first);
   }
   state.extr.splice(i,1);delete extDone[id];
@@ -1473,9 +1588,10 @@ function collect(id){
     var m=MAT_BY[g.id],tag=m.rare?' <em class="raro">raro</em>':m.pieza?' <em class="raro pz">pieza</em>':'';
     return '<li'+(m.rare||m.pieza?' class="rare"':'')+'><span class="sw mat-'+g.id+'"></span><span class="nm">'+esc(m.n)+tag+'</span><span class="qty">+'+g.amt+'</span></li>';
   }).join('');
-  var fx=y.eff.length?'<ul class="toolfx">'+y.eff.map(function(e){return '<li><b>'+esc(TOOL_BY[e[0]].n)+'</b> '+esc(e[1])+'</li>';}).join('')+'</ul>':'';
+  var fx=y.eff.length?'<ul class="toolfx">'+y.eff.map(function(e){return '<li><b>'+esc(effName(e[0]))+'</b> '+esc(e[1])+'</li>';}).join('')+'</ul>':'';
   var fr='';
-  if(real)fr+='<p class="fragok">¡Es una herramienta de verdad! Añadida: '+esc(real.n)+' ('+real.usos+' usos)'+(real.frags?', y su plano para fabricar más':'')+'.</p>';
+  if(real&&real.ok)fr+='<p class="fragok">Al desmontarla entiendes cómo funciona: ¡plano de '+esc(real.t.n)+'! Fabrícalo en el Taller.</p>';
+  if(real&&!real.ok)fr+='<p class="frag">'+esc(real.t.n)+' es una herramienta avanzada: estudia '+esc(TECH_BY[real.t.tech]?TECH_BY[real.t.tech].n:'su tecnología')+' para entenderla.</p>';
   if(frag)fr+=frag.full?'<p class="fragok">¡Plano completo: '+esc(frag.t.n)+'! Fabrícalo en el Taller.</p>':'<p class="frag">Fragmento de plano: <b>'+esc(frag.t.n)+'</b> ('+frag.n+'/'+frag.t.frags+')</p>';
   if(!modo.planos)fr+='<p class="mono">Extracción '+esc(modo.n.toLowerCase())+': sin planos.</p>';
   var lvlAfter=levelFor(state.xp);
@@ -1789,13 +1905,16 @@ $('#saveCfg').addEventListener('click',function(){
 function show(v){
   if(v==='set')renderSet();
   if(v==='taller')renderTaller();
-  ['scan','inv','taller','log','set'].forEach(function(k){
+  if(v==='tec')renderTec();
+  if(v==='tienda'){renderTienda();renderMarket();}
+  ['scan','inv','taller','tec','tienda','log','set'].forEach(function(k){
     $('#v-'+k).hidden=(k!==v);
-    $('#t-'+k).setAttribute('aria-selected',k===v?'true':'false');
+    var tb=$('#t-'+k);if(tb)tb.setAttribute('aria-selected',k===v?'true':'false');
   });
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){show(b.dataset.v);});});
+$('#btnGear').addEventListener('click',function(){show('set');});
 document.addEventListener('paste',function(e){
   var items=(e.clipboardData&&e.clipboardData.files)||[];
   for(var i=0;i<items.length;i++){if(/^image\//.test(items[i].type)){scan(items[i]);break;}}
