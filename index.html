@@ -242,7 +242,7 @@ button{font-family:inherit}
       </div>
       <p class="sub" id="acctInfo" role="status"></p>
       <p class="sub warn" id="acctMsg" role="alert"></p>
-      <button class="btn" id="gateRetry" type="button" hidden>Reintentar</button>
+      <div class="row"><button class="btn primary" id="gateRetry" type="button" hidden>Reintentar</button><button class="btn" id="gateOut" type="button" hidden>Cerrar sesión</button></div>
     </div>
   </div>
 </section>
@@ -487,7 +487,8 @@ async function initStore(){
 }
 /* ---------- Cuenta (Firebase) ---------- */
 var FB_V='https://www.gstatic.com/firebasejs/10.12.2/';
-var fb={state:'',auth:null,db:null,user:null,busy:false,known:false};
+var fb={state:'',auth:null,db:null,user:null,busy:false,known:false,loadErr:''};
+function deadline(p,ms){return Promise.race([p,new Promise(function(_,rej){setTimeout(function(){rej({code:'timeout'});},ms);})]);}
 function fbDoc(name){return fb.db.collection('users').doc(fb.user.uid).collection('rastro').doc(name);}
 function loadScript(src){
   return new Promise(function(res,rej){
@@ -521,9 +522,9 @@ async function initFirebase(){
   fb.auth.onAuthStateChanged(function(u){fb.known=true;onUser(u);});
 }
 function emptyCfg(){cfg={prov:visorOk?'visor':'puter',keys:{},models:{}};}
-async function onUser(u){
-  if(u&&fb.user&&u.uid===fb.user.uid){renderAcct();return;}
-  fb.user=u||null;
+async function onUser(u,again){
+  if(!again&&u&&fb.user&&u.uid===fb.user.uid){renderAcct();return;}
+  fb.user=u||null;fb.loadErr='';
   if(!u){
     // Sin sesión no se juega: se vacía todo lo cargado de la cuenta anterior
     mode='none';freshState();emptyCfg();
@@ -532,7 +533,7 @@ async function onUser(u){
   }
   fb.busy=true;renderAcct();
   try{
-    var r=await Promise.all([fbDoc('save').get(),fbDoc('config').get()]);
+    var r=await deadline(Promise.all([fbDoc('save').get(),fbDoc('config').get()]),15000);
     var sv=r[0],cf=r[1];
     // Partida: la de la cuenta; si es nueva, se trae la que hubiera en este navegador (una sola vez)
     freshState();
@@ -554,7 +555,7 @@ async function onUser(u){
     }
     mode='firebase';saveState='ok';
   }catch(e){
-    saveState='err';acctError(e);
+    saveState='err';fb.loadErr=(e&&e.code)||'error';mode='none';
   }
   fb.busy=false;
   if(cfg.prov==='puter')puterRefresh();
@@ -562,20 +563,30 @@ async function onUser(u){
   orHandleReturn();
 }
 function renderGate(){
-  var need=!window.claude&&(!fb.user||fb.busy);
+  var need=!window.claude&&(!fb.user||fb.busy||!!fb.loadErr);
   $('#gate').hidden=!need;
   document.querySelector('.app').hidden=need;
   document.querySelector('.tabs').hidden=need;
   if(!need)return;
   var t=$('#gateTxt'),forms=$('#gateForms'),retry=$('#gateRetry');
-  forms.hidden=true;retry.hidden=true;
-  if(fb.state==='error'){t.textContent='No se pudo cargar el acceso. Revisa la conexión y vuelve a intentarlo.';retry.hidden=false;}
+  forms.hidden=true;retry.hidden=true;$('#gateOut').hidden=true;
+  if(fb.user&&fb.loadErr){t.textContent=dbErrText(fb.loadErr);retry.hidden=false;$('#gateOut').hidden=false;}
+  else if(fb.state==='error'){t.textContent='No se pudo cargar el acceso. Revisa la conexión y vuelve a intentarlo.';retry.hidden=false;}
   else if(fb.state==='sin-config'){t.textContent='El acceso todavía no está configurado.';}
   else if(fb.state!=='listo'||!fb.known){t.textContent='Cargando…';}
   else if(fb.busy){t.textContent='Cargando tu partida…';}
   else{t.textContent='Necesitas una cuenta para jugar. Tu partida se guarda en ella y te acompaña en cualquier móvil.';forms.hidden=false;}
 }
-$('#gateRetry').addEventListener('click',function(){location.reload();});
+$('#gateRetry').addEventListener('click',function(){
+  if(fb.user&&fb.loadErr)onUser(fb.user,true);else location.reload();
+});
+$('#gateOut').addEventListener('click',function(){if(fb.auth)fb.auth.signOut();});
+function dbErrText(c){
+  if(c==='not-found')return 'Has entrado, pero la base de datos no existe todavía. En la consola de Firebase: Firestore Database → Crear base de datos.';
+  if(c==='permission-denied')return 'Has entrado, pero la base de datos rechaza el acceso. Revisa que las reglas de Firestore estén publicadas.';
+  if(c==='timeout'||c==='unavailable')return 'Has entrado, pero no se pudo conectar con la base de datos. Comprueba que Firestore Database está creada en la consola de Firebase y que tienes conexión.';
+  return 'Has entrado, pero no se pudo cargar tu partida ('+c+'). Vuelve a intentarlo.';
+}
 function acctError(e){
   var code=e&&e.code||'';
   var M={
