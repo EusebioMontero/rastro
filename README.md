@@ -34,10 +34,12 @@ Las reglas de `firestore.rules` permiten que cada jugador solo toque su partida 
 
 ## Juego
 
-- **Escanear**: la IA identifica el objeto, sus materiales y las piezas que lleva (tornillos, muelles, motor, cable, bisagras, neodimio, lentes, chips, LED).
+- **Escanear**: la IA identifica el objeto, sus materiales, las piezas que lleva (tornillos, muelles, motor, cable, bisagras, neodimio, lentes, chips, LED), su estado (nuevo, usado, desgastado, roto, antiguo) y cómo funciona. El estado cambia material, piezas, tiempo y rareza.
+- **Cómo funciona**: al desmontar por completo un objeto nuevo, la IA explica cómo funciona y ganas conocimiento de su campo (queda en el Diario).
+- **El maestro del taller**: consejero de IA que ve tu partida y te dice qué hacer a continuación o responde a tu pregunta.
 - **Extraer**: tras escanear eliges herramientas y modo (rápida 20 % del tiempo y 30 % del material, media 50 %/60 %, completa). El tiempo depende de talla, complejidad y herramientas; sigue avanzando con la app cerrada; hasta 3 a la vez. Solo la extracción completa da planos; si el objeto es una herramienta básica de verdad, su primera extracción completa te da su plano (nunca la herramienta). Las piezas solo salen con su herramienta (destornillador: tornillos, muelles y motores; pelacables: cable; palanca: bisagras; imán: neodimio; lupa: lentes; kit: chips y LED).
 - **Taller**: fabricar herramientas que dan más material, piezas o materiales raros (Cobre, Silicio, Resina, Cristal óptico); se gastan con el uso. Planos por fragmentos en extracciones completas, en la Tienda o extrayendo la herramienta real (solo las básicas). Las avanzadas (Lupa, Kit de precisión) se entienden estudiando su tecnología.
-- **Tecnología**: árbol de 9 tecnologías en 4 niveles con requisitos; se estudian con materiales, monedas y tiempo. Dan más material (madera, metal, vidrio, orgánico), más piezas, menos tiempo, menos pérdida al repetir y planos (Óptica → Lupa, Microelectrónica → Kit).
+- **Tecnología**: árbol de 9 tecnologías en 4 niveles. Una tecnología abierta solo crece con conocimiento: la primera extracción completa de cada objeto nuevo suma su complejidad al campo que dice la IA (Mecánica, Electricidad, Óptica, Materiales, Química). Al llenarse se aprende (efectos y planos: Óptica → Lupa, Microelectrónica → Kit). Desbloquear las siguientes cuesta monedas y materiales. Observación viene abierta y crece con cualquier campo.
 - **Tienda**: vender materiales y piezas por monedas, comprar planos y el **Mercado** entre jugadores (un jugador publica una cantidad por un precio; otro la compra al momento; el vendedor cobra al abrir Rastro).
 - Todo el equilibrio (tiempos, modos, piezas, herramientas, tecnologías, precios) está en `catalogo.js`.
 

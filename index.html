@@ -298,6 +298,18 @@ button{font-family:inherit}
 .pill.off{opacity:.7}
 .chip i.coin{border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe28a 0 30%,var(--hi) 31%);border-color:#9a7400}
 @media (max-width:420px){.tab{font-size:10.5px;padding-inline:2px}.tab svg{width:20px;height:20px}}
+.sz.est{border-style:dashed}
+.entiende{border:1.5px solid var(--accent);border-radius:var(--r);padding:10px 12px;display:grid;gap:4px}
+.entiende h3{font:800 16px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.dfun{font-size:13px;color:var(--ink-2)}
+.chip.know{padding-left:8px}
+.chip.know b{font-weight:600}
+.sheet{position:fixed;inset:0;z-index:30;background:rgba(10,20,28,.45);display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet-in{width:100%;max-width:528px;max-height:85vh;display:flex;flex-direction:column;gap:12px}
+.sheet .crow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ma-log{overflow-y:auto;display:grid;gap:8px;min-height:60px;max-height:45vh}
+.ma-q{justify-self:end;background:var(--accent);color:var(--on-accent);padding:8px 12px;border-radius:12px 12px 2px 12px;max-width:85%;font-size:14px}
+.ma-a{background:var(--bg);border:1px solid var(--line);padding:10px 12px;border-radius:12px 12px 12px 2px;max-width:92%;font-size:15px}
 .linkbtn{background:none;border:0;padding:4px 0;color:var(--accent);font:500 14px var(--f-body);text-decoration:underline;cursor:pointer;justify-self:start}
 .adv{border-top:1px solid var(--line);padding-top:10px}
 .adv summary{cursor:pointer;font-weight:600;color:var(--ink-2);padding:6px 0}
@@ -463,6 +475,17 @@ button{font-family:inherit}
 </div>
 
 <div id="toast" class="toast" role="status" hidden></div>
+<div id="maestro" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="maTitle">
+  <div class="sheet-in card">
+    <div class="crow"><h2 id="maTitle">El maestro del taller</h2><button class="btn sm" id="maClose" type="button">Cerrar</button></div>
+    <div id="maLog" class="ma-log" aria-live="polite"></div>
+    <form id="maForm" class="provs" novalidate>
+      <div class="field"><label for="ma-q">Tu pregunta (opcional)</label><input id="ma-q" type="text" autocomplete="off" maxlength="200" placeholder="¿Qué fabrico primero?"></div>
+      <button class="btn primary" id="maAsk" type="submit">Pedir consejo</button>
+    </form>
+    <p class="note">Ve tu inventario, planos, tecnologías y conocimiento. Cada consulta usa tu IA conectada.</p>
+  </div>
+</div>
 <nav class="tabs" aria-label="Secciones" hidden>
   <div class="in" role="tablist">
     <button class="tab" id="t-scan" role="tab" aria-selected="true" data-v="scan" type="button">
@@ -504,6 +527,7 @@ CAT.raros.forEach(function(m){MATS.push({id:m.id,n:m.n,rare:true});});
 (CAT.piezas||[]).forEach(function(m){MATS.push({id:m.id,n:m.n,pieza:true,tool:m.herramienta});});
 var MAT_BY={};MATS.forEach(function(m){MAT_BY[m.id]=m;});
 var TOOLS=CAT.herramientas||[],TOOL_BY={};TOOLS.forEach(function(t){TOOL_BY[t.id]=t;});
+var CAMPOS=CAT.campos||{materiales:'Materiales'},EST=CAT.estados||{usado:{n:'Usado',mat:1,piezas:1,tiempo:1,rareza:0}};
 var TECHS=CAT.tecnologias||[],TECH_BY={};TECHS.forEach(function(t){TECH_BY[t.id]=t;});
 function tech(id){return !!(state&&state.tech&&state.tech[id]);}
 var SIZES=[
@@ -543,17 +567,20 @@ var PROMPT=[
 '- Si no hay un objeto claro (foto borrosa, oscura, un paisaje, nada reconocible): valido=false, motivo="no_objeto".',
 '- En cualquier otro caso: valido=true, motivo="ok".',
 'Formato exacto:',
-'{"valido":true,"motivo":"ok","nombre":"nombre corto en español, minúsculas, genérico (ej. lata de refresco, silla de madera)","clave":"el mismo nombre genérico, sin tildes","dimension_cm":35,"complejidad":2,"materiales":[{"id":"metal","peso":8},{"id":"plastico","peso":1}],"piezas":[{"id":"tornillos","cant":6}],"dato":"una frase corta y curiosa sobre el objeto"}',
+'{"valido":true,"motivo":"ok","nombre":"nombre corto en español, minúsculas, genérico (ej. lata de refresco, silla de madera)","clave":"el mismo nombre genérico, sin tildes","dimension_cm":35,"complejidad":2,"materiales":[{"id":"metal","peso":8},{"id":"plastico","peso":1}],"piezas":[{"id":"tornillos","cant":6}],"estado":"usado","campo":"mecanica","funciona":"dos frases sencillas sobre cómo funciona o cómo está hecho","dato":"una frase corta y curiosa sobre el objeto"}',
 'Reglas de los campos:',
 '- dimension_cm: la dimensión mayor del objeto real en centímetros. Si junto al objeto hay una mano, una moneda u otra referencia de tamaño conocido, úsala para calcularlo; si no, estima a ojo.',
 '- complejidad: 1 = pieza simple de un solo material; 2 = objeto sencillo; 3 = objeto con varias piezas o mecanismos; 4 = aparato complejo con electrónica o motor.',
 '- materiales: entre 1 y 4, solo los que el objeto lleva de verdad, con peso de 1 a 10 proporcional a cuánto contiene. Usa únicamente estos id: madera, metal, plastico, vidrio, tela, papel, piedra, goma, ceramica, electronica, organico, cuero.',
 '- piezas: componentes reutilizables que el objeto lleva de verdad, con cant = número aproximado de unidades. Usa únicamente estos id: tornillos, muelle, motor (motor eléctrico pequeño), cable, bisagra, neodimio (imán permanente, p. ej. de altavoces o motores), lente, chip (circuito integrado o placa), led. Lista vacía si no lleva ninguna.',
+'- estado: uno de nuevo, usado, desgastado, roto, antiguo (antiguo si parece de hace más de 40 años o de época).',
+'- campo: el principio que mejor explica el objeto, uno de mecanica, electricidad, optica, materiales, quimica.',
+'- funciona: máximo dos frases sencillas y correctas, para alguien curioso, sobre cómo funciona el objeto o cómo se fabrica.',
 '- Si valido es false, rellena solo valido y motivo.'
 ].join('\n');
 
 /* ---------- Estado ---------- */
-var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},estudio:null};
+var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{}};
 MATS.forEach(function(m){state.inv[m.id]=0;});
 var ready=false,aiOk=false,aiWhy='',visorOk=false,busy=false,sampleFn=null,ctl=null,lastBlob=null,previewUrl=null;
 var mode='local',ref=null,unsub=null,saveState='',dirty=false,inflight=0,chain=Promise.resolve();
@@ -579,7 +606,7 @@ function hace(ts){
 }
 
 /* ---------- Guardado ---------- */
-function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,tech:state.tech,estudio:state.estudio,t:Date.now()};}
+function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,tech:state.tech,topen:state.topen,techp:state.techp,t:Date.now()};}
 function merge(d){
   if(!d||typeof d!=='object')return;
   var inv={};
@@ -596,8 +623,9 @@ function merge(d){
   state.planos=pl;state.tools=tl;
   state.monedas=Math.max(0,Math.floor(Number(d.monedas)||0));
   state.cola=(d.cola&&TOOL_BY[d.cola.id]&&Number(d.cola.fin)>0)?{id:String(d.cola.id),fin:Number(d.cola.fin)}:null;
-  var tc={},dtc=d.tech||{};TECHS.forEach(function(t){if(dtc[t.id])tc[t.id]=true;});state.tech=tc;
-  state.estudio=(d.estudio&&TECH_BY[d.estudio.id]&&Number(d.estudio.fin)>0)?{id:String(d.estudio.id),fin:Number(d.estudio.fin)}:null;
+  var tc={},to={},tp={},dtc=d.tech||{},dto=d.topen||{},dtp=d.techp||{};
+  TECHS.forEach(function(t){if(dtc[t.id])tc[t.id]=true;if(dto[t.id])to[t.id]=true;var v=Math.floor(Number(dtp[t.id])||0);if(v>0)tp[t.id]=Math.min(v,t.puntos||v);});
+  state.tech=tc;state.topen=to;state.techp=tp;
   state.extr=(Array.isArray(d.extr)?d.extr:[]).filter(function(e){return e&&e.id&&e.clave&&Array.isArray(e.mats)&&Number(e.fin)>0;}).slice(0,10);
 }
 function persist(){
@@ -658,7 +686,7 @@ function loadScript(src){
   });
 }
 function freshState(){
-  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},estudio:null};
+  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{}};
   MATS.forEach(function(m){state.inv[m.id]=0;});
 }
 function loadLocal(){
@@ -896,7 +924,7 @@ function renderLog(){
       .map(function(id){return '<span class="chip"><i class="mat-'+id+'"></i>'+MAT_BY[id].n+' '+(e.mats[id]|0)+'</span>';}).join('');
     return '<li class="entry"><div class="top2"><h3>'+esc(e.nombre||it[0])+'</h3><span class="sz">'+esc(e.tam||'?')+'</span></div>'+
       '<div class="info"><span class="pill r'+comp+'">'+RAR[comp-1].n+'</span><span>×'+(e.n|0)+(e.n===1?' escaneo':' escaneos')+'</span><span>'+hace(e.ultimo||Date.now())+'</span></div>'+
-      '<div class="chips">'+mats+'</div></li>';
+      '<div class="chips">'+mats+'</div>'+(e.funciona?'<p class="dfun"><b>'+esc(CAMPOS[e.campo]||'')+'</b> · '+esc(e.funciona)+'</p>':'')+'</li>';
   }).join('');
 }
 function renderAll(){renderHeader();renderInv();renderLog();renderTaller();renderTec();renderTienda();renderMarket();renderExtr();}
@@ -923,7 +951,7 @@ function showIdle(){
     return;
   }
   setPanel('<div class="card"><h2>Cuanto más grande, más material</h2>'+ladder(null)+
-    '<ul class="tips"><li>Un solo objeto por foto.</li><li>Una mano o una moneda al lado afina el tamaño.</li><li>Repetir el mismo objeto rinde menos cada vez.</li><li>Tras escanear eliges herramientas y modo: la extracción rápida da menos y nunca planos.</li><li>Las herramientas del Taller dan más material y piezas; estudiar Tecnologías te hace sacar aún más.</li><li>La foto no se guarda.</li></ul></div>');
+    '<ul class="tips"><li>Un solo objeto por foto.</li><li>Una mano o una moneda al lado afina el tamaño.</li><li>Repetir el mismo objeto rinde menos cada vez.</li><li>Tras escanear eliges herramientas y modo: la extracción rápida da menos y nunca planos.</li><li>Las herramientas del Taller dan más material y piezas; estudiar Tecnologías te hace sacar aún más.</li><li>La foto no se guarda.</li></ul><button class="btn" type="button" data-maestro="1">¿Qué hago ahora? Pregunta al maestro</button></div>');
 }
 function setPreview(blob,scanning){
   if(previewUrl)URL.revokeObjectURL(previewUrl);
@@ -1016,7 +1044,7 @@ function renderTaller(){
   var el=$('#tallerBody');if(!el)return;
   var nk=TOOLS.filter(known).length;
   $('#tallerSum').textContent=state.monedas+' monedas';
-  var h='';
+  var h='<button class="btn" type="button" data-maestro="1">Pedir consejo al maestro</button>';
   if(state.cola&&TOOL_BY[state.cola.id]){
     var t=TOOL_BY[state.cola.id],pct=Math.min(100,100*(1-(state.cola.fin-Date.now())/(t.tiempo*1000)));
     h+='<div class="card cola"><div class="crow"><h2>Fabricando: '+esc(t.n)+'</h2></div><div class="bar big"><i id="colaBar" style="width:'+pct+'%"></i></div><p class="mono" id="colaLeft">Faltan '+fmtT((state.cola.fin-Date.now())/1000)+'</p></div>';
@@ -1055,65 +1083,68 @@ function renderTienda(){
   el.querySelectorAll('[data-sellall]').forEach(function(b){b.addEventListener('click',function(){sell(b.dataset.sellall,true);});});
   el.querySelectorAll('[data-buy]').forEach(function(b){b.addEventListener('click',function(){buyPlano(b.dataset.buy);});});
 }
+function techFree(t){return !(t.monedas||0)&&!Object.keys(t.coste||{}).length;}
+function techOpen(t){return !tech(t.id)&&(state.topen[t.id]||(t.req.every(tech)&&techFree(t)));}
 function techState(t){
   if(tech(t.id))return 'hecha';
-  if(state.estudio&&state.estudio.id===t.id)return 'estudiando';
-  return t.req.every(tech)?'disponible':'bloqueada';
+  if(techOpen(t))return 'abierta';
+  return t.req.every(tech)?'desbloquear':'bloqueada';
 }
 function techPay(t){return Object.keys(t.coste||{}).every(function(k){return (state.inv[k]||0)>=t.coste[k];})&&state.monedas>=(t.monedas||0);}
-function startStudy(id){
+function campoN(c){return c==='*'?'cualquier campo':(CAMPOS[c]||c);}
+function unlockTech(id){
   var t=TECH_BY[id];
-  if(!t||state.estudio||techState(t)!=='disponible'||!techPay(t))return;
+  if(!t||techState(t)!=='desbloquear'||!techPay(t))return;
   Object.keys(t.coste||{}).forEach(function(k){state.inv[k]-=t.coste[k];});
   state.monedas-=(t.monedas||0);
-  state.estudio={id:id,fin:Date.now()+t.tiempo*1000};
+  state.topen[id]=true;
   persist();renderAll();
-  toast('Estudiando '+t.n+'. Tardará '+fmtT(t.tiempo)+'.');
+  toast(t.n+' desbloqueada. Crece desmontando por completo objetos nuevos de '+campoN(t.campo).toLowerCase()+'.');
 }
-function tickStudy(){
-  if(!state.estudio)return;
-  var t=TECH_BY[state.estudio.id];
-  if(!t){state.estudio=null;persist();return;}
-  if(Date.now()>=state.estudio.fin){
-    state.tech[t.id]=true;state.estudio=null;
-    (t.planos||[]).forEach(function(pid){var tl=TOOL_BY[pid];if(tl)state.planos[pid]=tl.frags||0;});
-    persist();renderAll();
-    toast('Has estudiado '+t.n+(t.planos&&t.planos.length?': ya tienes el plano de '+t.planos.map(function(p){return TOOL_BY[p]?TOOL_BY[p].n:p;}).join(', '):'')+'.');
-    return;
-  }
-  var bar=$('#stBar'),left=$('#stLeft');
-  if(bar)bar.style.width=Math.min(100,100*(1-(state.estudio.fin-Date.now())/(t.tiempo*1000)))+'%';
-  if(left)left.textContent='Faltan '+fmtT((state.estudio.fin-Date.now())/1000);
+// Conocimiento de un objeto nuevo: hace crecer las tecnologías abiertas de su campo
+function addKnowledge(campo,pts){
+  var out=[];
+  TECHS.forEach(function(t){
+    if(!techOpen(t)||!(t.campo==='*'||t.campo===campo))return;
+    var v=Math.min(t.puntos,(state.techp[t.id]||0)+pts);state.techp[t.id]=v;
+    var done=v>=t.puntos;
+    if(done){
+      state.tech[t.id]=true;delete state.topen[t.id];
+      (t.planos||[]).forEach(function(pid){var tl=TOOL_BY[pid];if(tl)state.planos[pid]=tl.frags||0;});
+    }
+    out.push({t:t,v:v,done:done});
+  });
+  return out;
 }
-setInterval(tickStudy,1000);
+function techsFor(campo){return TECHS.filter(function(t){return techOpen(t)&&(t.campo==='*'||t.campo===campo);});}
 function renderTec(){
   var el=$('#tecBody');if(!el)return;
-  var h='';
-  if(state.estudio&&TECH_BY[state.estudio.id]){
-    var t0=TECH_BY[state.estudio.id],pct=Math.min(100,100*(1-(state.estudio.fin-Date.now())/(t0.tiempo*1000)));
-    h+='<div class="card cola"><h2>Estudiando: '+esc(t0.n)+'</h2><div class="bar big"><i id="stBar" style="width:'+pct+'%"></i></div><p class="mono" id="stLeft">Faltan '+fmtT((state.estudio.fin-Date.now())/1000)+'</p></div>';
-  }
   var done=TECHS.filter(function(t){return tech(t.id);}).length;
   $('#tecSum').textContent=done+' / '+TECHS.length;
-  h+='<p class="sub">Estudiar te enseña cómo funcionan las cosas: sacas más de cada objeto y entiendes planos nuevos.</p>';
+  var h='<div class="card"><p class="sub">Las tecnologías <b>abiertas</b> crecen solo con conocimiento: desmonta por completo objetos <b>nuevos</b> de su campo y la IA te explicará cómo funcionan. Cuando aprendes una, desbloquear las siguientes cuesta monedas y materiales.</p><button class="btn" type="button" data-maestro="1">Pedir consejo al maestro</button></div>';
   var niveles={};TECHS.forEach(function(t){(niveles[t.nivel||1]=niveles[t.nivel||1]||[]).push(t);});
   Object.keys(niveles).sort().forEach(function(nv){
     h+='<h3 class="lvl-h">Nivel '+nv+'</h3><div class="planos">'+niveles[nv].map(function(t){
-      var st=techState(t),pay=techPay(t);
-      var pill={hecha:'<span class="pill r2">Estudiada</span>',estudiando:'<span class="pill r3">Estudiando</span>',disponible:'<span class="pill r1">Disponible</span>',bloqueada:'<span class="pill r1 off">Bloqueada</span>'}[st];
-      var req=t.req.length?'<p class="mono">Requiere: '+t.req.map(function(r){return (tech(r)?'✓ ':'✗ ')+esc(TECH_BY[r]?TECH_BY[r].n:r);}).join(' · ')+'</p>':'';
-      var cost='';
-      if(st!=='hecha'){
-        cost='<div class="chips">'+Object.keys(t.coste||{}).map(function(k){var got=state.inv[k]||0,need=t.coste[k];return '<span class="chip'+(got<need?' short':'')+'"><i class="mat-'+k+'"></i>'+matName(k)+' '+got+'/'+need+'</span>';}).join('')+
-          '<span class="chip'+(state.monedas<(t.monedas||0)?' short':'')+'"><i class="coin"></i>'+(t.monedas||0)+' monedas</span></div><p class="mono">'+fmtT(t.tiempo)+' de estudio</p>';
+      var st=techState(t),v=state.techp[t.id]||0;
+      var pill={hecha:'<span class="pill r2">Aprendida</span>',abierta:'<span class="pill r3">Creciendo</span>',desbloquear:'<span class="pill r1">Para desbloquear</span>',bloqueada:'<span class="pill r1 off">Bloqueada</span>'}[st];
+      var body='';
+      if(st==='abierta'||st==='hecha'){
+        body='<div class="bar big"><i style="width:'+Math.min(100,100*v/t.puntos)+'%"></i></div><p class="mono">'+(st==='hecha'?t.puntos:v)+' / '+t.puntos+' de conocimiento de '+esc(campoN(t.campo))+'</p>';
+        if(st==='abierta')body+='<p class="hint">Crece con la primera extracción completa de objetos nuevos de '+esc(campoN(t.campo).toLowerCase())+'.</p>';
+      }else if(st==='desbloquear'){
+        var pay=techPay(t);
+        body='<div class="chips">'+Object.keys(t.coste||{}).map(function(k){var got=state.inv[k]||0,need=t.coste[k];return '<span class="chip'+(got<need?' short':'')+'"><i class="mat-'+k+'"></i>'+matName(k)+' '+got+'/'+need+'</span>';}).join('')+
+          '<span class="chip'+(state.monedas<(t.monedas||0)?' short':'')+'"><i class="coin"></i>'+(t.monedas||0)+' monedas</span></div>'+
+          '<p class="mono">Luego crecerá con '+t.puntos+' de conocimiento de '+esc(campoN(t.campo))+'.</p>'+
+          '<button class="btn primary" type="button" data-unlock="'+t.id+'"'+(pay?'':' disabled')+'>'+(pay?'Desbloquear':'Te faltan monedas o materiales')+'</button>';
+      }else{
+        body='<p class="mono">Requiere: '+t.req.map(function(r){return (tech(r)?'✓ ':'✗ ')+esc(TECH_BY[r]?TECH_BY[r].n:r);}).join(' · ')+'</p>';
       }
-      var btn='';
-      if(st==='disponible')btn='<button class="btn primary" type="button" data-study="'+t.id+'"'+(state.estudio||!pay?' disabled':'')+'>'+(state.estudio?'Ya estás estudiando otra':(pay?'Estudiar':'Te falta material o monedas'))+'</button>';
-      return '<article class="plano tech '+st+'"><div class="ph"><h3>'+esc(t.n)+'</h3>'+pill+'</div><p class="eff">'+esc(t.efecto)+'</p>'+req+cost+btn+'</article>';
+      return '<article class="plano tech '+st+'"><div class="ph"><h3>'+esc(t.n)+'</h3>'+pill+'</div><p class="eff">'+esc(t.efecto)+'</p>'+body+'</article>';
     }).join('')+'</div>';
   });
   el.innerHTML=h;
-  el.querySelectorAll('[data-study]').forEach(function(b){b.addEventListener('click',function(){startStudy(b.dataset.study);});});
+  el.querySelectorAll('[data-unlock]').forEach(function(b){b.addEventListener('click',function(){unlockTech(b.dataset.unlock);});});
 }
 function realTool(r){
   var nm=norm(r.nombre);
@@ -1329,7 +1360,9 @@ function sanitize(o){
       var c=Math.round(Number(x.cant));if(!(c>=1))c=1;piezas.push({id:id,cant:Math.min(c,cap)});
     }
   });
-  return {ok:true,nombre:nombre,clave:clave,cm:cm,comp:comp,mats:mats.slice(0,4),piezas:piezas.slice(0,6),dato:clean(o.dato,140)};
+  var est=String(o.estado||'').toLowerCase();if(!EST[est])est='usado';
+  var campo=String(o.campo||'').toLowerCase();if(!CAMPOS[campo])campo='materiales';
+  return {ok:true,nombre:nombre,clave:clave,cm:cm,comp:comp,mats:mats.slice(0,4),piezas:piezas.slice(0,6),dato:clean(o.dato,140),estado:est,campo:campo,funciona:clean(o.funciona,260)};
 }
 function distribute(mats,total){
   var sum=mats.reduce(function(a,m){return a+m.peso;},0);
@@ -1426,12 +1459,14 @@ function extTime(o,tools,modo){
   if(T.destornillador&&o.comp>=3)f*=0.75;
   if(T.sierra&&hasMat(o,'madera'))f*=0.8;
   if(tech('mec')&&o.comp>=3)f*=0.85;
+  f*=((EST[o.estado]||{}).tiempo||1);
   return Math.max(5,Math.round(base*f*modo.tiempo));
 }
 // Rendimiento. roll=false: lo seguro, y lo probable en "posibles"
 function yieldOf(o,tools,modo,roll){
   var T={};tools.forEach(function(t){T[t]=1;});
-  var size=sizeById(o.size),comp=o.comp,eff=[],pos=[],q=modo.cant;
+  var size=sizeById(o.size),es=EST[o.estado]||EST.usado||{mat:1,piezas:1,rareza:0},comp=Math.min(4,o.comp+(es.rareza||0)),eff=[],pos=[],q=modo.cant;
+  if(es.rareza)eff.push(['#'+o.estado,'rareza +'+es.rareza]);
   var chance=function(p){return roll?Math.random()<p:false;};
   if(T.lupa&&comp<4){if(chance(0.25)){comp++;eff.push(['lupa','rareza +1']);}else if(!roll)pos.push('rareza +1');}
   var rar=RAR[comp-1],mult=1;
@@ -1439,7 +1474,8 @@ function yieldOf(o,tools,modo,roll){
   if(T.palanca&&size.base>=8){mult*=1.4;eff.push(['palanca','+40 % por ser grande']);}
   if(tech('obs')){mult*=1.1;eff.push(['@obs','+10 %']);}
   var gm={};
-  distribute(o.mats,size.base*rar.m*(o.decay||1)*mult*q).forEach(function(g){gm[g.id]=g.amt;});
+  if(es.mat&&es.mat!==1)eff.push(['#'+o.estado,(es.mat>1?'+':'−')+Math.round(Math.abs(1-es.mat)*100)+' % de material']);
+  distribute(o.mats,size.base*rar.m*(o.decay||1)*mult*q*(es.mat||1)).forEach(function(g){gm[g.id]=g.amt;});
   var add=function(id,n){gm[id]=(gm[id]||0)+n;};
   var bump=function(id,k){var v=gm[id]||0,nv=Math.ceil(v*k);gm[id]=nv;return nv-v;};
   if(tech('carp')&&gm.madera){var dc=bump('madera',1.25);if(dc)eff.push(['@carp','+'+dc+' madera']);}
@@ -1460,12 +1496,12 @@ function yieldOf(o,tools,modo,roll){
   (o.piezas||[]).forEach(function(pz){
     var tl=MAT_BY[pz.id]&&MAT_BY[pz.id].tool;
     if(tl&&T[tl]){var pk=(tech('mec')&&['tornillos','muelle','motor','bisagra'].indexOf(pz.id)>=0)||(tech('micro')&&['chip','led'].indexOf(pz.id)>=0)?1.5:1;
-      var n=Math.max(1,Math.round(pz.cant*q*pk));add(pz.id,n);eff.push([tl,'+'+n+' '+MAT_BY[pz.id].n.toLowerCase()]);}
+      var n=Math.max(1,Math.round(pz.cant*q*pk*(es.piezas||1)));add(pz.id,n);eff.push([tl,'+'+n+' '+MAT_BY[pz.id].n.toLowerCase()]);}
   });
   Object.keys(gm).forEach(function(k){if(!(gm[k]>0)||!MAT_BY[k])delete gm[k];});
   return {gm:gm,comp:comp,eff:eff,pos:pos,mult:mult};
 }
-function effName(k){return k.charAt(0)==='@'?(TECH_BY[k.slice(1)]?TECH_BY[k.slice(1)].n:k):(TOOL_BY[k]?TOOL_BY[k].n:k);}
+function effName(k){if(k.charAt(0)==='#')return 'Estado '+((EST[k.slice(1)]||{}).n||k.slice(1)).toLowerCase();return k.charAt(0)==='@'?(TECH_BY[k.slice(1)]?TECH_BY[k.slice(1)].n:k):(TOOL_BY[k]?TOOL_BY[k].n:k);}
 function gainsList(gm){
   return Object.keys(gm).map(function(id){return {id:id,amt:gm[id]};})
     .sort(function(a,b){var ka=MAT_BY[a.id].pieza?2:MAT_BY[a.id].rare?1:0,kb=MAT_BY[b.id].pieza?2:MAT_BY[b.id].rare?1:0;return (ka-kb)||(b.amt-a.amt);});
@@ -1479,7 +1515,7 @@ function applyScan(out){
   state.day.n=(state.day.d===today()?state.day.n:0)+1;state.day.d=today();
   var prev=state.disc[r.clave],n=prev&&prev.n?prev.n:0;
   pend={id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),nombre:r.nombre,clave:r.clave,cm:r.cm,size:sizeFor(r.cm).id,comp:r.comp,
-    mats:r.mats,piezas:r.piezas,dato:r.dato,decay:Math.max(0.2,1-(tech('recic')?0.15:0.25)*n),
+    mats:r.mats,piezas:r.piezas,dato:r.dato,estado:r.estado,campo:r.campo,funciona:r.funciona,decay:Math.max(0.2,1-(tech('recic')?0.15:0.25)*n),
     first:!prev&&!state.extr.some(function(e){return e.clave===r.clave;}),tools:[],modo:'completa'};
   pend.tools=TOOLS.filter(function(t){return has(t.id)&&applies(t.id,pend);}).map(function(t){return t.id;});
   persist();renderHeader();
@@ -1488,7 +1524,7 @@ function applyScan(out){
 }
 function renderSetup(){
   if(!pend)return;
-  var o=pend,size=sizeById(o.size),rar=RAR[o.comp-1],modo=MODO_BY[o.modo]||MODOS[MODOS.length-1];
+  var o=pend,size=sizeById(o.size),es=EST[o.estado]||{},rar=RAR[Math.min(4,o.comp+(es.rareza||0))-1],modo=MODO_BY[o.modo]||MODOS[MODOS.length-1];
   var own=TOOLS.filter(function(t){return has(t.id)&&applies(t.id,o);});
   var y=yieldOf(o,o.tools,modo,false),secs=extTime(o,o.tools,modo);
   var full=state.extr.length>=MAXE;
@@ -1506,14 +1542,15 @@ function renderSetup(){
   }).join('');
   var gl=gainsList(y.gm).map(function(g){return matChip(g.id,g.amt);}).join('');
   setPanel('<article class="card setup">'+
-    '<div class="meta"><span class="pill r'+o.comp+'">'+rar.n+'</span><span class="sz">Talla '+size.id+' · '+fmtLen(o.cm)+'</span>'+(o.first?'<span class="new">Nuevo</span>':'')+'</div>'+
+    '<div class="meta"><span class="pill r'+Math.min(4,o.comp+(es.rareza||0))+'">'+rar.n+'</span><span class="sz">Talla '+size.id+' · '+fmtLen(o.cm)+'</span><span class="sz est">'+esc(es.n||'Usado')+'</span>'+(o.first?'<span class="new">Nuevo</span>':'')+'</div>'+
     '<h2 class="name">'+esc(o.nombre)+'</h2>'+(o.dato?'<p class="dato">'+esc(o.dato)+'</p>':'')+
+    (es.desc?'<p class="mono">'+esc(es.n)+': '+esc(es.desc)+'</p>':'')+
     (pzs?'<h3 class="st-h">Piezas que lleva</h3><ul class="pzl">'+pzs+'</ul>':'')+
     '<h3 class="st-h">Herramientas</h3><div class="tool-opts">'+tl+'</div>'+
     '<h3 class="st-h">Extracción</h3><div class="segs" role="group" aria-label="Modo de extracción">'+md+'</div>'+
     '<div class="sum"><p><b>'+fmtT(secs)+'</b> · '+esc(modo.n.toLowerCase())+'</p><div class="chips">'+gl+'</div>'+
     (y.pos.length?'<p class="mono">Posible: '+esc(y.pos.join(', '))+'</p>':'')+
-    '<p class="mono">'+(modo.planos?'Puede dar fragmentos de plano'+(function(){var rt=realTool(o);return rt&&rt.basica&&!known(rt)&&!(state.disc[o.clave]&&state.disc[o.clave].herr)?' y el plano de '+rt.n:'';})()+'.':'Sin planos: solo la extracción completa los da.')+'</p></div>'+
+    '<p class="mono">'+(modo.planos&&!(state.disc[o.clave]&&state.disc[o.clave].ent)?'Al desmontarlo del todo entenderás cómo funciona ('+esc(CAMPOS[o.campo]||o.campo)+'): '+(techsFor(o.campo).length?'+'+o.comp+' para '+techsFor(o.campo).map(function(t){return t.n;}).join(', '):'ninguna tecnología abierta usa ese campo')+'. ':'')+(modo.planos?'Puede dar fragmentos de plano'+(function(){var rt=realTool(o);return rt&&rt.basica&&!known(rt)&&!(state.disc[o.clave]&&state.disc[o.clave].herr)?' y el plano de '+rt.n:'';})()+'.':'Sin planos: solo la extracción completa los da.')+'</p></div>'+
     (o.tools.length?'<p class="note">Cada herramienta elegida gasta 1 uso al empezar.</p>':'')+
     '<div class="row"><button class="btn primary" id="exStart" type="button"'+(full?' disabled':'')+'>'+(full?'Ya tienes '+MAXE+' extracciones en marcha':'Empezar extracción')+'</button><button class="btn" id="exDrop" type="button">Descartar</button></div>'+
     '</article>');
@@ -1571,7 +1608,13 @@ function collect(id){
   var mats=Object.assign({},prev&&prev.mats||{});
   gains.forEach(function(g){state.inv[g.id]=(state.inv[g.id]||0)+g.amt;mats[g.id]=(mats[g.id]||0)+g.amt;});
   var first=!prev;
-  state.disc[o.clave]={nombre:o.nombre,tam:o.size,rar:y.comp,n:n+1,primero:prev&&prev.primero||now,ultimo:now,mats:mats,herr:!!(prev&&prev.herr)};
+  state.disc[o.clave]={nombre:o.nombre,tam:o.size,rar:y.comp,n:n+1,primero:prev&&prev.primero||now,ultimo:now,mats:mats,herr:!!(prev&&prev.herr),
+    ent:!!(prev&&prev.ent),campo:o.campo||(prev&&prev.campo)||'',funciona:(prev&&prev.funciona)||''};
+  var saberGan=0,crecen=[];
+  if(modo.planos&&!(prev&&prev.ent)&&o.campo&&CAMPOS[o.campo]){
+    saberGan=Math.max(1,o.comp);crecen=addKnowledge(o.campo,saberGan);
+    state.disc[o.clave].ent=true;if(o.funciona)state.disc[o.clave].funciona=o.funciona;
+  }
   var xpGain=units+(first?5:0)+(y.comp-1)*2+(modo.planos?3:0);
   var lvlBefore=levelFor(state.xp);state.xp+=xpGain;
   var real=null,frag=null;
@@ -1593,12 +1636,16 @@ function collect(id){
   if(real&&real.ok)fr+='<p class="fragok">Al desmontarla entiendes cómo funciona: ¡plano de '+esc(real.t.n)+'! Fabrícalo en el Taller.</p>';
   if(real&&!real.ok)fr+='<p class="frag">'+esc(real.t.n)+' es una herramienta avanzada: estudia '+esc(TECH_BY[real.t.tech]?TECH_BY[real.t.tech].n:'su tecnología')+' para entenderla.</p>';
   if(frag)fr+=frag.full?'<p class="fragok">¡Plano completo: '+esc(frag.t.n)+'! Fabrícalo en el Taller.</p>':'<p class="frag">Fragmento de plano: <b>'+esc(frag.t.n)+'</b> ('+frag.n+'/'+frag.t.frags+')</p>';
-  if(!modo.planos)fr+='<p class="mono">Extracción '+esc(modo.n.toLowerCase())+': sin planos.</p>';
+  if(!modo.planos)fr+='<p class="mono">Extracción '+esc(modo.n.toLowerCase())+': sin planos ni conocimiento.</p>';
+  var ent=saberGan?'<div class="entiende"><h3>Cómo funciona</h3><p>'+esc(o.funciona||'Al desmontarlo entiendes cómo está hecho.')+'</p>'+
+    (crecen.length?crecen.map(function(c){return '<p class="mono">'+(c.done?'¡Aprendida! '+esc(c.t.n)+(c.t.planos&&c.t.planos.length?' · plano de '+c.t.planos.map(function(p){return TOOL_BY[p]?TOOL_BY[p].n:p;}).join(', '):''):esc(c.t.n)+' +'+saberGan+' ('+c.v+'/'+c.t.puntos+')')+'</p>';}).join('')
+      :'<p class="mono">+'+saberGan+' de '+esc(CAMPOS[o.campo])+', pero ninguna tecnología abierta usa ese campo.</p>')+'</div>':'';
+  crecen.forEach(function(c){if(c.done)setTimeout(function(){toast('¡Has aprendido '+c.t.n+'!');},300);});
   var lvlAfter=levelFor(state.xp);
   setPanel('<article class="card">'+
     '<div class="meta"><span class="pill r'+y.comp+'">'+RAR[y.comp-1].n+'</span><span class="sz">Talla '+o.size+' · '+fmtLen(o.cm)+'</span>'+(first?'<span class="new">Nuevo</span>':'')+'</div>'+
     '<h2 class="name">'+esc(o.nombre)+'</h2>'+
-    '<ul class="gains">'+list+'</ul>'+fx+
+    ent+'<ul class="gains">'+list+'</ul>'+fx+
     '<p class="calc">'+sizeById(o.size).base+' base × '+fmt(RAR[y.comp-1].m)+' rareza × '+fmt(o.decay||1)+' repetición × '+fmt(modo.cant)+' '+esc(modo.n.toLowerCase())+(y.mult!==1?' × '+fmt(y.mult)+' herramientas':'')+'</p>'+
     fr+'<p class="xp">+'+xpGain+' XP</p>'+
     (lvlAfter>lvlBefore?'<p class="lvlup">Subes al nivel '+lvlAfter+'</p>':'')+
@@ -1668,6 +1715,116 @@ async function post(url,headers,body,signal){
   if(!r.ok)throw {code:httpCode(r.status,txt)};
   try{return JSON.parse(txt);}catch(e){throw {code:'bad'};}
 }
+/* ---------- Texto con la IA conectada ---------- */
+async function aiText(prompt,signal){
+  var p=cfg.prov;
+  if(p==='visor'){
+    if(!sampleFn)throw {code:'auth'};
+    var rv=await sampleFn(prompt,{modelTier:'quick',cache:false,signal:signal});return rv.text||'';
+  }
+  var key=clean(cfg.keys[p],400),model=modelOf(p),j,t;
+  if(p==='puter'){
+    var P=await loadPuter();
+    if(!P.auth.isSignedIn())throw {code:'auth'};
+    var r;try{r=await P.ai.chat(prompt,{model:modelOf('puter')});}catch(e){throw {code:puterErrCode(e)};}
+    t=r&&r.message&&r.message.content;
+    if(Array.isArray(t))t=t.map(function(x){return typeof x==='string'?x:(x&&x.text)||'';}).join('');
+    return t||'';
+  }
+  if(!key)throw {code:'auth'};
+  if(p==='openrouter'){
+    model=await orModel();
+    j=await post('https://openrouter.ai/api/v1/chat/completions',{'Content-Type':'application/json','Authorization':'Bearer '+key,'X-Title':'Rastro','HTTP-Referer':location.origin+location.pathname},
+      {model:model,max_tokens:400,messages:[{role:'user',content:prompt}]},signal);
+    t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content||'';
+    return Array.isArray(t)?t.map(function(x){return x.text||'';}).join(''):t;
+  }
+  if(p==='gemini'){
+    j=await post('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{'Content-Type':'application/json','x-goog-api-key':key},
+      {contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.6}},signal);
+    t=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts||[];
+    return t.map(function(x){return x.text||'';}).join('');
+  }
+  if(p==='anthropic'){
+    j=await post('https://api.anthropic.com/v1/messages',{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      {model:model,max_tokens:400,messages:[{role:'user',content:prompt}]},signal);
+    return (j&&j.content||[]).map(function(x){return x.text||'';}).join('');
+  }
+  if(p==='openai'){
+    j=await post('https://api.openai.com/v1/chat/completions',{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      {model:model,messages:[{role:'user',content:prompt}]},signal);
+    return j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content||'';
+  }
+  throw {code:'upstream_error'};
+}
+
+/* ---------- El maestro del taller ---------- */
+var maLog=[],maBusy=false;
+function falta(t){
+  var f={};
+  Object.keys(t.coste||{}).forEach(function(k){var d=t.coste[k]-(state.inv[k]||0);if(d>0)f[matName(k)]=d;});
+  var dm=(t.monedas||0)-state.monedas;if(dm>0)f.monedas=dm;
+  return f;
+}
+function maestroCtx(){
+  var inv={};MATS.forEach(function(m){if(state.inv[m.id])inv[m.n]=state.inv[m.id];});
+  var herr={};TOOLS.forEach(function(t){if(has(t.id))herr[t.n]=state.tools[t.id]+' usos';});
+  return {
+    nivel:levelFor(state.xp),monedas:state.monedas,escaneos_que_quedan_hoy:scansLeft(),
+    inventario:inv,herramientas:herr,
+    planos:TOOLS.map(function(t){
+      var k=known(t),lock=t.tech&&!tech(t.tech);
+      return {herramienta:t.n,efecto:t.efecto,estado:k?'plano conocido':lock?'requiere estudiar '+(TECH_BY[t.tech]||{}).n:'fragmentos '+(state.planos[t.id]||0)+'/'+t.frags+', en tienda '+precioPlano(t)+' monedas',
+        receta:Object.keys(t.receta).map(function(k){return t.receta[k]+' '+matName(k);}).join(', '),
+        se_aprende_fotografiando:t.basica?t.pista:'no (avanzada)',fragmentos_con_objetos_de:t.afin.map(matName).join(', ')};
+    }),
+    fabricando:state.cola?(TOOL_BY[state.cola.id]||{}).n:null,
+    extracciones_en_marcha:state.extr.map(function(e){return e.nombre+' ('+e.modo+')';}),
+    tecnologias:TECHS.map(function(t){var st=techState(t);return {nombre:t.n,estado:{hecha:'aprendida',abierta:'abierta, creciendo',desbloquear:'se puede desbloquear pagando',bloqueada:'bloqueada'}[st],efecto:t.efecto,
+      campo_que_la_hace_crecer:campoN(t.campo),progreso:(state.techp[t.id]||0)+'/'+t.puntos,requiere:t.req.map(function(r){return (TECH_BY[r]||{}).n;}),
+      para_desbloquear_le_falta:st==='desbloquear'?falta(t):undefined};}),
+    ultimos_objetos:Object.keys(state.disc).map(function(k){return state.disc[k];}).sort(function(a,b){return (b.ultimo||0)-(a.ultimo||0);}).slice(0,6).map(function(e){return e.nombre;})
+  };
+}
+function maestroPrompt(q){
+  return ['Eres el maestro del taller en Rastro, un juego de crafteo con el mundo real.',
+  'Reglas: el jugador fotografía objetos reales y una IA le da materiales según tamaño, rareza, estado y composición, y piezas (tornillos, muelles, motor, cable, bisagras, neodimio, lentes, chips, LED) si tiene la herramienta adecuada.',
+  'Tras escanear elige herramientas y modo de extracción (rápida, media, completa). Solo la completa da fragmentos de plano y, en objetos nuevos, conocimiento de su campo (Mecánica, Electricidad, Óptica, Materiales, Química).',
+  'Las tecnologías abiertas solo crecen con ese conocimiento (desmontar por completo objetos nuevos de su campo); al llenarse se aprenden. Desbloquear las siguientes del árbol cuesta monedas y materiales.',
+  'Extraer por completo una herramienta básica real da su plano. En la Tienda se venden materiales y se compran planos; hay un mercado entre jugadores.',
+  'Datos de la partida del jugador (JSON):',
+  JSON.stringify(maestroCtx()),
+  q?('Pregunta del jugador: '+q):'El jugador pregunta qué le conviene hacer ahora.',
+  'Responde en español de España como un maestro artesano cercano, en 2 a 4 frases cortas, sin listas ni markdown. Da una o dos acciones concretas para su siguiente paso: qué objetos cotidianos fotografiar (pon ejemplos reales de casa o de la calle), qué fabricar o qué estudiar, y por qué. Usa solo herramientas, tecnologías y materiales que aparezcan en los datos.'].join('\n');
+}
+function renderMaestro(){
+  $('#maLog').innerHTML=maLog.length?maLog.map(function(m){
+    return (m.q?'<p class="ma-q">'+esc(m.q)+'</p>':'')+'<p class="ma-a'+(m.err?' warn':'')+'">'+esc(m.a)+'</p>';
+  }).join(''):'<p class="sub">Pregúntale qué hacer a continuación o algo concreto sobre tu partida.</p>';
+  $('#maAsk').disabled=maBusy;$('#maAsk').textContent=maBusy?'Pensando…':'Pedir consejo';
+  var lg=$('#maLog');lg.scrollTop=lg.scrollHeight;
+}
+function openMaestro(){$('#maestro').hidden=false;renderMaestro();setTimeout(function(){$('#ma-q').focus();},50);}
+function closeMaestro(){$('#maestro').hidden=true;}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-maestro]');if(b)openMaestro();});
+$('#maClose').addEventListener('click',closeMaestro);
+$('#maestro').addEventListener('click',function(e){if(e.target===$('#maestro'))closeMaestro();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#maestro').hidden)closeMaestro();});
+$('#maForm').addEventListener('submit',async function(e){
+  e.preventDefault();
+  if(maBusy)return;
+  if(!aiOk){maLog.push({q:'',a:whyText(),err:true});renderMaestro();return;}
+  var q=clean($('#ma-q').value,200);
+  maBusy=true;maLog.push({q:q,a:'…'});renderMaestro();
+  try{
+    var t=clean(await aiText(maestroPrompt(q)),900);
+    maLog[maLog.length-1].a=t||'El maestro se ha quedado pensativo. Vuelve a preguntar.';
+    $('#ma-q').value='';
+  }catch(err){maLog[maLog.length-1].a=errorText(err&&err.code);maLog[maLog.length-1].err=true;}
+  if(maLog.length>6)maLog=maLog.slice(-6);
+  maBusy=false;renderMaestro();
+});
+
 async function identifyRemote(blob,signal){
   var p=cfg.prov,key=clean(cfg.keys[p],400),model=modelOf(p);
   var mime=blob.type||'image/jpeg',data=await toB64(blob),j,t;

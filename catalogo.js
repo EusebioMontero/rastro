@@ -25,12 +25,16 @@
 //
 // Piezas: productos ya hechos que solo salen si llevas la herramienta indicada.
 //
-// Tecnologías (árbol de estudio):
-//   req     tecnologías que hay que tener antes
-//   coste   materiales o piezas que se gastan al estudiar
-//   monedas monedas que se gastan al estudiar
-//   tiempo  segundos de estudio
-//   planos  planos de herramientas que desbloquea y regala al terminar
+// Tecnologías (árbol):
+//   req     tecnologías que hay que haber aprendido antes
+//   coste   materiales o piezas para DESBLOQUEARLA (abrirla); sin coste ni monedas se abre sola
+//   monedas monedas para desbloquearla
+//   campo   campo de conocimiento que la hace crecer ('*' = cualquiera)
+//   puntos  conocimiento necesario para aprenderla. Una vez abierta, solo crece con la primera
+//           extracción completa de objetos nuevos de su campo (tantos puntos como su complejidad)
+//   planos  planos de herramientas que regala al aprenderla
+//
+// Estados del objeto (los detecta la IA): multiplicadores de material, piezas y tiempo, y rareza extra.
 //   efecto  descripción (el efecto en sí está programado en index.html)
 window.RASTRO_CAT = {
   tiempoTalla: { XS: 15, S: 30, M: 60, L: 120, XL: 240 },
@@ -40,24 +44,32 @@ window.RASTRO_CAT = {
     { id: 'completa', n: 'Completa', tiempo: 1,   cant: 1,   planos: true }
   ],
   maxExtr: 3,
+  campos: { mecanica: 'Mecánica', electricidad: 'Electricidad', optica: 'Óptica', materiales: 'Materiales', quimica: 'Química' },
+  estados: {
+    nuevo:      { n: 'Nuevo',      mat: 1,    piezas: 1,   tiempo: 1.1, rareza: 0, desc: 'Intacto: cuesta algo más desmontarlo.' },
+    usado:      { n: 'Usado',      mat: 1,    piezas: 1,   tiempo: 1,   rareza: 0, desc: '' },
+    desgastado: { n: 'Desgastado', mat: 0.85, piezas: 1,   tiempo: 0.9, rareza: 0, desc: 'Algo menos de material.' },
+    roto:       { n: 'Roto',       mat: 0.7,  piezas: 1.3, tiempo: 0.7, rareza: 0, desc: 'Menos material, pero las piezas salen solas y más rápido.' },
+    antiguo:    { n: 'Antiguo',    mat: 1,    piezas: 1,   tiempo: 1.2, rareza: 1, desc: '+1 de rareza.' }
+  },
   tecnologias: [
-    { id: 'obs', n: 'Observación', nivel: 1, req: [], coste: { papel: 2 }, monedas: 10, tiempo: 60,
+    { id: 'obs', n: 'Observación', nivel: 1, req: [], campo: '*', puntos: 3, coste: {}, monedas: 0,
       efecto: 'Te fijas en cómo están hechas las cosas: +10 % de todos los materiales.' },
-    { id: 'carp', n: 'Carpintería', nivel: 2, req: ['obs'], coste: { madera: 6 }, monedas: 30, tiempo: 120,
+    { id: 'carp', n: 'Carpintería', nivel: 2, req: ['obs'], campo: 'materiales', puntos: 4, coste: { madera: 6 }, monedas: 30,
       efecto: '+25 % de madera, y los fragmentos de planos de madera salen el doble.' },
-    { id: 'metal', n: 'Metalurgia', nivel: 2, req: ['obs'], coste: { metal: 6 }, monedas: 40, tiempo: 120,
+    { id: 'metal', n: 'Metalurgia', nivel: 2, req: ['obs'], campo: 'materiales', puntos: 5, coste: { metal: 6 }, monedas: 40,
       efecto: '+25 % de metal.' },
-    { id: 'elec', n: 'Electricidad', nivel: 2, req: ['obs'], coste: { cable: 2, electronica: 3 }, monedas: 50, tiempo: 180,
+    { id: 'elec', n: 'Electricidad', nivel: 2, req: ['obs'], campo: 'electricidad', puntos: 5, coste: { cable: 2, electronica: 3 }, monedas: 50,
       efecto: '+1 de electrónica en aparatos y el Pelacables saca el doble de cobre.' },
-    { id: 'opt', n: 'Óptica', nivel: 2, req: ['obs'], coste: { vidrio: 6, plastico: 2 }, monedas: 50, tiempo: 180,
+    { id: 'opt', n: 'Óptica', nivel: 2, req: ['obs'], campo: 'optica', puntos: 4, coste: { vidrio: 6, plastico: 2 }, monedas: 50,
       efecto: '+25 % de vidrio. Entiendes cómo funciona una lupa: plano de la Lupa.', planos: ['lupa'] },
-    { id: 'mec', n: 'Mecánica', nivel: 3, req: ['metal'], coste: { tornillos: 6, muelle: 2 }, monedas: 60, tiempo: 240,
+    { id: 'mec', n: 'Mecánica', nivel: 3, req: ['metal'], campo: 'mecanica', puntos: 6, coste: { tornillos: 6, muelle: 2 }, monedas: 60,
       efecto: '+50 % de piezas mecánicas (tornillos, muelles, motores, bisagras) y −15 % de tiempo en aparatos complejos.' },
-    { id: 'quim', n: 'Química', nivel: 3, req: ['carp'], coste: { organico: 6, resina: 1 }, monedas: 60, tiempo: 240,
+    { id: 'quim', n: 'Química', nivel: 3, req: ['carp'], campo: 'quimica', puntos: 4, coste: { organico: 6, resina: 1 }, monedas: 60,
       efecto: '+25 % de orgánico y la Navaja siempre saca resina.' },
-    { id: 'recic', n: 'Reciclaje', nivel: 3, req: ['metal', 'carp'], coste: { papel: 6, plastico: 6 }, monedas: 80, tiempo: 300,
+    { id: 'recic', n: 'Reciclaje', nivel: 3, req: ['metal', 'carp'], campo: 'materiales', puntos: 8, coste: { papel: 6, plastico: 6 }, monedas: 80,
       efecto: 'Repetir un objeto rinde menos despacio: −15 % por repetición en vez de −25 %.' },
-    { id: 'micro', n: 'Microelectrónica', nivel: 4, req: ['elec', 'opt'], coste: { cobre: 4, cable: 4, electronica: 6 }, monedas: 120, tiempo: 420,
+    { id: 'micro', n: 'Microelectrónica', nivel: 4, req: ['elec', 'opt'], campo: 'electricidad', puntos: 8, coste: { cobre: 4, cable: 4, electronica: 6 }, monedas: 120,
       efecto: '+50 % de chips y LED. Entiendes un circuito: plano del Kit de precisión.', planos: ['kit'] }
   ],
   piezas: [
