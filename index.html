@@ -249,6 +249,43 @@ button{font-family:inherit}
 .mk .st.ok{color:var(--good)}
 .mk .empty-li{display:block;color:var(--ink-2);font-size:14px}
 #mkForm .row .field{flex:1 1 120px}
+.st-h{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin-top:4px}
+.pzl{list-style:none;padding:0;display:grid;gap:6px}
+.pzl li{display:flex;align-items:center;gap:10px}
+.pzl .nm{flex:1;min-width:0}
+.pzl .sw{width:26px;height:26px}
+.okc{color:var(--good)}
+.tool-opts{display:grid;gap:8px}
+.tool-opt{display:flex;gap:10px;align-items:center;border:1.5px solid var(--line);border-radius:var(--r);padding:10px;cursor:pointer}
+.tool-opt.on{border-color:var(--accent)}
+.tool-opt input{width:18px;height:18px;accent-color:var(--accent);flex:none}
+.tool-opt div{flex:1;min-width:0;display:grid;gap:2px}
+.tool-opt span{font-size:13px;color:var(--ink-2)}
+.tool-opt em{font-style:normal;white-space:nowrap}
+.segs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.seg{display:grid;gap:2px;justify-items:center;padding:8px 4px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);cursor:pointer;font-family:inherit}
+.seg b{font-size:14px}
+.seg span{font:500 11px var(--f-mono);color:var(--ink-2)}
+.seg.on{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
+.seg.on span{color:var(--on-accent)}
+.seg:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.sum{display:grid;gap:6px;border-left:3px solid var(--hi);padding-left:10px}
+.sum b{font:800 22px/1 var(--f-display);letter-spacing:.04em}
+.chip.rare{border-color:var(--hi)}
+.chip.pz{border-style:dashed}
+.ext{gap:8px}
+.ext .crow{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.ext.done{border-color:var(--good)}
+.raro.pz{background:var(--accent);color:var(--on-accent)}
+.mat-tornillos{background:radial-gradient(circle at 50% 50%,#d6dbe0 0 22%,#6f7880 23% 28%,transparent 29%) 0 0/12px 12px,#9aa3ab}
+.mat-muelle{background:repeating-linear-gradient(60deg,#c7ccd1 0 2px,#6b7379 2px 5px)}
+.mat-motor{background:radial-gradient(circle,#c98c3a 0 25%,#3d4247 26% 60%,#7b8288 61%)}
+.mat-cable{background:repeating-linear-gradient(45deg,#d02b2b 0 4px,#1f1f1f 4px 8px)}
+.mat-bisagra{background:linear-gradient(90deg,#8d959c 0 45%,#5b6268 45% 55%,#8d959c 55%)}
+.mat-neodimio{background:linear-gradient(90deg,#c0392b 0 50%,#2c3e8f 50%)}
+.mat-lente{background:radial-gradient(circle at 40% 40%,#ffffff 0 12%,#bfe6f5 13% 55%,#7fb9d1 56%)}
+.mat-chip{background:linear-gradient(90deg,transparent 0 20%,#c9a648 20% 24%,transparent 24% 76%,#c9a648 76% 80%,transparent 80%),linear-gradient(#222 0 100%)}
+.mat-led{background:radial-gradient(circle at 50% 40%,#fff6a8 0 18%,#ff4d4d 19% 45%,#5a1a1a 46%)}
 .linkbtn{background:none;border:0;padding:4px 0;color:var(--accent);font:500 14px var(--f-body);text-decoration:underline;cursor:pointer;justify-self:start}
 .adv{border-top:1px solid var(--line);padding-top:10px}
 .adv summary{cursor:pointer;font-weight:600;color:var(--ink-2);padding:6px 0}
@@ -319,6 +356,7 @@ button{font-family:inherit}
         <div class="btn primary pick" id="btn-cam"><span>Cámara</span><input id="in-cam" type="file" accept="image/*" capture="environment" aria-label="Hacer foto con la cámara"></div>
         <div class="btn pick" id="btn-up"><span>Galería</span><input id="in-up" type="file" accept="image/*" aria-label="Elegir foto de la galería"></div>
       </div>
+      <div id="extList" class="tbody"></div>
       <div id="panel" role="status" aria-live="polite"></div>
       <p id="diag" class="mono"></p>
     </section>
@@ -436,6 +474,7 @@ var MATS=[
 ];
 var CAT=window.RASTRO_CAT||{raros:[],herramientas:[]};
 CAT.raros.forEach(function(m){MATS.push({id:m.id,n:m.n,rare:true});});
+(CAT.piezas||[]).forEach(function(m){MATS.push({id:m.id,n:m.n,pieza:true,tool:m.herramienta});});
 var MAT_BY={};MATS.forEach(function(m){MAT_BY[m.id]=m;});
 var TOOLS=CAT.herramientas||[],TOOL_BY={};TOOLS.forEach(function(t){TOOL_BY[t.id]=t;});
 var SIZES=[
@@ -475,16 +514,17 @@ var PROMPT=[
 '- Si no hay un objeto claro (foto borrosa, oscura, un paisaje, nada reconocible): valido=false, motivo="no_objeto".',
 '- En cualquier otro caso: valido=true, motivo="ok".',
 'Formato exacto:',
-'{"valido":true,"motivo":"ok","nombre":"nombre corto en español, minúsculas, genérico (ej. lata de refresco, silla de madera)","clave":"el mismo nombre genérico, sin tildes","dimension_cm":35,"complejidad":2,"materiales":[{"id":"metal","peso":8},{"id":"plastico","peso":1}],"dato":"una frase corta y curiosa sobre el objeto"}',
+'{"valido":true,"motivo":"ok","nombre":"nombre corto en español, minúsculas, genérico (ej. lata de refresco, silla de madera)","clave":"el mismo nombre genérico, sin tildes","dimension_cm":35,"complejidad":2,"materiales":[{"id":"metal","peso":8},{"id":"plastico","peso":1}],"piezas":[{"id":"tornillos","cant":6}],"dato":"una frase corta y curiosa sobre el objeto"}',
 'Reglas de los campos:',
 '- dimension_cm: la dimensión mayor del objeto real en centímetros. Si junto al objeto hay una mano, una moneda u otra referencia de tamaño conocido, úsala para calcularlo; si no, estima a ojo.',
 '- complejidad: 1 = pieza simple de un solo material; 2 = objeto sencillo; 3 = objeto con varias piezas o mecanismos; 4 = aparato complejo con electrónica o motor.',
 '- materiales: entre 1 y 4, solo los que el objeto lleva de verdad, con peso de 1 a 10 proporcional a cuánto contiene. Usa únicamente estos id: madera, metal, plastico, vidrio, tela, papel, piedra, goma, ceramica, electronica, organico, cuero.',
+'- piezas: componentes reutilizables que el objeto lleva de verdad, con cant = número aproximado de unidades. Usa únicamente estos id: tornillos, muelle, motor (motor eléctrico pequeño), cable, bisagra, neodimio (imán permanente, p. ej. de altavoces o motores), lente, chip (circuito integrado o placa), led. Lista vacía si no lleva ninguna.',
 '- Si valido es false, rellena solo valido y motivo.'
 ].join('\n');
 
 /* ---------- Estado ---------- */
-var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0};
+var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[]};
 MATS.forEach(function(m){state.inv[m.id]=0;});
 var ready=false,aiOk=false,aiWhy='',visorOk=false,busy=false,sampleFn=null,ctl=null,lastBlob=null,previewUrl=null;
 var mode='local',ref=null,unsub=null,saveState='',dirty=false,inflight=0,chain=Promise.resolve();
@@ -510,7 +550,7 @@ function hace(ts){
 }
 
 /* ---------- Guardado ---------- */
-function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,t:Date.now()};}
+function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,t:Date.now()};}
 function merge(d){
   if(!d||typeof d!=='object')return;
   var inv={};
@@ -527,6 +567,7 @@ function merge(d){
   state.planos=pl;state.tools=tl;
   state.monedas=Math.max(0,Math.floor(Number(d.monedas)||0));
   state.cola=(d.cola&&TOOL_BY[d.cola.id]&&Number(d.cola.fin)>0)?{id:String(d.cola.id),fin:Number(d.cola.fin)}:null;
+  state.extr=(Array.isArray(d.extr)?d.extr:[]).filter(function(e){return e&&e.id&&e.clave&&Array.isArray(e.mats)&&Number(e.fin)>0;}).slice(0,10);
 }
 function persist(){
   dirty=true;
@@ -586,7 +627,7 @@ function loadScript(src){
   });
 }
 function freshState(){
-  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0};
+  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[]};
   MATS.forEach(function(m){state.inv[m.id]=0;});
 }
 function loadLocal(){
@@ -801,9 +842,10 @@ function renderInv(){
     var q=state.inv[m.id]||0;total+=q;
     return '<div class="tile'+(q?'':' zero')+(m.rare?' rare':'')+'"><div class="sample mat-'+m.id+'"></div><div class="tm"><span class="tn">'+m.n+'</span><b class="tq">'+q+'</b></div></div>';
   };
-  var base=MATS.filter(function(m){return !m.rare;}),raros=MATS.filter(function(m){return m.rare;});
+  var base=MATS.filter(function(m){return !m.rare&&!m.pieza;}),raros=MATS.filter(function(m){return m.rare;}),piezas=MATS.filter(function(m){return m.pieza;});
   var html=base.map(tile).join('');
   if(raros.length)html+='<h3 class="inv-h">Materiales raros</h3>'+raros.map(tile).join('');
+  if(piezas.length)html+='<h3 class="inv-h">Piezas</h3>'+piezas.map(tile).join('');
   $('#invGrid').innerHTML=html;
   $('#invSum').textContent=total+(total===1?' unidad':' unidades');
 }
@@ -826,7 +868,7 @@ function renderLog(){
       '<div class="chips">'+mats+'</div></li>';
   }).join('');
 }
-function renderAll(){renderHeader();renderInv();renderLog();renderTaller();renderMarket();}
+function renderAll(){renderHeader();renderInv();renderLog();renderTaller();renderMarket();renderExtr();}
 function setPanel(html){$('#panel').innerHTML=html;}
 function setButtons(){
   var off=busy;
@@ -841,12 +883,16 @@ function showIdle(){
     $('#goSet').addEventListener('click',function(){show('set');});
     return;
   }
+  if(state.extr.length>=MAXE){
+    setPanel('<div class="card"><h2>Taller lleno</h2><p class="sub">Tienes '+MAXE+' extracciones en marcha. Recoge alguna para escanear otro objeto.</p></div>');
+    return;
+  }
   if(scansLeft()<=0){
     setPanel('<div class="card"><h2>Límite de hoy</h2><p class="sub">Has hecho '+DAILY+' escaneos hoy. Vuelve mañana con objetos nuevos.</p></div>');
     return;
   }
   setPanel('<div class="card"><h2>Cuanto más grande, más material</h2>'+ladder(null)+
-    '<ul class="tips"><li>Un solo objeto por foto.</li><li>Una mano o una moneda al lado afina el tamaño.</li><li>Repetir el mismo objeto rinde menos cada vez.</li><li>Las herramientas del Taller dan más material y materiales raros.</li><li>La foto no se guarda.</li></ul></div>');
+    '<ul class="tips"><li>Un solo objeto por foto.</li><li>Una mano o una moneda al lado afina el tamaño.</li><li>Repetir el mismo objeto rinde menos cada vez.</li><li>Tras escanear eliges herramientas y modo: la extracción rápida da menos y nunca planos.</li><li>Las herramientas del Taller dan más material y materiales raros.</li><li>La foto no se guarda.</li></ul></div>');
 }
 function setPreview(blob,scanning){
   if(previewUrl)URL.revokeObjectURL(previewUrl);
@@ -1166,12 +1212,19 @@ function sanitize(o){
   var mats=[];
   (Array.isArray(o.materiales)?o.materiales:[]).forEach(function(m){
     var id=String(m&&m.id||'').toLowerCase();
-    if(MAT_BY[id]&&!MAT_BY[id].rare&&!mats.some(function(x){return x.id===id;})){
+    if(MAT_BY[id]&&!MAT_BY[id].rare&&!MAT_BY[id].pieza&&!mats.some(function(x){return x.id===id;})){
       var p=Number(m.peso);if(!(p>0))p=1;mats.push({id:id,peso:Math.min(p,10)});
     }
   });
   if(!mats.length)return {ok:false,motivo:'no_objeto'};
-  return {ok:true,nombre:nombre,clave:clave,cm:cm,comp:comp,mats:mats.slice(0,4),dato:clean(o.dato,140)};
+  var cap={XS:4,S:12,M:30,L:60,XL:100}[sizeFor(cm).id]||30,piezas=[];
+  (Array.isArray(o.piezas)?o.piezas:[]).forEach(function(x){
+    var id=String(x&&x.id||'').toLowerCase();
+    if(MAT_BY[id]&&MAT_BY[id].pieza&&!piezas.some(function(y){return y.id===id;})){
+      var c=Math.round(Number(x.cant));if(!(c>=1))c=1;piezas.push({id:id,cant:Math.min(c,cap)});
+    }
+  });
+  return {ok:true,nombre:nombre,clave:clave,cm:cm,comp:comp,mats:mats.slice(0,4),piezas:piezas.slice(0,6),dato:clean(o.dato,140)};
 }
 function distribute(mats,total){
   var sum=mats.reduce(function(a,m){return a+m.peso;},0);
@@ -1221,77 +1274,219 @@ function showError(code){
   $('#again').addEventListener('click',function(){resetViewfinder();showIdle();});
   var r=$('#retry');if(r)r.addEventListener('click',function(){scan(lastBlob);});
 }
+/* ---------- Extracción ---------- */
+var MODOS=CAT.modos||[{id:'completa',n:'Completa',tiempo:1,cant:1,planos:true}],MODO_BY={};MODOS.forEach(function(m){MODO_BY[m.id]=m;});
+var TT=CAT.tiempoTalla||{XS:15,S:30,M:60,L:120,XL:240},MAXE=CAT.maxExtr||3;
+var pend=null,extDone={};
+function sizeById(id){for(var i=0;i<SIZES.length;i++)if(SIZES[i].id===id)return SIZES[i];return SIZES[2];}
+function hasMat(o,id){return o.mats.some(function(m){return m.id===id;});}
+function hasPz(o,id){return (o.piezas||[]).some(function(p){return p.id===id;});}
+function applies(tid,o){
+  var big=sizeById(o.size).base>=8;
+  switch(tid){
+    case 'guantes':case 'lupa':return true;
+    case 'sierra':return hasMat(o,'madera');
+    case 'iman':return hasMat(o,'metal')||hasPz(o,'neodimio');
+    case 'palanca':return big||hasPz(o,'bisagra');
+    case 'destornillador':return o.comp>=3||hasPz(o,'tornillos')||hasPz(o,'muelle')||hasPz(o,'motor');
+    case 'navaja':return hasMat(o,'madera')||hasMat(o,'organico');
+    case 'pelacables':return hasMat(o,'electronica')||hasPz(o,'cable');
+    case 'kit':return hasMat(o,'electronica')||hasPz(o,'chip')||hasPz(o,'led');
+  }
+  return false;
+}
+function piecesFor(tid,o){return (o.piezas||[]).filter(function(p){return MAT_BY[p.id]&&MAT_BY[p.id].tool===tid;});}
+function toolNote(tid,o){
+  var big=sizeById(o.size).base>=8,n=[];
+  var pz=piecesFor(tid,o).map(function(p){return p.cant+' '+MAT_BY[p.id].n.toLowerCase();});
+  if(pz.length)n.push('saca '+pz.join(', '));
+  switch(tid){
+    case 'guantes':n.push('+20 % de todo','−10 % de tiempo');break;
+    case 'lupa':n.push('25 % de subir la rareza');if(hasMat(o,'vidrio'))n.push('40 % de cristal óptico');break;
+    case 'sierra':n.push('+50 % de madera','−20 % de tiempo');break;
+    case 'iman':if(hasMat(o,'metal'))n.push('+50 % de metal');break;
+    case 'palanca':if(big)n.push('+40 % de material','−25 % de tiempo');break;
+    case 'destornillador':if(o.comp>=3)n.push('+2 electrónica','+1 metal','−25 % de tiempo');break;
+    case 'navaja':n.push('50 % de resina');break;
+    case 'pelacables':if(hasMat(o,'electronica'))n.push('cobre de la electrónica');break;
+    case 'kit':if(hasMat(o,'electronica'))n.push('silicio de la electrónica');break;
+  }
+  return n.join(' · ');
+}
+function extTime(o,tools,modo){
+  var T={};tools.forEach(function(t){T[t]=1;});
+  var base=(TT[o.size]||60)*(1+0.3*(o.comp-1)),f=1;
+  if(T.guantes)f*=0.9;
+  if(T.palanca&&sizeById(o.size).base>=8)f*=0.75;
+  if(T.destornillador&&o.comp>=3)f*=0.75;
+  if(T.sierra&&hasMat(o,'madera'))f*=0.8;
+  return Math.max(5,Math.round(base*f*modo.tiempo));
+}
+// Rendimiento. roll=false: lo seguro, y lo probable en "posibles"
+function yieldOf(o,tools,modo,roll){
+  var T={};tools.forEach(function(t){T[t]=1;});
+  var size=sizeById(o.size),comp=o.comp,eff=[],pos=[],q=modo.cant;
+  var chance=function(p){return roll?Math.random()<p:false;};
+  if(T.lupa&&comp<4){if(chance(0.25)){comp++;eff.push(['lupa','rareza +1']);}else if(!roll)pos.push('rareza +1');}
+  var rar=RAR[comp-1],mult=1;
+  if(T.guantes){mult*=1.2;eff.push(['guantes','+20 % de todo']);}
+  if(T.palanca&&size.base>=8){mult*=1.4;eff.push(['palanca','+40 % por ser grande']);}
+  var gm={};
+  distribute(o.mats,size.base*rar.m*(o.decay||1)*mult*q).forEach(function(g){gm[g.id]=g.amt;});
+  var add=function(id,n){gm[id]=(gm[id]||0)+n;};
+  var bump=function(id,k){var v=gm[id]||0,nv=Math.ceil(v*k);gm[id]=nv;return nv-v;};
+  if(T.sierra&&gm.madera)eff.push(['sierra','+'+bump('madera',1.5)+' madera']);
+  if(T.iman&&gm.metal)eff.push(['iman','+'+bump('metal',1.5)+' metal']);
+  if(T.destornillador&&comp>=3){var de=Math.max(1,Math.round(2*q));add('electronica',de);add('metal',1);eff.push(['destornillador','+'+de+' electrónica, +1 metal']);}
+  if(T.navaja&&(gm.madera||gm.organico)){
+    var rs=((gm.madera||0)+(gm.organico||0))>=8?2:1;
+    if(chance(0.5)){add('resina',rs);eff.push(['navaja','+'+rs+' resina']);}else if(!roll)pos.push(rs+' resina');
+  }
+  if(T.pelacables&&gm.electronica){var cu=Math.max(1,Math.floor(gm.electronica/2));add('cobre',cu);eff.push(['pelacables','+'+cu+' cobre']);}
+  if(T.lupa&&gm.vidrio){if(chance(0.4)){add('cristal',1);eff.push(['lupa','+1 cristal óptico']);}else if(!roll)pos.push('1 cristal óptico');}
+  if(T.kit&&gm.electronica){var si=comp>=4?2:1;add('silicio',si);eff.push(['kit','+'+si+' silicio']);}
+  (o.piezas||[]).forEach(function(pz){
+    var tl=MAT_BY[pz.id]&&MAT_BY[pz.id].tool;
+    if(tl&&T[tl]){var n=Math.max(1,Math.round(pz.cant*q));add(pz.id,n);eff.push([tl,'+'+n+' '+MAT_BY[pz.id].n.toLowerCase()]);}
+  });
+  Object.keys(gm).forEach(function(k){if(!(gm[k]>0)||!MAT_BY[k])delete gm[k];});
+  return {gm:gm,comp:comp,eff:eff,pos:pos,mult:mult};
+}
+function gainsList(gm){
+  return Object.keys(gm).map(function(id){return {id:id,amt:gm[id]};})
+    .sort(function(a,b){var ka=MAT_BY[a.id].pieza?2:MAT_BY[a.id].rare?1:0,kb=MAT_BY[b.id].pieza?2:MAT_BY[b.id].rare?1:0;return (ka-kb)||(b.amt-a.amt);});
+}
+function matChip(id,amt){var m=MAT_BY[id];return '<span class="chip'+(m.rare?' rare':'')+(m.pieza?' pz':'')+'"><i class="mat-'+id+'"></i>'+esc(m.n)+' '+amt+'</span>';}
+
 function applyScan(out){
   var r=sanitize(out);
   if(!r.ok){showRejected(r.motivo);return;}
   ensureDay();
-  var prev=state.disc[r.clave];
-  var n=prev&&prev.n?prev.n:0;
-  var decay=Math.max(0.2,1-0.25*n);
-  var size=sizeFor(r.cm);
-  var used={},eff=[];
-  var use=function(id,txt){used[id]=1;eff.push({id:id,txt:txt});};
-  var comp=r.comp;
-  if(has('lupa')&&comp<4&&Math.random()<0.25){comp++;use('lupa','rareza +1');}
-  var rar=RAR[comp-1],mult=1;
-  if(has('guantes')){mult*=1.2;use('guantes','+20 % de todo');}
-  if(has('palanca')&&size.base>=8){mult*=1.4;use('palanca','+40 % por ser grande');}
-  var gm={};
-  distribute(r.mats,size.base*rar.m*decay*mult).forEach(function(g){gm[g.id]=g.amt;});
-  var bump=function(id,k){var v=gm[id]||0,nv=Math.ceil(v*k);gm[id]=nv;return nv-v;};
-  if(has('sierra')&&gm.madera)use('sierra','+'+bump('madera',1.5)+' madera');
-  if(has('iman')&&gm.metal)use('iman','+'+bump('metal',1.5)+' metal');
-  if(has('destornillador')&&comp>=3){gm.electronica=(gm.electronica||0)+2;gm.metal=(gm.metal||0)+1;use('destornillador','+2 electrónica, +1 metal');}
-  if(has('navaja')&&(gm.madera||gm.organico)&&Math.random()<0.5){var rs=((gm.madera||0)+(gm.organico||0))>=8?2:1;gm.resina=(gm.resina||0)+rs;use('navaja','+'+rs+' resina');}
-  if(has('pelacables')&&gm.electronica){var cu=Math.max(1,Math.floor(gm.electronica/2));gm.cobre=(gm.cobre||0)+cu;use('pelacables','+'+cu+' cobre');}
-  if(has('lupa')&&gm.vidrio&&Math.random()<0.4){gm.cristal=(gm.cristal||0)+1;use('lupa','+1 cristal óptico');}
-  if(has('kit')&&gm.electronica){var si=comp>=4?2:1;gm.silicio=(gm.silicio||0)+si;use('kit','+'+si+' silicio');}
-  var rotas=[];
-  Object.keys(used).forEach(function(id){state.tools[id]=(state.tools[id]||0)-1;if(state.tools[id]<=0){delete state.tools[id];rotas.push(id);}});
-  var gains=Object.keys(gm).filter(function(id){return gm[id]>0&&MAT_BY[id];}).map(function(id){return {id:id,amt:gm[id]};})
-    .sort(function(a,b){return ((MAT_BY[a.id].rare?1:0)-(MAT_BY[b.id].rare?1:0))||(b.amt-a.amt);});
-  var units=gains.reduce(function(a,g){return a+g.amt;},0);
-  var first=!prev;
-  var xpGain=units+(first?5:0)+(comp-1)*2;
-  var lvlBefore=levelFor(state.xp);
+  state.day.n=(state.day.d===today()?state.day.n:0)+1;state.day.d=today();
+  var prev=state.disc[r.clave],n=prev&&prev.n?prev.n:0;
+  pend={id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),nombre:r.nombre,clave:r.clave,cm:r.cm,size:sizeFor(r.cm).id,comp:r.comp,
+    mats:r.mats,piezas:r.piezas,dato:r.dato,decay:Math.max(0.2,1-0.25*n),
+    first:!prev&&!state.extr.some(function(e){return e.clave===r.clave;}),tools:[],modo:'completa'};
+  pend.tools=TOOLS.filter(function(t){return has(t.id)&&applies(t.id,pend);}).map(function(t){return t.id;});
+  persist();renderHeader();
+  $('#vf').classList.remove('scan');
+  renderSetup();
+}
+function renderSetup(){
+  if(!pend)return;
+  var o=pend,size=sizeById(o.size),rar=RAR[o.comp-1],modo=MODO_BY[o.modo]||MODOS[MODOS.length-1];
+  var own=TOOLS.filter(function(t){return has(t.id)&&applies(t.id,o);});
+  var y=yieldOf(o,o.tools,modo,false),secs=extTime(o,o.tools,modo);
+  var full=state.extr.length>=MAXE;
+  var pzs=(o.piezas||[]).map(function(p){
+    var m=MAT_BY[p.id],t=TOOL_BY[m.tool],ok=o.tools.indexOf(m.tool)>=0;
+    return '<li><span class="sw mat-'+p.id+'"></span><span class="nm">'+p.cant+' '+esc(m.n.toLowerCase())+'</span><span class="mono '+(ok?'okc':'warn')+'">'+(ok?'con '+esc(t.n):(has(m.tool)?'activa '+esc(t.n):'necesitas '+esc(t?t.n:m.tool)))+'</span></li>';
+  }).join('');
+  var tl=own.length?own.map(function(t){
+    var on=o.tools.indexOf(t.id)>=0;
+    return '<label class="tool-opt'+(on?' on':'')+'"><input type="checkbox" data-tool="'+t.id+'"'+(on?' checked':'')+'><div><b>'+esc(t.n)+'</b><span>'+esc(toolNote(t.id,o))+'</span></div><em class="mono">'+state.tools[t.id]+' usos</em></label>';
+  }).join(''):'<p class="sub">No tienes herramientas que sirvan para este objeto. Fabrícalas o cómpralas en el Taller.</p>';
+  var md=MODOS.map(function(m){
+    var on=m.id===o.modo;
+    return '<button type="button" class="seg'+(on?' on':'')+'" data-modo="'+m.id+'" aria-pressed="'+on+'"><b>'+esc(m.n)+'</b><span>'+fmtT(extTime(o,o.tools,m))+'</span><span>'+Math.round(m.cant*100)+' %</span></button>';
+  }).join('');
+  var gl=gainsList(y.gm).map(function(g){return matChip(g.id,g.amt);}).join('');
+  setPanel('<article class="card setup">'+
+    '<div class="meta"><span class="pill r'+o.comp+'">'+rar.n+'</span><span class="sz">Talla '+size.id+' · '+fmtLen(o.cm)+'</span>'+(o.first?'<span class="new">Nuevo</span>':'')+'</div>'+
+    '<h2 class="name">'+esc(o.nombre)+'</h2>'+(o.dato?'<p class="dato">'+esc(o.dato)+'</p>':'')+
+    (pzs?'<h3 class="st-h">Piezas que lleva</h3><ul class="pzl">'+pzs+'</ul>':'')+
+    '<h3 class="st-h">Herramientas</h3><div class="tool-opts">'+tl+'</div>'+
+    '<h3 class="st-h">Extracción</h3><div class="segs" role="group" aria-label="Modo de extracción">'+md+'</div>'+
+    '<div class="sum"><p><b>'+fmtT(secs)+'</b> · '+esc(modo.n.toLowerCase())+'</p><div class="chips">'+gl+'</div>'+
+    (y.pos.length?'<p class="mono">Posible: '+esc(y.pos.join(', '))+'</p>':'')+
+    '<p class="mono">'+(modo.planos?'Puede dar fragmentos de plano'+(realTool(o)&&!(state.disc[o.clave]&&state.disc[o.clave].herr)?' y la herramienta real':'')+'.':'Sin planos: solo la extracción completa los da.')+'</p></div>'+
+    (o.tools.length?'<p class="note">Cada herramienta elegida gasta 1 uso al empezar.</p>':'')+
+    '<div class="row"><button class="btn primary" id="exStart" type="button"'+(full?' disabled':'')+'>'+(full?'Ya tienes '+MAXE+' extracciones en marcha':'Empezar extracción')+'</button><button class="btn" id="exDrop" type="button">Descartar</button></div>'+
+    '</article>');
+  $('#panel').querySelectorAll('[data-tool]').forEach(function(c){c.addEventListener('change',function(){
+    var id=c.dataset.tool,i=o.tools.indexOf(id);if(c.checked&&i<0)o.tools.push(id);if(!c.checked&&i>=0)o.tools.splice(i,1);renderSetup();});});
+  $('#panel').querySelectorAll('[data-modo]').forEach(function(bn){bn.addEventListener('click',function(){o.modo=bn.dataset.modo;renderSetup();});});
+  $('#exStart').addEventListener('click',startExtr);
+  $('#exDrop').addEventListener('click',function(){pend=null;resetViewfinder();showIdle();});
+}
+function startExtr(){
+  if(!pend||state.extr.length>=MAXE)return;
+  var o=pend,modo=MODO_BY[o.modo];
+  o.tools=o.tools.filter(function(t){return has(t);});
+  o.tools.forEach(function(t){state.tools[t]-=1;if(state.tools[t]<=0)delete state.tools[t];});
+  o.inicio=Date.now();o.fin=o.inicio+extTime(o,o.tools,modo)*1000;
+  state.extr.push(o);pend=null;
+  persist();renderAll();
+  resetViewfinder();showIdle();
+  toast('Extracción en marcha: '+o.nombre+'. Lista en '+fmtT((o.fin-o.inicio)/1000)+'.');
+}
+function renderExtr(){
+  var el=$('#extList');if(!el)return;
   var now=Date.now();
+  el.innerHTML=state.extr.map(function(e){
+    var done=now>=e.fin,tot=Math.max(1,e.fin-e.inicio),pct=Math.min(100,100*(now-e.inicio)/tot);
+    return '<div class="card ext'+(done?' done':'')+'" data-ex="'+esc(e.id)+'"><div class="crow"><b>'+esc(e.nombre)+'</b><span class="mono">'+esc((MODO_BY[e.modo]||{}).n||'')+'</span></div>'+
+      (e.tools.length?'<p class="mono">'+e.tools.map(function(t){return TOOL_BY[t]?TOOL_BY[t].n:t;}).join(' · ')+'</p>':'')+
+      (done?'<button class="btn primary" type="button" data-collect="'+esc(e.id)+'">Recoger</button>'
+        :'<div class="bar big"><i style="width:'+pct+'%"></i></div><p class="mono ex-left">Faltan '+fmtT((e.fin-now)/1000)+'</p>')+'</div>';
+  }).join('');
+  el.querySelectorAll('[data-collect]').forEach(function(bn){bn.addEventListener('click',function(){collect(bn.dataset.collect);});});
+}
+function tickExtr(){
+  var now=Date.now(),changed=false;
+  state.extr.forEach(function(e){
+    if(now>=e.fin&&!extDone[e.id]){extDone[e.id]=1;changed=true;toast('Extracción lista: '+e.nombre+'. Recógela en Escanear.');}
+  });
+  if(changed){renderExtr();setButtons();return;}
+  document.querySelectorAll('#extList .ext:not(.done)').forEach(function(c){
+    var e=state.extr.filter(function(x){return x.id===c.dataset.ex;})[0];if(!e)return;
+    var bar=c.querySelector('.bar i'),lt=c.querySelector('.ex-left');
+    if(bar)bar.style.width=Math.min(100,100*(now-e.inicio)/Math.max(1,e.fin-e.inicio))+'%';
+    if(lt)lt.textContent='Faltan '+fmtT((e.fin-now)/1000);
+  });
+}
+setInterval(tickExtr,1000);
+function collect(id){
+  var i=-1;state.extr.forEach(function(e,k){if(e.id===id)i=k;});
+  if(i<0)return;
+  var o=state.extr[i];if(Date.now()<o.fin)return;
+  var modo=MODO_BY[o.modo]||MODOS[MODOS.length-1];
+  var y=yieldOf(o,o.tools,modo,true);
+  var gains=gainsList(y.gm),units=gains.reduce(function(a,g){return a+g.amt;},0);
+  var prev=state.disc[o.clave],n=prev&&prev.n?prev.n:0,now=Date.now();
   var mats=Object.assign({},prev&&prev.mats||{});
   gains.forEach(function(g){state.inv[g.id]=(state.inv[g.id]||0)+g.amt;mats[g.id]=(mats[g.id]||0)+g.amt;});
-  state.disc[r.clave]={nombre:r.nombre,tam:size.id,rar:comp,n:n+1,primero:prev&&prev.primero||now,ultimo:now,mats:mats};
-  state.xp+=xpGain;
-  state.day.n=(state.day.d===today()?state.day.n:0)+1;state.day.d=today();
-  // Escanear una herramienta real (la primera vez): la herramienta y su plano
-  var real=first?realTool(r):null;
-  if(real){state.tools[real.id]=(state.tools[real.id]||0)+real.usos;if(real.frags)state.planos[real.id]=real.frags;}
-  var frag=dropFragment(r,first);
-  var lvlAfter=levelFor(state.xp);
-  persist();
-  renderAll();
-  $('#vf').classList.remove('scan');
+  var first=!prev;
+  state.disc[o.clave]={nombre:o.nombre,tam:o.size,rar:y.comp,n:n+1,primero:prev&&prev.primero||now,ultimo:now,mats:mats,herr:!!(prev&&prev.herr)};
+  var xpGain=units+(first?5:0)+(y.comp-1)*2+(modo.planos?3:0);
+  var lvlBefore=levelFor(state.xp);state.xp+=xpGain;
+  var real=null,frag=null;
+  if(modo.planos){
+    real=(prev&&prev.herr)?null:realTool(o);
+    if(real){state.tools[real.id]=(state.tools[real.id]||0)+real.usos;if(real.frags)state.planos[real.id]=real.frags;state.disc[o.clave].herr=true;}
+    frag=dropFragment(o,first);
+  }
+  state.extr.splice(i,1);delete extDone[id];
+  persist();renderAll();setButtons();
+  show('scan');
   var list=gains.map(function(g){
-    var rare=MAT_BY[g.id].rare;
-    return '<li'+(rare?' class="rare"':'')+'><span class="sw mat-'+g.id+'"></span><span class="nm">'+MAT_BY[g.id].n+(rare?' <em class="raro">raro</em>':'')+'</span><span class="qty">+'+g.amt+'</span></li>';
+    var m=MAT_BY[g.id],tag=m.rare?' <em class="raro">raro</em>':m.pieza?' <em class="raro pz">pieza</em>':'';
+    return '<li'+(m.rare||m.pieza?' class="rare"':'')+'><span class="sw mat-'+g.id+'"></span><span class="nm">'+esc(m.n)+tag+'</span><span class="qty">+'+g.amt+'</span></li>';
   }).join('');
-  var fx=eff.length?'<ul class="toolfx">'+eff.map(function(e){return '<li><b>'+esc(TOOL_BY[e.id].n)+'</b> '+esc(e.txt)+'</li>';}).join('')+'</ul>':'';
-  var broke=rotas.map(function(id){return '<p class="sub warn">Se ha gastado tu '+esc(TOOL_BY[id].n)+'. Fabrica otra en el Taller.</p>';}).join('');
+  var fx=y.eff.length?'<ul class="toolfx">'+y.eff.map(function(e){return '<li><b>'+esc(TOOL_BY[e[0]].n)+'</b> '+esc(e[1])+'</li>';}).join('')+'</ul>':'';
   var fr='';
   if(real)fr+='<p class="fragok">¡Es una herramienta de verdad! Añadida: '+esc(real.n)+' ('+real.usos+' usos)'+(real.frags?', y su plano para fabricar más':'')+'.</p>';
-  if(frag){
-    fr+=frag.full?'<p class="fragok">¡Plano completo: '+esc(frag.t.n)+'! Fabrícalo en el Taller.</p>'
-      :'<p class="frag">Fragmento de plano: <b>'+esc(frag.t.n)+'</b> ('+frag.n+'/'+frag.t.frags+')</p>';
-  }
+  if(frag)fr+=frag.full?'<p class="fragok">¡Plano completo: '+esc(frag.t.n)+'! Fabrícalo en el Taller.</p>':'<p class="frag">Fragmento de plano: <b>'+esc(frag.t.n)+'</b> ('+frag.n+'/'+frag.t.frags+')</p>';
+  if(!modo.planos)fr+='<p class="mono">Extracción '+esc(modo.n.toLowerCase())+': sin planos.</p>';
+  var lvlAfter=levelFor(state.xp);
   setPanel('<article class="card">'+
-    '<div class="meta"><span class="pill r'+comp+'">'+rar.n+'</span><span class="sz">Talla '+size.id+' · '+fmtLen(r.cm)+'</span>'+(first?'<span class="new">Nuevo</span>':'')+'</div>'+
-    '<h2 class="name">'+esc(r.nombre)+'</h2>'+
-    (r.dato?'<p class="dato">'+esc(r.dato)+'</p>':'')+
-    ladder(size.id)+
-    '<ul class="gains">'+list+'</ul>'+
-    fx+
-    '<p class="calc">'+size.base+' base × '+fmt(rar.m)+' rareza × '+fmt(decay)+' repetición'+(mult!==1?' × '+fmt(mult)+' herramientas':'')+'</p>'+
-    fr+broke+
-    '<p class="xp">+'+xpGain+' XP</p>'+
+    '<div class="meta"><span class="pill r'+y.comp+'">'+RAR[y.comp-1].n+'</span><span class="sz">Talla '+o.size+' · '+fmtLen(o.cm)+'</span>'+(first?'<span class="new">Nuevo</span>':'')+'</div>'+
+    '<h2 class="name">'+esc(o.nombre)+'</h2>'+
+    '<ul class="gains">'+list+'</ul>'+fx+
+    '<p class="calc">'+sizeById(o.size).base+' base × '+fmt(RAR[y.comp-1].m)+' rareza × '+fmt(o.decay||1)+' repetición × '+fmt(modo.cant)+' '+esc(modo.n.toLowerCase())+(y.mult!==1?' × '+fmt(y.mult)+' herramientas':'')+'</p>'+
+    fr+'<p class="xp">+'+xpGain+' XP</p>'+
     (lvlAfter>lvlBefore?'<p class="lvlup">Subes al nivel '+lvlAfter+'</p>':'')+
-    '<button class="btn primary" id="again" type="button">Escanear otro objeto</button></article>');
+    '<button class="btn primary" id="again" type="button">Seguir</button></article>');
   $('#again').addEventListener('click',function(){resetViewfinder();showIdle();});
 }
 async function scan(file){
@@ -1301,13 +1496,14 @@ async function scan(file){
   if(!aiOk){showIdle();return;}
   ensureDay();
   if(scansLeft()<=0){showIdle();return;}
+  if(state.extr.length>=MAXE){showIdle();return;}
   busy=true;setButtons();
   ctl=new AbortController();
   var blob=file;
   try{blob=await prepareImage(file);}catch(e){blob=file;}
   lastBlob=blob;
   setPreview(blob,true);
-  setPanel('<div class="card"><p class="busy">Analizando el objeto</p><p class="sub">La primera vez, Claude te pedirá permiso. Acéptalo para escanear.</p><button class="btn" id="stop" type="button">Cancelar</button></div>');
+  setPanel('<div class="card"><p class="busy">Analizando el objeto</p><p class="sub">La IA está identificando el objeto, sus materiales y sus piezas.</p><button class="btn" id="stop" type="button">Cancelar</button></div>');
   var stop=$('#stop'),c=ctl;
   stop.addEventListener('click',function(){c.abort();});
   try{

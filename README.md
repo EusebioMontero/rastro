@@ -27,14 +27,15 @@ Proyecto: `rastro-3fa4c`. Métodos de acceso que hay que tener activados en Auth
 | Ruta | Contenido |
 |---|---|
 | `users/{uid}/rastro/config` | proveedor de IA, claves y modelos |
-| `users/{uid}/rastro/save` | inventario, monedas, diario, XP, planos, herramientas y fabricación en curso |
+| `users/{uid}/rastro/save` | inventario (materiales, raros y piezas), monedas, diario, XP, planos, herramientas, fabricación y extracciones en curso |
 | `mercado/{id}` | ofertas entre jugadores: vendedor, material, cantidad, precio y estado (`abierta`, `vendida`, `cancelada`) |
 
 Las reglas de `firestore.rules` permiten que cada jugador solo toque su partida y que en el mercado solo se pueda publicar a tu nombre, comprar ofertas abiertas de otros, retirar las tuyas y cobrar una vez.
 
 ## Juego
 
-- **Escanear**: materiales según tamaño, rareza y composición del objeto.
+- **Escanear**: la IA identifica el objeto, sus materiales y las piezas que lleva (tornillos, muelles, motor, cable, bisagras, neodimio, lentes, chips, LED).
+- **Extraer**: tras escanear eliges herramientas y modo (rápida 20 % del tiempo y 30 % del material, media 50 %/60 %, completa). El tiempo depende de talla, complejidad y herramientas; sigue avanzando con la app cerrada; hasta 3 a la vez. Solo la extracción completa da planos (y la herramienta real, la primera vez). Las piezas solo salen con su herramienta (destornillador: tornillos, muelles y motores; pelacables: cable; palanca: bisagras; imán: neodimio; lupa: lentes; kit: chips y LED).
 - **Taller**: herramientas que dan más material o materiales raros (Cobre, Silicio, Resina, Cristal óptico); se gastan con el uso. Planos por fragmentos al escanear, comprándolos en la tienda, o escaneando la herramienta real (la primera vez te la llevas con su plano). El catálogo está en `catalogo.js`.
 - **Tienda**: vender materiales por monedas y comprar planos.
 - **Mercado**: un jugador publica una cantidad de material por un precio; otro la compra y el intercambio es inmediato. El vendedor cobra al abrir Rastro.
