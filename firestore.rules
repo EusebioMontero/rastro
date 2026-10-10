@@ -11,9 +11,12 @@ service cloud.firestore {
     match /mercado/{id} {
       allow read: if request.auth != null;
 
-      // Publicar: siempre a tu nombre, abierta y con valores razonables
+      // Publicar: siempre a tu nombre, abierta y con valores razonables (material o plano; un plano puede pedir otro a cambio)
       allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['vendedor', 'alias', 'mat', 'cant', 'precio', 'estado', 'creada'])
+        && request.resource.data.keys().hasOnly(['vendedor', 'alias', 'tipo', 'mat', 'cant', 'precio', 'pide', 'estado', 'creada'])
+        && request.resource.data.get('tipo', 'mat') in ['mat', 'plano']
+        && request.resource.data.get('pide', '') is string && request.resource.data.get('pide', '').size() <= 20
+        && (request.resource.data.get('tipo', 'mat') == 'mat' || request.resource.data.cant == 1)
         && request.resource.data.vendedor == request.auth.uid
         && request.resource.data.estado == 'abierta'
         && request.resource.data.mat is string && request.resource.data.mat.size() <= 20

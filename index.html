@@ -310,6 +310,7 @@ button{font-family:inherit}
 .ma-log{overflow-y:auto;display:grid;gap:8px;min-height:60px;max-height:45vh}
 .ma-q{justify-self:end;background:var(--accent);color:var(--on-accent);padding:8px 12px;border-radius:12px 12px 2px 12px;max-width:85%;font-size:14px}
 .ma-a{background:var(--bg);border:1px solid var(--line);padding:10px 12px;border-radius:12px 12px 12px 2px;max-width:92%;font-size:15px}
+.plano-sw{background:repeating-linear-gradient(0deg,rgba(255,255,255,.25) 0 1px,transparent 1px 6px),repeating-linear-gradient(90deg,rgba(255,255,255,.25) 0 1px,transparent 1px 6px),#1f4f8a}
 .linkbtn{background:none;border:0;padding:4px 0;color:var(--accent);font:500 14px var(--f-body);text-decoration:underline;cursor:pointer;justify-self:start}
 .adv{border-top:1px solid var(--line);padding-top:10px}
 .adv summary{cursor:pointer;font-weight:600;color:var(--ink-2);padding:6px 0}
@@ -408,10 +409,11 @@ button{font-family:inherit}
         <div class="sec-h sub-h"><h2>Mercado</h2><span class="mono">entre jugadores</span></div>
         <form id="mkForm" class="card provs" novalidate>
           <h2>Publicar una oferta</h2>
-          <div class="field"><label for="mk-mat">Material</label><select id="mk-mat"></select></div>
+          <div class="field"><label for="mk-mat">Qué ofreces</label><select id="mk-mat"></select></div>
+          <div class="field" id="mk-pide-f" hidden><label for="mk-pide">A cambio de otro plano (opcional)</label><select id="mk-pide"></select></div>
           <div class="row">
-            <div class="field"><label for="mk-cant">Cantidad</label><input id="mk-cant" type="number" inputmode="numeric" min="1" step="1" value="1"></div>
-            <div class="field"><label for="mk-precio">Precio total</label><input id="mk-precio" type="number" inputmode="numeric" min="0" step="1" value="10"></div>
+            <div class="field" id="mk-cant-f"><label for="mk-cant">Cantidad</label><input id="mk-cant" type="number" inputmode="numeric" min="1" step="1" value="1"></div>
+            <div class="field"><label for="mk-precio" id="mk-precio-l">Precio total</label><input id="mk-precio" type="number" inputmode="numeric" min="0" step="1" value="10"></div>
           </div>
           <p class="note" id="mkRef"></p>
           <button class="btn primary" id="mkPub" type="submit">Publicar oferta</button>
@@ -1072,6 +1074,11 @@ function renderTienda(){
         '<button class="btn sm" type="button" data-sell="'+m.id+'">Vender 1</button>'+
         (q>1?'<button class="btn sm'+(sellArm===m.id?' primary':'')+'" type="button" data-sellall="'+m.id+'">'+(sellArm===m.id?'¿Seguro? '+(q*pr):'Todo · '+(q*pr))+'</button>':'')+'</li>';
     }).join('')+'</ul>':'<p class="sub">No tienes materiales para vender. Escanea objetos para conseguirlos.</p>')+'</div>';
+  var mine=TOOLS.filter(planTradable);
+  if(mine.length)h+='<div class="card"><h2>Vender planos</h2><p class="note">La tienda paga la mitad de su precio. Al venderlo dejas de tener el plano; tus herramientas ya fabricadas se quedan.</p><ul class="sell">'+mine.map(function(t){
+    var pr=Math.floor((t.precio||0)/2),arm=sellArm==='p:'+t.id;
+    return '<li><span class="sw plano-sw" aria-hidden="true"></span><div class="sn"><b>Plano de '+esc(t.n)+'</b><span class="mono">en tienda '+(t.precio||0)+' monedas</span></div><button class="btn sm'+(arm?' primary':'')+'" type="button" data-sellplan="'+t.id+'">'+(arm?'¿Seguro? +'+pr:'Vender · '+pr)+'</button></li>';
+  }).join('')+'</ul></div>';
   var plans=TOOLS.filter(function(t){return !known(t);});
   h+='<div class="card"><h2>Planos a la venta</h2>'+(plans.length?'<ul class="sell">'+plans.map(function(t){
     var lock=t.tech&&!tech(t.tech),pr=precioPlano(t),fr=state.planos[t.id]||0;
@@ -1082,6 +1089,16 @@ function renderTienda(){
   el.querySelectorAll('[data-sell]').forEach(function(b){b.addEventListener('click',function(){sell(b.dataset.sell,false);});});
   el.querySelectorAll('[data-sellall]').forEach(function(b){b.addEventListener('click',function(){sell(b.dataset.sellall,true);});});
   el.querySelectorAll('[data-buy]').forEach(function(b){b.addEventListener('click',function(){buyPlano(b.dataset.buy);});});
+  el.querySelectorAll('[data-sellplan]').forEach(function(b){b.addEventListener('click',function(){sellPlan(b.dataset.sellplan);});});
+}
+function sellPlan(id){
+  var t=TOOL_BY[id];if(!planTradable(t))return;
+  if(sellArm!=='p:'+id){sellArm='p:'+id;renderTienda();return;}
+  sellArm='';
+  var pr=Math.floor((t.precio||0)/2);
+  state.planos[id]=0;state.monedas+=pr;
+  persist();renderAll();
+  toast('Plano de '+t.n+' vendido por '+pr+' monedas.');
 }
 function techFree(t){return !(t.monedas||0)&&!Object.keys(t.coste||{}).length;}
 function techOpen(t){return !tech(t.id)&&(state.topen[t.id]||(t.req.every(tech)&&techFree(t)));}
@@ -1191,24 +1208,46 @@ function mkErr(e){
   if(c==='vendida')return 'Esa oferta ya no está disponible.';
   if(c==='monedas')return 'No tienes monedas suficientes.';
   if(c==='material')return 'No tienes tanta cantidad de ese material.';
+  if(c==='yaplano')return 'Ya tienes ese plano.';
+  if(c==='faltaplano')return 'No tienes el plano que piden a cambio.';
   if(c==='permission-denied')return 'El mercado ha rechazado la operación. Revisa las reglas de Firestore.';
   return 'No se pudo completar. Revisa la conexión e inténtalo otra vez.';
 }
-async function mkPublicar(mat,cant,precio){
+function planTradable(t){return t&&t.frags>0&&known(t);}
+function offTipo(o){return o.tipo==='plano'?'plano':'mat';}
+function offValid(o){return offTipo(o)==='plano'?!!TOOL_BY[o.mat]:!!MAT_BY[o.mat];}
+function offName(o){return offTipo(o)==='plano'?'Plano de '+TOOL_BY[o.mat].n:o.cant+' de '+matName(o.mat);}
+function offSw(o){return offTipo(o)==='plano'?'<span class="sw plano-sw" aria-hidden="true"></span>':'<span class="sw mat-'+o.mat+'"></span>';}
+function offTerms(o){
+  var pide=o.pide&&TOOL_BY[o.pide]?'a cambio del plano de '+TOOL_BY[o.pide].n:'';
+  return pide?(pide+(o.precio?' + '+o.precio+' monedas':'')):o.precio+' monedas';
+}
+async function mkPublicar(tipo,item,cant,precio,pide){
   if(mk.busy||!fb.user||mode!=='firebase')return;
-  if(!MAT_BY[mat]||!(cant>=1)||!(precio>=0))return;
-  if((state.inv[mat]||0)<cant){mkMsg(mkErr({code:'material'}),true);return;}
+  if(!(precio>=0))return;
+  if(tipo==='plano'){
+    var t=TOOL_BY[item];
+    if(!planTradable(t)){mkMsg('No tienes ese plano.',true);return;}
+    if(pide&&(!TOOL_BY[pide]||pide===item)){mkMsg('Elige otro plano a cambio.',true);return;}
+    cant=1;
+  }else{
+    if(!MAT_BY[item]||!(cant>=1))return;
+    if((state.inv[item]||0)<cant){mkMsg(mkErr({code:'material'}),true);return;}
+    pide='';
+  }
   mk.busy=true;mkMsg('Publicando…');
   try{
     var ref=fb.db.collection('mercado').doc();
-    var save=saveWith(function(d){d.inv[mat]-=cant;});
+    var save=saveWith(function(d){if(tipo==='plano')d.planos[item]=0;else d.inv[item]-=cant;});
     var b=fb.db.batch();
-    b.set(ref,{vendedor:fb.user.uid,alias:mkAlias(),mat:mat,cant:cant,precio:precio,estado:'abierta',creada:Date.now()});
+    var doc={vendedor:fb.user.uid,alias:mkAlias(),tipo:tipo,mat:item,cant:cant,precio:precio,estado:'abierta',creada:Date.now()};
+    if(pide)doc.pide=pide;
+    b.set(ref,doc);
     b.set(fbDoc('save'),save);
     await b.commit();
-    state.inv[mat]-=cant;
+    if(tipo==='plano')state.planos[item]=0;else state.inv[item]-=cant;
     persist();renderAll();
-    mkMsg('Oferta publicada: '+cant+' de '+matName(mat)+' por '+precio+' monedas.');
+    mkMsg('Oferta publicada: '+offName(doc)+', '+offTerms(doc)+'.');
   }catch(e){mkMsg(mkErr(e),true);}
   mk.busy=false;renderMarket();
 }
@@ -1220,15 +1259,24 @@ async function mkComprar(id){
     await fb.db.runTransaction(async function(tx){
       var snap=await tx.get(mkRef(id));
       var o=snap.exists?snap.data():null;
-      if(!o||o.estado!=='abierta'||o.vendedor===fb.user.uid)throw {code:'vendida'};
+      if(!o||o.estado!=='abierta'||o.vendedor===fb.user.uid||!offValid(o))throw {code:'vendida'};
       if(state.monedas<o.precio)throw {code:'monedas'};
+      var plano=offTipo(o)==='plano';
+      if(plano&&known(TOOL_BY[o.mat]))throw {code:'yaplano'};
+      if(plano&&o.pide&&!planTradable(TOOL_BY[o.pide]))throw {code:'faltaplano'};
       tx.update(mkRef(id),{estado:'vendida',comprador:fb.user.uid,vendidaEn:Date.now()});
-      tx.set(fbDoc('save'),saveWith(function(d){d.monedas-=o.precio;d.inv[o.mat]=(d.inv[o.mat]||0)+o.cant;}));
+      tx.set(fbDoc('save'),saveWith(function(d){
+        d.monedas-=o.precio;
+        if(plano){d.planos[o.mat]=TOOL_BY[o.mat].frags;if(o.pide)d.planos[o.pide]=0;}
+        else d.inv[o.mat]=(d.inv[o.mat]||0)+o.cant;
+      }));
       got=o;
     });
-    state.monedas-=got.precio;state.inv[got.mat]=(state.inv[got.mat]||0)+got.cant;
+    state.monedas-=got.precio;
+    if(offTipo(got)==='plano'){state.planos[got.mat]=TOOL_BY[got.mat].frags;if(got.pide)state.planos[got.pide]=0;}
+    else state.inv[got.mat]=(state.inv[got.mat]||0)+got.cant;
     persist();renderAll();
-    toast('Comprado: '+got.cant+' de '+matName(got.mat)+' por '+got.precio+' monedas.');
+    toast((got.pide?'Cambio hecho: ':'Comprado: ')+offName(got)+(got.pide?' por el plano de '+TOOL_BY[got.pide].n:'')+(got.precio?' ('+got.precio+' monedas)':'')+'.');
   }catch(e){toast(mkErr(e));}
   mk.busy=false;renderMarket();
 }
@@ -1240,14 +1288,14 @@ async function mkCancelar(id){
     await fb.db.runTransaction(async function(tx){
       var snap=await tx.get(mkRef(id));
       var o=snap.exists?snap.data():null;
-      if(!o||o.estado!=='abierta'||o.vendedor!==fb.user.uid)throw {code:'vendida'};
+      if(!o||o.estado!=='abierta'||o.vendedor!==fb.user.uid||!offValid(o))throw {code:'vendida'};
       tx.update(mkRef(id),{estado:'cancelada'});
-      tx.set(fbDoc('save'),saveWith(function(d){d.inv[o.mat]=(d.inv[o.mat]||0)+o.cant;}));
+      tx.set(fbDoc('save'),saveWith(function(d){if(offTipo(o)==='plano')d.planos[o.mat]=TOOL_BY[o.mat].frags;else d.inv[o.mat]=(d.inv[o.mat]||0)+o.cant;}));
       got=o;
     });
-    state.inv[got.mat]=(state.inv[got.mat]||0)+got.cant;
+    if(offTipo(got)==='plano')state.planos[got.mat]=TOOL_BY[got.mat].frags;else state.inv[got.mat]=(state.inv[got.mat]||0)+got.cant;
     persist();renderAll();
-    toast('Oferta retirada. Recuperas '+got.cant+' de '+matName(got.mat)+'.');
+    toast('Oferta retirada. Recuperas: '+offName(got)+'.');
   }catch(e){toast(mkErr(e));}
   mk.busy=false;renderMarket();
 }
@@ -1261,39 +1309,58 @@ async function mkCobrar(id){
       var o=snap.exists?snap.data():null;
       if(!o||o.estado!=='vendida'||o.cobrado||o.vendedor!==fb.user.uid){got=null;return;}
       tx.update(mkRef(id),{cobrado:true});
-      tx.set(fbDoc('save'),saveWith(function(d){d.monedas+=o.precio;}));
+      tx.set(fbDoc('save'),saveWith(function(d){d.monedas+=o.precio;if(o.pide&&TOOL_BY[o.pide])d.planos[o.pide]=TOOL_BY[o.pide].frags;}));
       got=o;
     });
     if(got){
-      state.monedas+=got.precio;persist();renderAll();
-      toast('Has vendido '+got.cant+' de '+matName(got.mat)+': +'+got.precio+' monedas.');
+      state.monedas+=got.precio;if(got.pide&&TOOL_BY[got.pide])state.planos[got.pide]=TOOL_BY[got.pide].frags;
+      persist();renderAll();
+      toast('Has '+(got.pide?'cambiado ':'vendido ')+(offTipo(got)==='plano'?'el plano de '+TOOL_BY[got.mat].n:offName(got))+(got.pide?': ahora tienes el plano de '+TOOL_BY[got.pide].n:'')+(got.precio?' (+'+got.precio+' monedas)':'')+'.');
     }
   }catch(e){}
   delete mk.cobrando[id];
 }
 function renderMarket(){
   var box=$('#mercado');if(!box||box.hidden)return;
-  // selector de material (conserva la elección)
+  // qué ofreces: materiales y planos (conserva la elección)
   var sel=$('#mk-mat'),cur=sel.value;
   var mats=MATS.filter(function(m){return (state.inv[m.id]||0)>0;});
-  sel.innerHTML=mats.length?mats.map(function(m){return '<option value="'+m.id+'">'+m.n+' (tienes '+state.inv[m.id]+')</option>';}).join(''):'<option value="">No tienes materiales</option>';
-  if(cur&&mats.some(function(m){return m.id===cur;}))sel.value=cur;
-  $('#mkPub').disabled=!mats.length||mk.busy;
-  var m0=sel.value;
-  $('#mkRef').textContent=m0?'La tienda paga '+(VENTA[m0]||1)+' monedas por unidad de '+matName(m0).toLowerCase()+'. Los materiales quedan apartados hasta que alguien compre o retires la oferta.':'';
+  var plans=TOOLS.filter(planTradable);
+  var opts='';
+  if(mats.length)opts+='<optgroup label="Materiales y piezas">'+mats.map(function(m){return '<option value="m:'+m.id+'">'+m.n+' (tienes '+state.inv[m.id]+')</option>';}).join('')+'</optgroup>';
+  if(plans.length)opts+='<optgroup label="Planos">'+plans.map(function(t){return '<option value="p:'+t.id+'">Plano de '+t.n+'</option>';}).join('')+'</optgroup>';
+  sel.innerHTML=opts||'<option value="">No tienes nada que ofrecer</option>';
+  if(cur&&sel.querySelector('option[value="'+cur+'"]'))sel.value=cur;
+  var v=sel.value,isPlan=v.indexOf('p:')===0,item=v.slice(2);
+  $('#mk-cant-f').hidden=isPlan;$('#mk-pide-f').hidden=!isPlan;
+  $('#mk-precio-l').textContent=isPlan?'Monedas (0 si solo cambias)':'Precio total';
+  if(isPlan){
+    var ps=$('#mk-pide'),pc=ps.value;
+    var wants=TOOLS.filter(function(t){return t.frags>0&&!known(t)&&t.id!==item;});
+    ps.innerHTML='<option value="">Nada, solo monedas</option>'+wants.map(function(t){return '<option value="'+t.id+'">Plano de '+t.n+'</option>';}).join('');
+    if(pc&&ps.querySelector('option[value="'+pc+'"]'))ps.value=pc;
+  }
+  $('#mkPub').disabled=!v||mk.busy;
+  $('#mkRef').textContent=!v?'':isPlan?'La tienda lo vende por '+(TOOL_BY[item].precio||0)+' monedas. Mientras esté publicada dejas de tener el plano; si retiras la oferta, lo recuperas. Tus herramientas ya fabricadas no se pierden.'
+    :'La tienda paga '+(VENTA[item]||1)+' monedas por unidad de '+matName(item).toLowerCase()+'. Los materiales quedan apartados hasta que alguien compre o retires la oferta.';
   // ofertas de otros
-  var others=mk.open.filter(function(o){return fb.user&&o.vendedor!==fb.user.uid&&MAT_BY[o.mat];}).sort(function(a,b){return (b.creada||0)-(a.creada||0);});
+  var others=mk.open.filter(function(o){return fb.user&&o.vendedor!==fb.user.uid&&offValid(o);}).sort(function(a,b){return (b.creada||0)-(a.creada||0);});
   $('#mkList').innerHTML=others.length?others.map(function(o){
-    var pu=o.cant?Math.round(o.precio/o.cant*10)/10:0;
-    return '<li><span class="sw mat-'+o.mat+'"></span><div class="sn"><b>'+o.cant+' de '+esc(matName(o.mat))+'</b><span class="mono">'+esc(o.alias||'Jugador')+' · '+fmt(pu)+' c/u</span></div>'+
-      '<button class="btn sm primary" type="button" data-mkbuy="'+esc(o.id)+'"'+(mk.busy||state.monedas<o.precio?' disabled':'')+'>Comprar · '+o.precio+'</button></li>';
+    var plano=offTipo(o)==='plano',why='';
+    if(plano&&known(TOOL_BY[o.mat]))why='Ya lo tienes';
+    else if(plano&&o.pide&&!planTradable(TOOL_BY[o.pide]))why='Te falta el plano de '+TOOL_BY[o.pide].n;
+    else if(state.monedas<o.precio)why='Faltan monedas';
+    var label=why||(o.pide?'Cambiar'+(o.precio?' + '+o.precio:''):'Comprar · '+o.precio);
+    var sub=plano?offTerms(o):(o.cant?fmt(Math.round(o.precio/o.cant*10)/10)+' c/u · ':'')+o.precio+' monedas';
+    return '<li>'+offSw(o)+'<div class="sn"><b>'+esc(offName(o))+'</b><span class="mono">'+esc(o.alias||'Jugador')+' · '+esc(sub)+'</span></div>'+
+      '<button class="btn sm'+(why?'':' primary')+'" type="button" data-mkbuy="'+esc(o.id)+'"'+(mk.busy||why?' disabled':'')+'>'+esc(label)+'</button></li>';
   }).join(''):'<li class="empty-li">Ahora mismo no hay ofertas de otros jugadores.</li>';
   // mis ofertas
-  var mine=mk.mine.filter(function(o){return o.estado!=='cancelada'&&MAT_BY[o.mat];}).sort(function(a,b){return (b.creada||0)-(a.creada||0);}).slice(0,20);
+  var mine=mk.mine.filter(function(o){return o.estado!=='cancelada'&&offValid(o);}).sort(function(a,b){return (b.creada||0)-(a.creada||0);}).slice(0,20);
   $('#mkMine').innerHTML=mine.length?mine.map(function(o){
     var right=o.estado==='abierta'?'<button class="btn sm" type="button" data-mkcancel="'+esc(o.id)+'"'+(mk.busy?' disabled':'')+'>Retirar</button>'
-      :'<span class="st ok">Vendida'+(o.cobrado?' · cobrada':'')+'</span>';
-    return '<li><span class="sw mat-'+o.mat+'"></span><div class="sn"><b>'+o.cant+' de '+esc(matName(o.mat))+'</b><span class="mono">'+o.precio+' monedas</span></div>'+right+'</li>';
+      :'<span class="st ok">'+(o.pide?'Cambiada':'Vendida')+(o.cobrado?' · cobrada':'')+'</span>';
+    return '<li>'+offSw(o)+'<div class="sn"><b>'+esc(offName(o))+'</b><span class="mono">'+esc(offTerms(o))+'</span></div>'+right+'</li>';
   }).join(''):'<li class="empty-li">No tienes ofertas publicadas.</li>';
   box.querySelectorAll('[data-mkbuy]').forEach(function(b){b.addEventListener('click',function(){mkComprar(b.dataset.mkbuy);});});
   box.querySelectorAll('[data-mkcancel]').forEach(function(b){b.addEventListener('click',function(){mkCancelar(b.dataset.mkcancel);});});
@@ -1301,11 +1368,13 @@ function renderMarket(){
 $('#mk-mat').addEventListener('change',renderMarket);
 $('#mkForm').addEventListener('submit',function(e){
   e.preventDefault();
-  var mat=$('#mk-mat').value,cant=Math.floor(Number($('#mk-cant').value)),precio=Math.floor(Number($('#mk-precio').value));
-  if(!mat){mkMsg('Elige un material.',true);return;}
-  if(!(cant>=1&&cant<=999)){mkMsg('La cantidad debe estar entre 1 y 999.',true);return;}
+  var v=$('#mk-mat').value,cant=Math.floor(Number($('#mk-cant').value)),precio=Math.floor(Number($('#mk-precio').value));
+  if(!v){mkMsg('Elige qué ofreces.',true);return;}
+  var tipo=v.indexOf('p:')===0?'plano':'mat',item=v.slice(2),pide=tipo==='plano'?$('#mk-pide').value:'';
+  if(tipo==='mat'&&!(cant>=1&&cant<=999)){mkMsg('La cantidad debe estar entre 1 y 999.',true);return;}
   if(!(precio>=0&&precio<=100000)){mkMsg('El precio debe estar entre 0 y 100.000 monedas.',true);return;}
-  mkPublicar(mat,cant,precio);
+  if(tipo==='plano'&&!pide&&precio<1){mkMsg('Pon un precio o elige un plano a cambio.',true);return;}
+  mkPublicar(tipo,item,cant,precio,pide);
 });
 
 function dropFragment(r,first){

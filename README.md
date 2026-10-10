@@ -28,7 +28,7 @@ Proyecto: `rastro-3fa4c`. Métodos de acceso que hay que tener activados en Auth
 |---|---|
 | `users/{uid}/rastro/config` | proveedor de IA, claves y modelos |
 | `users/{uid}/rastro/save` | inventario (materiales, raros y piezas), monedas, diario, XP, planos, herramientas, fabricación y extracciones en curso |
-| `mercado/{id}` | ofertas entre jugadores: vendedor, material, cantidad, precio y estado (`abierta`, `vendida`, `cancelada`) |
+| `mercado/{id}` | ofertas entre jugadores: vendedor, tipo (`mat` o `plano`), material o plano, cantidad, precio, plano pedido a cambio y estado (`abierta`, `vendida`, `cancelada`) |
 
 Las reglas de `firestore.rules` permiten que cada jugador solo toque su partida y que en el mercado solo se pueda publicar a tu nombre, comprar ofertas abiertas de otros, retirar las tuyas y cobrar una vez.
 
@@ -40,7 +40,7 @@ Las reglas de `firestore.rules` permiten que cada jugador solo toque su partida 
 - **Extraer**: tras escanear eliges herramientas y modo (rápida 20 % del tiempo y 30 % del material, media 50 %/60 %, completa). El tiempo depende de talla, complejidad y herramientas; sigue avanzando con la app cerrada; hasta 3 a la vez. Solo la extracción completa da planos; si el objeto es una herramienta básica de verdad, su primera extracción completa te da su plano (nunca la herramienta). Las piezas solo salen con su herramienta (destornillador: tornillos, muelles y motores; pelacables: cable; palanca: bisagras; imán: neodimio; lupa: lentes; kit: chips y LED).
 - **Taller**: fabricar herramientas que dan más material, piezas o materiales raros (Cobre, Silicio, Resina, Cristal óptico); se gastan con el uso. Planos por fragmentos en extracciones completas, en la Tienda o extrayendo la herramienta real (solo las básicas). Las avanzadas (Lupa, Kit de precisión) se entienden estudiando su tecnología.
 - **Tecnología**: árbol de 9 tecnologías en 4 niveles. Una tecnología abierta solo crece con conocimiento: la primera extracción completa de cada objeto nuevo suma su complejidad al campo que dice la IA (Mecánica, Electricidad, Óptica, Materiales, Química). Al llenarse se aprende (efectos y planos: Óptica → Lupa, Microelectrónica → Kit). Desbloquear las siguientes cuesta monedas y materiales. Observación viene abierta y crece con cualquier campo.
-- **Tienda**: vender materiales y piezas por monedas, comprar planos y el **Mercado** entre jugadores (un jugador publica una cantidad por un precio; otro la compra al momento; el vendedor cobra al abrir Rastro).
+- **Tienda**: vender materiales, piezas y planos (la tienda paga la mitad y dejas de tener el plano), comprar planos y el **Mercado** entre jugadores: se publica material o un plano por monedas, a cambio de otro plano o ambas cosas; otro jugador lo compra o cambia al momento; el vendedor cobra al abrir Rastro. Lo ofrecido queda apartado hasta que se vende o se retira.
 - Todo el equilibrio (tiempos, modos, piezas, herramientas, tecnologías, precios) está en `catalogo.js`.
 
 ## Hoja de ruta
