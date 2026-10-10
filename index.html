@@ -189,7 +189,11 @@ button{font-family:inherit}
 .field{display:grid;gap:4px;min-width:0}
 .field label{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 .field input{min-height:46px;padding:0 12px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--bg);color:var(--ink);font:500 15px var(--f-mono);width:100%}
-.field input:focus{outline:none;border-color:var(--accent)}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
+.field select{min-height:46px;padding:0 10px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--bg);color:var(--ink);font:500 14px var(--f-mono);width:100%;max-width:100%}
+.adv{border-top:1px solid var(--line);padding-top:10px}
+.adv summary{cursor:pointer;font-weight:600;color:var(--ink-2);padding:6px 0}
+.adv[open] summary{margin-bottom:8px}
 .note{font-size:13px;color:var(--ink-2)}
 .note a{color:var(--accent)}
 .ok-msg{font:600 12px var(--f-mono);color:var(--good)}
@@ -252,20 +256,37 @@ button{font-family:inherit}
       </div>
       <div class="card">
         <h2>IA del escáner</h2>
+        <p class="sub">Elige una IA y entra con tu cuenta de ese servicio. Cada jugador usa la suya.</p>
         <div class="provs" id="provs">
-          <label class="prov"><input type="radio" name="prov" id="p-visor" value="visor"><div><b>Claude (dentro de Claude)<em class="tag" id="visorTag"></em></b><span>Sin clave. Solo funciona al abrir la página dentro de Claude y si ese visor deja enviar fotos.</span></div></label>
-          <label class="prov"><input type="radio" name="prov" id="p-gemini" value="gemini"><div><b>Google Gemini</b><span>Tiene nivel gratuito. Clave en Google AI Studio.</span></div></label>
-          <label class="prov"><input type="radio" name="prov" id="p-anthropic" value="anthropic"><div><b>Claude por API</b><span>De pago por uso. Clave en la consola de Anthropic.</span></div></label>
-          <label class="prov"><input type="radio" name="prov" id="p-openai" value="openai"><div><b>OpenAI</b><span>De pago por uso. Clave en la plataforma de OpenAI.</span></div></label>
+          <label class="prov"><input type="radio" name="prov" id="p-visor" value="visor"><div><b>Claude (dentro de Claude)<em class="tag" id="visorTag"></em></b><span>Sin cuenta extra. Solo funciona al abrir la página dentro de Claude.</span></div></label>
+          <label class="prov" data-login><input type="radio" name="prov" id="p-puter" value="puter"><div><b>Puter</b><span>Entras con tu cuenta de Puter (registro gratuito) y usas Gemini, Claude o GPT.</span></div></label>
+          <label class="prov" data-login><input type="radio" name="prov" id="p-openrouter" value="openrouter"><div><b>OpenRouter</b><span>Entras con tu cuenta de OpenRouter. Tiene modelos gratuitos y de pago.</span></div></label>
         </div>
+        <div id="loginBox" class="provs">
+          <p class="sub" id="loginTxt"></p>
+          <div class="row">
+            <button class="btn primary" id="btnConnect" type="button">Conectar</button>
+            <button class="btn" id="btnDisconnect" type="button">Desconectar</button>
+          </div>
+          <div class="field" id="orModelField"><label for="f-ormodel">Modelo</label><select id="f-ormodel"></select><input id="f-ormodel-txt" type="text" autocomplete="off" spellcheck="false" placeholder="proveedor/modelo" hidden></div>
+          <div class="field" id="puterModelField"><label for="f-putermodel">Modelo</label><input id="f-putermodel" type="text" autocomplete="off" spellcheck="false"></div>
+        </div>
+        <details class="adv" id="adv">
+          <summary>Avanzado: usar una clave de API propia</summary>
+          <div class="provs">
+            <label class="prov"><input type="radio" name="prov" id="p-gemini" value="gemini"><div><b>Google Gemini</b><span>Clave de Google AI Studio.</span></div></label>
+            <label class="prov"><input type="radio" name="prov" id="p-anthropic" value="anthropic"><div><b>Claude por API</b><span>Clave de la consola de Anthropic.</span></div></label>
+            <label class="prov"><input type="radio" name="prov" id="p-openai" value="openai"><div><b>OpenAI</b><span>Clave de la plataforma de OpenAI.</span></div></label>
+          </div>
+        </details>
         <div id="keyBox" class="provs">
           <div class="field"><label for="f-key">Clave de API</label><input id="f-key" type="password" autocomplete="off" spellcheck="false" placeholder="Pega aquí tu clave"></div>
           <div class="field"><label for="f-model">Modelo</label><input id="f-model" type="text" autocomplete="off" spellcheck="false"></div>
           <p class="note" id="keyNote"></p>
+          <div class="row"><button class="btn primary" id="saveCfg" type="button">Guardar clave</button></div>
         </div>
-        <div class="row"><button class="btn primary" id="saveCfg" type="button">Guardar</button></div>
         <p class="ok-msg" id="cfgMsg" role="status"></p>
-        <p class="note" id="keyWhere">La clave se guarda solo en este navegador y viaja directamente al proveedor elegido.</p>
+        <p class="note" id="keyWhere"></p>
       </div>
     </section>
   </main>
@@ -313,6 +334,8 @@ var LS='rastro.save.v1';
 var LS_AI='rastro.ai.v1';
 var PROVS={
   visor:{n:'Claude (dentro de Claude)',key:false},
+  puter:{n:'Puter',login:true,model:'google/gemini-3.8-flash',site:'puter.com'},
+  openrouter:{n:'OpenRouter',login:true,model:'',site:'openrouter.ai'},
   gemini:{n:'Gemini',key:true,model:'gemini-3.6-flash',where:'aistudio.google.com',url:'https://aistudio.google.com/apikey'},
   anthropic:{n:'Claude por API',key:true,model:'claude-haiku-5-5',where:'console.anthropic.com',url:'https://console.anthropic.com/settings/keys'},
   openai:{n:'OpenAI',key:true,model:'gpt-5-mini',where:'platform.openai.com',url:'https://platform.openai.com/api-keys'}
@@ -442,7 +465,7 @@ function loadLocal(){
   freshState();
   try{var raw=localStorage.getItem(LS);if(raw)merge(JSON.parse(raw));}catch(e){}
   cfg={prov:'',keys:{},models:{}};loadCfg();
-  if(!cfg.prov)cfg.prov=visorOk?'visor':'gemini';
+  if(!cfg.prov)cfg.prov=visorOk?'visor':'puter';
 }
 async function initFirebase(){
   var c=window.RASTRO_FIREBASE;
@@ -474,9 +497,9 @@ async function onUser(u){
     else{await fbDoc('save').set(snapshot());}
     if(cf.exists){
       var d=cf.data()||{};
-      cfg={prov:PROVS[d.prov]?d.prov:(cfg.prov||'gemini'),keys:d.keys||{},models:d.models||{}};
+      cfg={prov:PROVS[d.prov]?d.prov:(cfg.prov||'puter'),keys:d.keys||{},models:d.models||{}};
     }else{
-      if(cfg.prov==='visor'&&!visorOk)cfg.prov='gemini';
+      if(cfg.prov==='visor'&&!visorOk)cfg.prov='puter';
       await fbDoc('config').set(cfgData());
     }
     mode='firebase';saveState='ok';
@@ -499,6 +522,7 @@ function acctError(e){
 function renderAcct(){
   var txt=$('#acctTxt'),li=$('#btnLogin'),lo=$('#btnLogout');
   li.hidden=true;lo.hidden=true;
+  $('#acct').hidden=(fb.state==='sin-config'||fb.state==='en-claude');
   if(fb.state==='en-claude'){txt.textContent='Dentro de Claude la partida se guarda en tu cuenta de Claude.';}
   else if(fb.state==='sin-config'){txt.textContent='El inicio de sesión aún no está configurado. Mientras, todo se guarda solo en este navegador.';}
   else if(fb.state==='error'){txt.textContent='No se pudo cargar el inicio de sesión. Todo se guarda en este navegador.';}
@@ -511,8 +535,6 @@ function renderAcct(){
     txt.textContent='Entra para guardar tu clave de IA y tu partida en tu cuenta. Sin sesión, todo queda solo en este navegador.';
     li.hidden=false;
   }
-  var kw=$('#keyWhere');
-  if(kw)kw.textContent=fb.user?'La clave se guarda en tu cuenta, solo tú puedes leerla, y viaja directamente al proveedor elegido.':'La clave se guarda solo en este navegador y viaja directamente al proveedor elegido.';
 }
 $('#btnLogin').addEventListener('click',function(){
   if(!fb.auth)return;
@@ -540,15 +562,18 @@ async function initVisor(){
 async function initAI(){
   loadCfg();
   await initVisor();
-  if(!cfg.prov)cfg.prov=visorOk?'visor':'gemini';
+  if(!cfg.prov)cfg.prov=visorOk?'visor':'puter';
   refreshAi();
 }
 function refreshAi(){
   var p=cfg.prov;
-  aiOk=p==='visor'?visorOk:!!clean(cfg.keys[p],400);
+  if(p==='visor')aiOk=visorOk;
+  else if(p==='puter')aiOk=puterIn;
+  else aiOk=!!clean(cfg.keys[p],400);
 }
 function withTimeout(p,ms){return Promise.race([p,new Promise(function(r){setTimeout(r,ms);})]);}
 function whyText(){
+  if(cfg.prov&&PROVS[cfg.prov]&&PROVS[cfg.prov].login)return 'Conecta tu cuenta de '+PROVS[cfg.prov].n+' en Ajustes para escanear.';
   if(cfg.prov&&cfg.prov!=='visor')return 'Falta la clave de '+PROVS[cfg.prov].n+'. Ponla en Ajustes.';
   if(aiWhy==='sin-claude')return 'La página no está dentro del visor de Claude.';
   if(aiWhy==='sin-sample')return 'Este visor no da acceso a Claude a las páginas.';
@@ -569,7 +594,7 @@ function renderHeader(){
   else if(saveState==='err'){s.textContent='Sin guardar';s.dataset.s='err';}
   else if(mode==='cloud'||mode==='firebase'){s.textContent='En tu cuenta';s.dataset.s='ok';}
   else{s.textContent='Solo aquí';s.dataset.s='';}
-  $('#diag').textContent=ready?('IA: '+(cfg.prov?PROVS[cfg.prov].n:'?')+(cfg.prov&&cfg.prov!=='visor'?' · '+modelOf(cfg.prov):'')+' · '+(aiOk?'lista':'no lista')+(cfg.prov==='visor'&&aiWhy?' ('+aiWhy+')':'')):'';
+  $('#diag').textContent=ready?('IA: '+(cfg.prov?PROVS[cfg.prov].n:'?')+(cfg.prov&&cfg.prov!=='visor'?' · '+(modelOf(cfg.prov)||'modelo por defecto'):'')+' · '+(aiOk?'lista':'no lista')+(cfg.prov==='visor'&&aiWhy?' ('+aiWhy+')':'')):'';
 }
 function ladder(active){
   return '<div class="ladder" role="img" aria-label="Escala de tamaños">'+SIZES.map(function(s){
@@ -615,7 +640,7 @@ function showIdle(){
   var head='';
   if(!ready){setPanel('<div class="card"><p class="busy">Cargando tu taller</p></div>');return;}
   if(!aiOk){
-    setPanel('<div class="card"><h2>Elige una IA</h2><p class="sub">'+esc(whyText())+'</p><button class="btn primary" id="goSet" type="button">Ir a Ajustes</button></div>');
+    setPanel('<div class="card"><h2>Conecta una IA</h2><p class="sub">'+esc(whyText())+'</p><button class="btn primary" id="goSet" type="button">Ir a Ajustes</button></div>');
     $('#goSet').addEventListener('click',function(){show('set');});
     return;
   }
@@ -696,9 +721,9 @@ function errorText(code){
     case 'invalid_json':case 'empty_completion':return 'No he entendido la respuesta. Inténtalo otra vez.';
     case 'session_expired':return 'La sesión ha caducado. Vuelve a iniciar sesión en Claude.';
     case 'net':return 'No se pudo contactar con el proveedor. Si tienes la página abierta dentro de Claude, ábrela fuera; si no, revisa la conexión.';
-    case 'auth':return 'La clave no es válida o no tiene permiso. Revísala en Ajustes.';
-    case 'model':return 'Ese modelo no existe o no acepta imágenes. Cambia el nombre en Ajustes.';
-    case 'quota':return 'Has agotado el cupo o el saldo del proveedor. Espera o revisa tu cuenta.';
+    case 'auth':return (PROVS[cfg.prov]&&PROVS[cfg.prov].login)?'La conexión con '+PROVS[cfg.prov].n+' no es válida o ha caducado. Vuelve a conectar en Ajustes.':'La clave no es válida o no tiene permiso. Revísala en Ajustes.';
+    case 'model':return 'Ese modelo no existe o no acepta imágenes. Elige otro en Ajustes.';
+    case 'quota':return 'Has agotado el saldo o el límite gratuito de '+(PROVS[cfg.prov]?PROVS[cfg.prov].n:'la IA')+'. Espera un rato, elige un modelo gratuito o recarga saldo en tu cuenta.';
     case 'bad':return 'El proveedor no ha devuelto una respuesta válida. Inténtalo otra vez.';
     default:return 'Fallo de conexión. Inténtalo de nuevo.';
   }
@@ -804,6 +829,7 @@ function parseLoose(t){
 function httpCode(status,body){
   var s=String(body||'').toLowerCase();
   if(status===401||status===403)return 'auth';
+  if(status===402)return 'quota';
   if(status===429||s.indexOf('quota')>=0||s.indexOf('credit')>=0||s.indexOf('billing')>=0)return 'quota';
   if(status===404||s.indexOf('model')>=0)return 'model';
   if(status===400&&(s.indexOf('api key')>=0||s.indexOf('api_key')>=0))return 'auth';
@@ -831,6 +857,23 @@ async function identifyRemote(blob,signal){
       {'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       {model:model,max_tokens:700,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mime,data:data}},{type:'text',text:PROMPT}]}]},signal);
     t=(j&&j.content||[]).map(function(x){return x.text||'';}).join('');
+  }else if(p==='openrouter'){
+    model=await orModel();
+    j=await post('https://openrouter.ai/api/v1/chat/completions',
+      {'Content-Type':'application/json','Authorization':'Bearer '+key,'X-Title':'Rastro','HTTP-Referer':location.origin+location.pathname},
+      {model:model,max_tokens:700,messages:[{role:'user',content:[{type:'text',text:PROMPT},{type:'image_url',image_url:{url:'data:'+mime+';base64,'+data}}]}]},signal);
+    t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content||'';
+    if(Array.isArray(t))t=t.map(function(x){return x.text||'';}).join('');
+  }else if(p==='puter'){
+    var P=await loadPuter();
+    if(!P.auth.isSignedIn())throw {code:'auth'};
+    var r;
+    try{r=await P.ai.chat(PROMPT,'data:'+mime+';base64,'+data,{model:modelOf('puter')});}
+    catch(e){throw {code:puterErrCode(e)};}
+    if(signal&&signal.aborted){var ab=new Error('cancelado');ab.name='AbortError';throw ab;}
+    t=r&&r.message&&r.message.content;
+    if(Array.isArray(t))t=t.map(function(x){return typeof x==='string'?x:(x&&x.text)||'';}).join('');
+    t=t||'';
   }else if(p==='openai'){
     j=await post('https://api.openai.com/v1/chat/completions',
       {'Content-Type':'application/json','Authorization':'Bearer '+key},
@@ -840,14 +883,138 @@ async function identifyRemote(blob,signal){
   return parseLoose(t);
 }
 
+/* ---------- Puter ---------- */
+var PUTER_JS='https://js.puter.com/v2/';
+var puterP=null,puterIn=false,puterName='',puterErr=false;
+function loadPuter(){
+  if(window.puter&&window.puter.ai)return Promise.resolve(window.puter);
+  if(!puterP)puterP=loadScript(PUTER_JS).then(function(){if(!window.puter)throw new Error('puter');puterErr=false;return window.puter;},function(e){puterP=null;puterErr=true;throw e;});
+  return puterP;
+}
+async function puterRefresh(){
+  try{
+    var P=await loadPuter();
+    puterIn=!!P.auth.isSignedIn();
+    puterName='';
+    if(puterIn){try{var u=await P.auth.getUser();puterName=u&&u.username||'';}catch(e){}}
+  }catch(e){puterIn=false;}
+  refreshAi();renderSet();renderHeader();setButtons();if(!busy)showIdle();
+}
+function puterErrCode(e){
+  var s=JSON.stringify(e&&(e.error||e)||'').toLowerCase();
+  if(s.indexOf('insufficient')>=0||s.indexOf('usage')>=0||s.indexOf('limit')>=0||s.indexOf('funds')>=0)return 'quota';
+  if(s.indexOf('auth')>=0||s.indexOf('token')>=0||s.indexOf('sign')>=0)return 'auth';
+  if(s.indexOf('model')>=0)return 'model';
+  return 'upstream_error';
+}
+
+/* ---------- OpenRouter ---------- */
+var OR_V='rastro.or.verifier';
+var orModels=null,orModelsP=null,orModelsErr=false;
+function b64url(buf){
+  var s='',b=new Uint8Array(buf);for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function callbackUrl(){return location.origin+location.pathname;}
+async function orConnect(){
+  var rnd=new Uint8Array(48);crypto.getRandomValues(rnd);
+  var v=b64url(rnd);
+  try{localStorage.setItem(OR_V,v);}catch(e){}
+  var ch=b64url(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
+  location.href='https://openrouter.ai/auth?callback_url='+encodeURIComponent(callbackUrl())+'&code_challenge='+ch+'&code_challenge_method=S256';
+}
+async function orHandleReturn(){
+  var u=new URL(location.href),code=u.searchParams.get('code');
+  if(!code)return;
+  u.searchParams.delete('code');
+  history.replaceState(null,'',u.pathname+(u.search||'')+u.hash);
+  var v='';try{v=localStorage.getItem(OR_V)||'';localStorage.removeItem(OR_V);}catch(e){}
+  show('set');
+  $('#cfgMsg').textContent='Conectando con OpenRouter…';
+  try{
+    var r=await fetch('https://openrouter.ai/api/v1/auth/keys',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(v?{code:code,code_verifier:v,code_challenge_method:'S256'}:{code:code})});
+    var j=await r.json().catch(function(){return {};});
+    if(!r.ok||!j.key)throw new Error('exchange');
+    cfg.keys.openrouter=j.key;cfg.prov='openrouter';
+    await saveCfg();
+    refreshAi();renderSet();renderHeader();setButtons();showIdle();
+    $('#cfgMsg').textContent='Conectado con OpenRouter. Ya puedes escanear.';
+  }catch(e){
+    $('#cfgMsg').textContent='No se pudo completar la conexión con OpenRouter. Vuelve a pulsar Conectar.';
+  }
+}
+function loadOrModels(){
+  if(orModels)return Promise.resolve(orModels);
+  if(!orModelsP)orModelsP=fetch('https://openrouter.ai/api/v1/models').then(function(r){if(!r.ok)throw new Error('models');return r.json();}).then(function(j){
+    var list=(j&&j.data||[]).filter(function(m){
+      var a=m.architecture||{},inp=a.input_modalities||[],mod=String(a.modality||'').split('->')[0];
+      return inp.indexOf('image')>=0||mod.indexOf('image')>=0;
+    }).map(function(m){
+      var pr=m.pricing||{},free=/:free$/.test(m.id)||(Number(pr.prompt)===0&&Number(pr.completion)===0);
+      return {id:m.id,name:m.name||m.id,free:free};
+    });
+    list.sort(function(a,b){return (b.free-a.free)||a.name.localeCompare(b.name);});
+    orModels=list;orModelsErr=false;return list;
+  }).catch(function(e){orModelsP=null;orModelsErr=true;throw e;});
+  return orModelsP;
+}
+function orDefault(list){
+  var pick=function(f){for(var i=0;i<list.length;i++)if(f(list[i]))return list[i].id;return '';};
+  return pick(function(m){return m.free&&/gemini/i.test(m.id);})||pick(function(m){return m.free;})
+    ||pick(function(m){return /gemini/i.test(m.id)&&/flash/i.test(m.id);})||(list[0]&&list[0].id)||'';
+}
+async function orModel(){
+  var m=clean(cfg.models.openrouter,120);
+  if(m)return m;
+  try{var list=await loadOrModels();m=orDefault(list);}catch(e){}
+  if(!m)throw {code:'model'};
+  return m;
+}
+function renderOrModels(){
+  var sel=$('#f-ormodel'),txt=$('#f-ormodel-txt');
+  if(orModels&&orModels.length){
+    var cur=clean(cfg.models.openrouter,120)||orDefault(orModels);
+    sel.innerHTML=orModels.map(function(m){
+      return '<option value="'+esc(m.id)+'"'+(m.id===cur?' selected':'')+'>'+esc(m.name)+(m.free?' · gratis':'')+'</option>';
+    }).join('');
+    sel.hidden=false;txt.hidden=true;
+  }else if(orModelsErr){
+    sel.hidden=true;txt.hidden=false;txt.value=cfg.models.openrouter||'';
+  }else{
+    sel.innerHTML='<option>Cargando modelos…</option>';sel.hidden=false;txt.hidden=true;
+    loadOrModels().then(renderOrModels,renderOrModels);
+  }
+}
+
 /* ---------- Ajustes ---------- */
 function renderSet(){
-  var p=cfg.prov||'gemini';
+  var inClaude=!!window.claude;
+  var p=cfg.prov||'puter',P=PROVS[p]||PROVS.puter;
   document.querySelectorAll('input[name="prov"]').forEach(function(r){r.checked=(r.value===p);});
   $('#visorTag').textContent=visorOk?'disponible aquí':'no disponible aquí';
   $('#visorTag').style.color=visorOk?'':'var(--ink-2)';
-  $('#p-visor').closest('.prov').hidden=!window.claude;
-  var P=PROVS[p];
+  $('#p-visor').closest('.prov').hidden=!inClaude;
+  document.querySelectorAll('[data-login]').forEach(function(l){l.hidden=inClaude;});
+  $('#adv').hidden=inClaude;
+  if(P.key)$('#adv').open=true;
+  // Conexión con cuenta
+  var lb=$('#loginBox');lb.hidden=!P.login;
+  if(P.login){
+    var con=p==='puter'?puterIn:!!cfg.keys.openrouter;
+    var t;
+    if(p==='puter'&&puterErr)t='No se pudo cargar Puter. Revisa la conexión y vuelve a abrir Ajustes.';
+    else if(con)t='Conectado'+(p==='puter'&&puterName?' como '+puterName:'')+' a '+P.n+'. Ya puedes escanear.';
+    else t='Pulsa Conectar: se abrirá '+P.site+' para que entres o te registres, y volverás aquí.';
+    $('#loginTxt').textContent=t;
+    $('#btnConnect').hidden=con;$('#btnDisconnect').hidden=!con;
+    $('#btnConnect').textContent='Conectar con '+P.n;
+    $('#orModelField').hidden=!(p==='openrouter'&&con);
+    $('#puterModelField').hidden=!(p==='puter'&&con);
+    if(p==='openrouter'&&con)renderOrModels();
+    if(p==='puter'){$('#f-putermodel').value=cfg.models.puter||'';$('#f-putermodel').placeholder=PROVS.puter.model;}
+  }
+  // Clave propia
   $('#keyBox').hidden=!P.key;
   if(P.key){
     $('#f-key').value=cfg.keys[p]||'';
@@ -855,29 +1022,58 @@ function renderSet(){
     $('#f-model').placeholder=P.model;
     $('#keyNote').innerHTML='Consigue la clave en <a href="'+P.url+'" target="_blank" rel="noopener">'+P.where+'</a>. Deja el modelo vacío para usar '+esc(P.model)+'.';
   }
+  var where=fb.user?'en tu cuenta de Rastro':'solo en este navegador';
+  $('#keyWhere').textContent=P.login?'El acceso de '+P.n+' se guarda '+where+'. Lo que gastes lo pone tu cuenta de '+P.n+'.'
+    :P.key?'La clave se guarda '+where+' y viaja directamente al proveedor.':'';
   $('#setSum').textContent=PROVS[cfg.prov]?PROVS[cfg.prov].n:'';
+}
+function commit(msg){
+  refreshAi();renderSet();renderHeader();setButtons();showIdle();
+  return saveCfg().then(function(ok){
+    if(!ok)$('#cfgMsg').textContent=fb.user?'No se pudo guardar en tu cuenta. Revisa la conexión.':'No se pudo guardar en este navegador.';
+    else if(msg)$('#cfgMsg').textContent=msg;
+  });
 }
 document.querySelectorAll('input[name="prov"]').forEach(function(r){
   r.addEventListener('change',function(){
-    var keep=cfg.prov;cfg.prov=r.value;renderSet();cfg.prov=keep;
     $('#cfgMsg').textContent='';
+    cfg.prov=r.value;
+    if(r.value==='puter')loadPuter().then(puterRefresh,function(){renderSet();});
+    commit('');
   });
 });
-$('#saveCfg').addEventListener('click',function(){
-  var sel=document.querySelector('input[name="prov"]:checked');
-  var p=sel?sel.value:'gemini';
-  cfg.prov=p;
-  if(PROVS[p].key){
-    cfg.keys[p]=clean($('#f-key').value,400);
-    cfg.models[p]=clean($('#f-model').value,80);
+$('#btnConnect').addEventListener('click',function(){
+  $('#cfgMsg').textContent='';
+  if(cfg.prov==='openrouter'){orConnect();return;}
+  if(cfg.prov==='puter'){
+    var go=function(P){
+      return P.auth.signIn().then(function(){return puterRefresh();}).then(function(){
+        $('#cfgMsg').textContent=puterIn?'Conectado con Puter. Ya puedes escanear.':'';
+      });
+    };
+    var fail=function(){$('#cfgMsg').textContent='No se completó la entrada en Puter. Si no se abrió ninguna ventana, permite las ventanas emergentes y vuelve a intentarlo.';};
+    if(window.puter&&window.puter.auth)go(window.puter).catch(fail);
+    else loadPuter().then(go).catch(fail);
   }
-  refreshAi();renderSet();renderHeader();setButtons();showIdle();
+});
+$('#btnDisconnect').addEventListener('click',function(){
+  if(cfg.prov==='openrouter'){delete cfg.keys.openrouter;commit('Desconectado de OpenRouter.');}
+  else if(cfg.prov==='puter'&&window.puter){
+    try{window.puter.auth.signOut();}catch(e){}
+    puterIn=false;puterName='';commit('Desconectado de Puter.');
+  }
+});
+$('#f-ormodel').addEventListener('change',function(e){cfg.models.openrouter=e.target.value;commit('Modelo guardado.');});
+$('#f-ormodel-txt').addEventListener('change',function(e){cfg.models.openrouter=clean(e.target.value,120);commit('Modelo guardado.');});
+$('#f-putermodel').addEventListener('change',function(e){cfg.models.puter=clean(e.target.value,120);commit('Modelo guardado.');});
+$('#saveCfg').addEventListener('click',function(){
+  var p=cfg.prov;
+  if(!PROVS[p]||!PROVS[p].key)return;
+  cfg.keys[p]=clean($('#f-key').value,400);
+  cfg.models[p]=clean($('#f-model').value,80);
   $('#cfgMsg').textContent='Guardando…';
-  saveCfg().then(function(ok){
-    var where=fb.user?' en tu cuenta':'';
-    $('#cfgMsg').textContent=!ok?(fb.user?'No se pudo guardar en tu cuenta. Revisa la conexión.':'No se pudo guardar en este navegador; vale solo hasta que cierres la página.')
-      :(aiOk?'Guardado'+where+'. IA lista: '+PROVS[p].n+'.':'Guardado'+where+', pero falta '+(p==='visor'?'abrir la página dentro de Claude':'la clave')+'.');
-  });
+  refreshAi();
+  commit(aiOk?'Guardado. IA lista: '+PROVS[p].n+'.':'Guardado, pero falta la clave.');
 });
 
 /* ---------- Eventos ---------- */
@@ -909,6 +1105,10 @@ Promise.all([withTimeout(initStore(),12000),withTimeout(initAI(),12000)]).then(f
   ready=true;
   renderAll();showIdle();setButtons();
   initFirebase();
+  if(!window.claude){
+    orHandleReturn();
+    if(cfg.prov==='puter')puterRefresh();
+  }
 });
 })();
 </script>

@@ -5,10 +5,15 @@ Juego de crafteo con el mundo real: haces una foto a un objeto, una IA lo identi
 Jugar: https://eusebiomontero.github.io/rastro/
 
 - Una sola página (`index.html`), sin build.
-- IA a elegir en Ajustes: Gemini (con nivel gratuito), Claude por API u OpenAI, con tu propia clave.
-- Inicio de sesión con Google (Firebase). Con sesión, la clave y la partida se guardan en Firestore y solo las lee su dueño. Sin sesión, todo queda en el navegador.
+- IA a elegir en Ajustes, entrando con la cuenta del propio jugador (sin copiar claves):
+  - **Puter**: `puter.auth.signIn()` y `puter.ai.chat()`; cada jugador paga con su cuenta de Puter.
+  - **OpenRouter**: conexión OAuth PKCE (`openrouter.ai/auth` → `/api/v1/auth/keys`); lista de modelos con visión, los gratuitos primero.
+  - Avanzado: clave propia de Gemini, Claude por API u OpenAI.
+- Sin cuenta de Rastro, la partida y el acceso a la IA se guardan en el navegador.
 
-## Configurar el inicio de sesión
+## Opcional: cuenta de Rastro con Firebase
+
+Sirve para guardar la partida en la nube y llevarla a otros dispositivos. Si `config.js` vale `null`, la tarjeta de cuenta no aparece.
 
 1. Crea un proyecto en https://console.firebase.google.com (no hace falta Google Analytics).
 2. **Authentication → Comenzar → Google**: actívalo.
