@@ -9,11 +9,11 @@ Jugar: https://eusebiomontero.github.io/rastro/
   - **Puter**: `puter.auth.signIn()` y `puter.ai.chat()`; cada jugador paga con su cuenta de Puter.
   - **OpenRouter**: conexión OAuth PKCE (`openrouter.ai/auth` → `/api/v1/auth/keys`); lista de modelos con visión, los gratuitos primero.
   - Avanzado: clave propia de Gemini, Claude por API u OpenAI.
-- Sin cuenta de Rastro, la partida y el acceso a la IA se guardan en el navegador.
+- Hay que tener cuenta para jugar: pantalla de acceso con Google o correo y contraseña (registro incluido). La partida y la conexión de IA se guardan en la cuenta (Firestore).
 
-## Opcional: cuenta de Rastro con Firebase
+## Cuenta de Rastro con Firebase
 
-Sirve para guardar la partida en la nube y llevarla a otros dispositivos. Si `config.js` vale `null`, la tarjeta de cuenta no aparece.
+Proyecto: `rastro-3fa4c`. Métodos de acceso que hay que tener activados en Authentication: **Google** y **Correo electrónico/contraseña**.
 
 1. Crea un proyecto en https://console.firebase.google.com (no hace falta Google Analytics).
 2. **Authentication → Comenzar → Google**: actívalo.

@@ -191,6 +191,15 @@ button{font-family:inherit}
 .field input{min-height:46px;padding:0 12px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--bg);color:var(--ink);font:500 15px var(--f-mono);width:100%}
 .field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
 .field select{min-height:46px;padding:0 10px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--bg);color:var(--ink);font:500 14px var(--f-mono);width:100%;max-width:100%}
+.gate{min-height:100%;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
+.gate-in{width:100%;max-width:420px;display:grid;gap:14px}
+.gate-brand{display:flex;align-items:center;gap:12px}
+.gate-brand .logo{width:40px;height:40px}
+.gate-brand h1{font:800 52px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase}
+.gate-tag{font-size:16px;color:var(--ink-2);max-width:34ch}
+.or{display:flex;align-items:center;gap:10px;color:var(--ink-2);font:500 12px var(--f-mono);text-transform:uppercase;letter-spacing:.06em}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.linkbtn{background:none;border:0;padding:4px 0;color:var(--accent);font:500 14px var(--f-body);text-decoration:underline;cursor:pointer;justify-self:start}
 .adv{border-top:1px solid var(--line);padding-top:10px}
 .adv summary{cursor:pointer;font-weight:600;color:var(--ink-2);padding:6px 0}
 .adv[open] summary{margin-bottom:8px}
@@ -208,7 +217,37 @@ button{font-family:inherit}
 }
 </style>
 
-<div class="app">
+<section id="gate" class="gate" aria-labelledby="gateTitle">
+  <div class="gate-in">
+    <div class="gate-brand">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><rect x="9" y="9" width="6" height="6"/></svg>
+      <h1 id="gateTitle">Rastro</h1>
+    </div>
+    <p class="gate-tag">Fotografía objetos reales, sácales materiales y fabrica cosas nuevas.</p>
+    <div class="card">
+      <h2>Entra o regístrate</h2>
+      <p class="sub" id="gateTxt">Cargando…</p>
+      <div id="gateForms" class="provs" hidden>
+        <button class="btn primary" id="btnLogin" type="button">Entrar con Google</button>
+        <p class="or"><span>o con tu correo</span></p>
+        <form id="mailForm" class="provs" novalidate>
+          <div class="field"><label for="f-mail">Correo</label><input id="f-mail" type="email" autocomplete="email" inputmode="email" spellcheck="false"></div>
+          <div class="field"><label for="f-pass">Contraseña</label><input id="f-pass" type="password" autocomplete="current-password" minlength="6"></div>
+          <div class="row">
+            <button class="btn primary" id="btnMailIn" type="submit">Entrar</button>
+            <button class="btn" id="btnMailUp" type="button">Crear cuenta</button>
+          </div>
+          <button class="linkbtn" id="btnReset" type="button">He olvidado la contraseña</button>
+        </form>
+      </div>
+      <p class="sub" id="acctInfo" role="status"></p>
+      <p class="sub warn" id="acctMsg" role="alert"></p>
+      <button class="btn" id="gateRetry" type="button" hidden>Reintentar</button>
+    </div>
+  </div>
+</section>
+
+<div class="app" hidden>
   <header class="top">
     <div class="brand">
       <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><rect x="9" y="9" width="6" height="6"/></svg>
@@ -249,10 +288,8 @@ button{font-family:inherit}
         <h2>Cuenta</h2>
         <p class="sub" id="acctTxt">Comprobando…</p>
         <div class="row">
-          <button class="btn primary" id="btnLogin" type="button" hidden>Entrar con Google</button>
           <button class="btn" id="btnLogout" type="button" hidden>Cerrar sesión</button>
         </div>
-        <p class="sub warn" id="acctMsg" role="status"></p>
       </div>
       <div class="card">
         <h2>IA del escáner</h2>
@@ -292,7 +329,7 @@ button{font-family:inherit}
   </main>
 </div>
 
-<nav class="tabs" aria-label="Secciones">
+<nav class="tabs" aria-label="Secciones" hidden>
   <div class="in" role="tablist">
     <button class="tab" id="t-scan" role="tab" aria-selected="true" data-v="scan" type="button">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Escanear
@@ -344,6 +381,7 @@ var cfg={prov:'',keys:{},models:{}};
 function loadCfg(){try{var r=JSON.parse(localStorage.getItem(LS_AI)||'null');if(r&&typeof r==='object'){cfg.prov=PROVS[r.prov]?r.prov:'';cfg.keys=r.keys||{};cfg.models=r.models||{};}}catch(e){}}
 function cfgData(){return {prov:cfg.prov,keys:cfg.keys,models:cfg.models,t:Date.now()};}
 function saveCfg(){
+  if(mode==='none')return Promise.resolve(true);
   if(fb.user)return fbDoc('config').set(cfgData()).then(function(){return true;},function(){return false;});
   try{localStorage.setItem(LS_AI,JSON.stringify(cfg));return Promise.resolve(true);}catch(e){return Promise.resolve(false);}
 }
@@ -409,6 +447,7 @@ function persist(){
     dirty=false;inflight++;
     var data=snapshot();
     return Promise.resolve().then(function(){
+      if(mode==='none')return;
       if(mode==='firebase'&&fb.user)return fbDoc('save').set(data);
       if(mode==='cloud'&&ref)return ref.set(data);
       localStorage.setItem(LS,JSON.stringify(data));
@@ -448,7 +487,7 @@ async function initStore(){
 }
 /* ---------- Cuenta (Firebase) ---------- */
 var FB_V='https://www.gstatic.com/firebasejs/10.12.2/';
-var fb={state:'',auth:null,db:null,user:null,busy:false};
+var fb={state:'',auth:null,db:null,user:null,busy:false,known:false};
 function fbDoc(name){return fb.db.collection('users').doc(fb.user.uid).collection('rastro').doc(name);}
 function loadScript(src){
   return new Promise(function(res,rej){
@@ -478,14 +517,16 @@ async function initFirebase(){
     fb.auth=firebase.auth();fb.db=firebase.firestore();
   }catch(e){fb.state='error';renderAcct();return;}
   fb.state='listo';
-  try{await fb.auth.getRedirectResult();}catch(e){acctError(e);}
-  fb.auth.onAuthStateChanged(function(u){onUser(u);});
+  renderAcct();
+  fb.auth.onAuthStateChanged(function(u){fb.known=true;onUser(u);});
 }
+function emptyCfg(){cfg={prov:visorOk?'visor':'puter',keys:{},models:{}};}
 async function onUser(u){
-  if(u&&fb.user&&u.uid===fb.user.uid)return;
+  if(u&&fb.user&&u.uid===fb.user.uid){renderAcct();return;}
   fb.user=u||null;
   if(!u){
-    if(mode==='firebase'){mode='local';loadLocal();}
+    // Sin sesión no se juega: se vacía todo lo cargado de la cuenta anterior
+    mode='none';freshState();emptyCfg();
     refreshAi();renderAcct();renderAll();showIdle();setButtons();renderSet();
     return;
   }
@@ -493,62 +534,112 @@ async function onUser(u){
   try{
     var r=await Promise.all([fbDoc('save').get(),fbDoc('config').get()]);
     var sv=r[0],cf=r[1];
-    if(sv.exists){freshState();merge(sv.data());}
-    else{await fbDoc('save').set(snapshot());}
+    // Partida: la de la cuenta; si es nueva, se trae la que hubiera en este navegador (una sola vez)
+    freshState();
+    if(sv.exists)merge(sv.data());
+    else{
+      try{var raw=localStorage.getItem(LS);if(raw)merge(JSON.parse(raw));}catch(e){}
+      await fbDoc('save').set(snapshot());
+      try{localStorage.removeItem(LS);}catch(e){}
+    }
+    // Conexión de IA: igual
     if(cf.exists){
       var d=cf.data()||{};
-      cfg={prov:PROVS[d.prov]?d.prov:(cfg.prov||'puter'),keys:d.keys||{},models:d.models||{}};
+      cfg={prov:PROVS[d.prov]?d.prov:'puter',keys:d.keys||{},models:d.models||{}};
     }else{
-      if(cfg.prov==='visor'&&!visorOk)cfg.prov='puter';
+      emptyCfg();loadCfg();
+      if(!PROVS[cfg.prov]||(cfg.prov==='visor'&&!visorOk))cfg.prov='puter';
       await fbDoc('config').set(cfgData());
+      try{localStorage.removeItem(LS_AI);}catch(e){}
     }
     mode='firebase';saveState='ok';
   }catch(e){
     saveState='err';acctError(e);
   }
   fb.busy=false;
+  if(cfg.prov==='puter')puterRefresh();
   refreshAi();renderAcct();renderAll();showIdle();setButtons();renderSet();
+  orHandleReturn();
 }
+function renderGate(){
+  var need=!window.claude&&(!fb.user||fb.busy);
+  $('#gate').hidden=!need;
+  document.querySelector('.app').hidden=need;
+  document.querySelector('.tabs').hidden=need;
+  if(!need)return;
+  var t=$('#gateTxt'),forms=$('#gateForms'),retry=$('#gateRetry');
+  forms.hidden=true;retry.hidden=true;
+  if(fb.state==='error'){t.textContent='No se pudo cargar el acceso. Revisa la conexión y vuelve a intentarlo.';retry.hidden=false;}
+  else if(fb.state==='sin-config'){t.textContent='El acceso todavía no está configurado.';}
+  else if(fb.state!=='listo'||!fb.known){t.textContent='Cargando…';}
+  else if(fb.busy){t.textContent='Cargando tu partida…';}
+  else{t.textContent='Necesitas una cuenta para jugar. Tu partida se guarda en ella y te acompaña en cualquier móvil.';forms.hidden=false;}
+}
+$('#gateRetry').addEventListener('click',function(){location.reload();});
 function acctError(e){
   var code=e&&e.code||'';
-  var t='No se pudo completar. Inténtalo otra vez.';
-  if(code==='auth/unauthorized-domain')t='Este dominio no está autorizado en Firebase (Authentication → Settings → Authorized domains).';
-  else if(code==='auth/popup-closed-by-user'||code==='auth/cancelled-popup-request')t='';
-  else if(code==='auth/network-request-failed')t='Sin conexión. Revisa la red.';
-  else if(code==='permission-denied')t='Firestore ha rechazado el acceso. Revisa las reglas de seguridad.';
-  else if(code==='auth/operation-not-allowed')t='El inicio con Google no está activado en Firebase.';
+  var M={
+    'auth/unauthorized-domain':'Este dominio no está autorizado en Firebase (Authentication → Configuración → Dominios autorizados).',
+    'auth/popup-closed-by-user':'Se cerró la ventana de Google antes de terminar. Vuelve a intentarlo o usa tu correo.',
+    'auth/cancelled-popup-request':'',
+    'auth/popup-blocked':'El navegador bloqueó la ventana de Google. Permite las ventanas emergentes para este sitio o usa tu correo.',
+    'auth/network-request-failed':'Sin conexión. Revisa la red.',
+    'permission-denied':'Firestore ha rechazado el acceso. Revisa las reglas de seguridad.',
+    'auth/operation-not-allowed':'Ese método de inicio no está activado en Firebase (Authentication → Método de inicio de sesión).',
+    'auth/email-already-in-use':'Ya existe una cuenta con ese correo. Pulsa Entrar.',
+    'auth/invalid-email':'El correo no es válido.',
+    'auth/missing-password':'Escribe la contraseña.',
+    'auth/weak-password':'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-credential':'Correo o contraseña incorrectos.',
+    'auth/wrong-password':'Correo o contraseña incorrectos.',
+    'auth/user-not-found':'No hay ninguna cuenta con ese correo. Pulsa Crear cuenta.',
+    'auth/too-many-requests':'Demasiados intentos. Espera unos minutos.'
+  };
+  var t=(code in M)?M[code]:'No se pudo completar'+(code?' ('+code+')':'')+'. Inténtalo otra vez.';
+  $('#acctInfo').textContent='';
   $('#acctMsg').textContent=t;
 }
+function acctInfo(t){$('#acctMsg').textContent='';$('#acctInfo').textContent=t;}
 function renderAcct(){
-  var txt=$('#acctTxt'),li=$('#btnLogin'),lo=$('#btnLogout');
-  li.hidden=true;lo.hidden=true;
-  $('#acct').hidden=(fb.state==='sin-config'||fb.state==='en-claude');
-  if(fb.state==='en-claude'){txt.textContent='Dentro de Claude la partida se guarda en tu cuenta de Claude.';}
-  else if(fb.state==='sin-config'){txt.textContent='El inicio de sesión aún no está configurado. Mientras, todo se guarda solo en este navegador.';}
-  else if(fb.state==='error'){txt.textContent='No se pudo cargar el inicio de sesión. Todo se guarda en este navegador.';}
-  else if(fb.state!=='listo'){txt.textContent='Comprobando…';}
-  else if(fb.busy){txt.textContent='Cargando tu partida…';}
-  else if(fb.user){
-    txt.textContent='Has entrado como '+(fb.user.email||fb.user.displayName||'usuario')+'. Tu clave y tu partida se guardan en tu cuenta y te siguen a cualquier dispositivo.';
+  var txt=$('#acctTxt'),lo=$('#btnLogout');
+  lo.hidden=true;
+  $('#acct').hidden=!fb.user;
+  if(fb.user){
+    txt.textContent='Has entrado como '+(fb.user.email||fb.user.displayName||'usuario')+'. Tu partida y tu conexión de IA se guardan en tu cuenta y te siguen a cualquier dispositivo.';
     lo.hidden=false;
-  }else{
-    txt.textContent='Entra para guardar tu clave de IA y tu partida en tu cuenta. Sin sesión, todo queda solo en este navegador.';
-    li.hidden=false;
   }
+  renderGate();
 }
 $('#btnLogin').addEventListener('click',function(){
   if(!fb.auth)return;
-  $('#acctMsg').textContent='';
+  acctInfo('Abriendo Google… Elige tu cuenta en la ventana que aparece.');
   var p=new firebase.auth.GoogleAuthProvider();
-  fb.auth.signInWithPopup(p).catch(function(e){
-    var c=e&&e.code||'';
-    if(c==='auth/popup-blocked'||c==='auth/operation-not-supported-in-this-environment'){
-      fb.auth.signInWithRedirect(p).catch(acctError);
-    }else acctError(e);
-  });
+  p.setCustomParameters({prompt:'select_account'});
+  fb.auth.signInWithPopup(p).then(function(){acctInfo('');}).catch(acctError);
+});
+function mailCreds(){return {m:clean($('#f-mail').value,120),p:$('#f-pass').value||''};}
+$('#mailForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  if(!fb.auth)return;
+  var c=mailCreds();
+  acctInfo('Entrando…');
+  fb.auth.signInWithEmailAndPassword(c.m,c.p).then(function(){acctInfo('');$('#f-pass').value='';}).catch(acctError);
+});
+$('#btnMailUp').addEventListener('click',function(){
+  if(!fb.auth)return;
+  var c=mailCreds();
+  if(c.p.length<6){acctError({code:'auth/weak-password'});return;}
+  acctInfo('Creando tu cuenta…');
+  fb.auth.createUserWithEmailAndPassword(c.m,c.p).then(function(){acctInfo('Cuenta creada.');$('#f-pass').value='';}).catch(acctError);
+});
+$('#btnReset').addEventListener('click',function(){
+  if(!fb.auth)return;
+  var c=mailCreds();
+  if(!c.m){acctError({code:'auth/invalid-email'});return;}
+  fb.auth.sendPasswordResetEmail(c.m).then(function(){acctInfo('Te hemos enviado un correo para cambiar la contraseña. Mira también en spam.');}).catch(acctError);
 });
 $('#btnLogout').addEventListener('click',function(){
-  if(fb.auth)fb.auth.signOut().catch(acctError);
+  if(fb.auth)fb.auth.signOut().then(function(){acctInfo('Has cerrado sesión.');show('scan');}).catch(acctError);
 });
 
 async function initVisor(){
@@ -979,7 +1070,7 @@ function renderOrModels(){
       return '<option value="'+esc(m.id)+'"'+(m.id===cur?' selected':'')+'>'+esc(m.name)+(m.free?' · gratis':'')+'</option>';
     }).join('');
     sel.hidden=false;txt.hidden=true;
-  }else if(orModelsErr){
+  }else if(orModelsErr||orModels){
     sel.hidden=true;txt.hidden=false;txt.value=cfg.models.openrouter||'';
   }else{
     sel.innerHTML='<option>Cargando modelos…</option>';sel.hidden=false;txt.hidden=true;
@@ -1105,10 +1196,7 @@ Promise.all([withTimeout(initStore(),12000),withTimeout(initAI(),12000)]).then(f
   ready=true;
   renderAll();showIdle();setButtons();
   initFirebase();
-  if(!window.claude){
-    orHandleReturn();
-    if(cfg.prov==='puter')puterRefresh();
-  }
+  if(window.claude&&cfg.prov==='puter')puterRefresh();
 });
 })();
 </script>
