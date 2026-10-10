@@ -1,9 +1,48 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Cada jugador solo puede leer y escribir lo suyo: users/{uid}/rastro/config y users/{uid}/rastro/save
+
+    // Partida y configuración de cada jugador: solo su dueño
     match /users/{uid}/rastro/{doc} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Mercado entre jugadores
+    match /mercado/{id} {
+      allow read: if request.auth != null;
+
+      // Publicar: siempre a tu nombre, abierta y con valores razonables
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['vendedor', 'alias', 'mat', 'cant', 'precio', 'estado', 'creada'])
+        && request.resource.data.vendedor == request.auth.uid
+        && request.resource.data.estado == 'abierta'
+        && request.resource.data.mat is string && request.resource.data.mat.size() <= 20
+        && request.resource.data.alias is string && request.resource.data.alias.size() <= 40
+        && request.resource.data.cant is int && request.resource.data.cant >= 1 && request.resource.data.cant <= 999
+        && request.resource.data.precio is int && request.resource.data.precio >= 0 && request.resource.data.precio <= 100000
+        && request.resource.data.creada is number;
+
+      allow update: if request.auth != null && (
+        // Comprar: una oferta abierta de otro jugador pasa a vendida a tu nombre
+        (resource.data.estado == 'abierta'
+          && resource.data.vendedor != request.auth.uid
+          && request.resource.data.estado == 'vendida'
+          && request.resource.data.comprador == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'comprador', 'vendidaEn']))
+        // Retirar: el vendedor cancela su oferta mientras siga abierta
+        || (resource.data.vendedor == request.auth.uid
+          && resource.data.estado == 'abierta'
+          && request.resource.data.estado == 'cancelada'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado']))
+        // Cobrar: el vendedor marca como cobrada una oferta vendida (una sola vez)
+        || (resource.data.vendedor == request.auth.uid
+          && resource.data.estado == 'vendida'
+          && resource.data.get('cobrado', false) == false
+          && request.resource.data.cobrado == true
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['cobrado']))
+      );
+
+      allow delete: if false;
     }
   }
 }

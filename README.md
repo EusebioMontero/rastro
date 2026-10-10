@@ -27,10 +27,20 @@ Proyecto: `rastro-3fa4c`. Métodos de acceso que hay que tener activados en Auth
 | Ruta | Contenido |
 |---|---|
 | `users/{uid}/rastro/config` | proveedor de IA, claves y modelos |
-| `users/{uid}/rastro/save` | inventario, diario, XP y escaneos del día |
+| `users/{uid}/rastro/save` | inventario, monedas, diario, XP, planos, herramientas y fabricación en curso |
+| `mercado/{id}` | ofertas entre jugadores: vendedor, material, cantidad, precio y estado (`abierta`, `vendida`, `cancelada`) |
+
+Las reglas de `firestore.rules` permiten que cada jugador solo toque su partida y que en el mercado solo se pueda publicar a tu nombre, comprar ofertas abiertas de otros, retirar las tuyas y cobrar una vez.
+
+## Juego
+
+- **Escanear**: materiales según tamaño, rareza y composición del objeto.
+- **Taller**: herramientas que dan más material o materiales raros (Cobre, Silicio, Resina, Cristal óptico); se gastan con el uso. Planos por fragmentos al escanear, comprándolos en la tienda, o escaneando la herramienta real (la primera vez te la llevas con su plano). El catálogo está en `catalogo.js`.
+- **Tienda**: vender materiales por monedas y comprar planos.
+- **Mercado**: un jugador publica una cantidad de material por un precio; otro la compra y el intercambio es inmediato. El vendedor cobra al abrir Rastro.
 
 ## Hoja de ruta
 1. Cámara, identificación, tamaño y materiales (hecho)
-2. Recetas, planos por fragmentos y cola de fabricación
+2. Herramientas, planos, tienda y mercado entre jugadores (hecho)
 3. Aceleradores, automatización y progreso offline
 4. Coleccionable, logros y prestigio

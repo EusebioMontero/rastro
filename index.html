@@ -241,6 +241,14 @@ button{font-family:inherit}
 .mat-silicio{background:linear-gradient(90deg,rgba(255,255,255,.12) 1px,transparent 1px) 0 0/7px 7px,linear-gradient(0deg,rgba(255,255,255,.12) 1px,transparent 1px) 0 0/7px 7px,linear-gradient(135deg,#3b4a63,#6d7f9e 50%,#2f3b50)}
 .mat-resina{background:radial-gradient(circle at 30% 35%,rgba(255,255,255,.55) 0 8%,transparent 9%),linear-gradient(160deg,#f2b33d,#c9761a 60%,#9b5410)}
 .mat-cristal{background:conic-gradient(from 30deg,#dff6ff,#9fd8f0,#ffffff,#b8e6f7,#e8fbff,#a5d9ee,#dff6ff)}
+.mk{list-style:none;padding:0;display:grid;gap:8px}
+.mk li{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:8px}
+.mk li:first-child{border-top:0;padding-top:0}
+.mk .sn{flex:1;min-width:0;display:grid;gap:1px}
+.mk .st{font:600 11px var(--f-mono);text-transform:uppercase;letter-spacing:.05em}
+.mk .st.ok{color:var(--good)}
+.mk .empty-li{display:block;color:var(--ink-2);font-size:14px}
+#mkForm .row .field{flex:1 1 120px}
 .linkbtn{background:none;border:0;padding:4px 0;color:var(--accent);font:500 14px var(--f-body);text-decoration:underline;cursor:pointer;justify-self:start}
 .adv{border-top:1px solid var(--line);padding-top:10px}
 .adv summary{cursor:pointer;font-weight:600;color:var(--ink-2);padding:6px 0}
@@ -323,6 +331,22 @@ button{font-family:inherit}
     <section id="v-taller" class="view" hidden>
       <div class="sec-h"><h2>Taller</h2><span id="tallerSum" class="mono"></span></div>
       <div id="tallerBody" class="tbody"></div>
+      <section id="mercado" class="tbody" hidden>
+        <div class="sec-h sub-h"><h2>Mercado</h2><span class="mono">entre jugadores</span></div>
+        <form id="mkForm" class="card provs" novalidate>
+          <h2>Publicar una oferta</h2>
+          <div class="field"><label for="mk-mat">Material</label><select id="mk-mat"></select></div>
+          <div class="row">
+            <div class="field"><label for="mk-cant">Cantidad</label><input id="mk-cant" type="number" inputmode="numeric" min="1" step="1" value="1"></div>
+            <div class="field"><label for="mk-precio">Precio total</label><input id="mk-precio" type="number" inputmode="numeric" min="0" step="1" value="10"></div>
+          </div>
+          <p class="note" id="mkRef"></p>
+          <button class="btn primary" id="mkPub" type="submit">Publicar oferta</button>
+          <p class="sub" id="mkMsg" role="status"></p>
+        </form>
+        <div class="card"><h2>Ofertas de otros jugadores</h2><ul id="mkList" class="mk"></ul></div>
+        <div class="card"><h2>Tus ofertas</h2><ul id="mkMine" class="mk"></ul></div>
+      </section>
     </section>
 
     <section id="v-log" class="view" hidden>
@@ -591,6 +615,7 @@ async function onUser(u,again){
   fb.user=u||null;fb.loadErr='';
   if(!u){
     // Sin sesión no se juega: se vacía todo lo cargado de la cuenta anterior
+    mkStop();
     mode='none';freshState();emptyCfg();
     refreshAi();renderAcct();renderAll();showIdle();setButtons();renderSet();
     return;
@@ -622,6 +647,7 @@ async function onUser(u,again){
     saveState='err';fb.loadErr=(e&&e.code)||'error';mode='none';
   }
   fb.busy=false;
+  if(mode==='firebase')mkStart();
   if(cfg.prov==='puter')puterRefresh();
   refreshAi();renderAcct();renderAll();showIdle();setButtons();renderSet();
   orHandleReturn();
@@ -800,7 +826,7 @@ function renderLog(){
       '<div class="chips">'+mats+'</div></li>';
   }).join('');
 }
-function renderAll(){renderHeader();renderInv();renderLog();renderTaller();}
+function renderAll(){renderHeader();renderInv();renderLog();renderTaller();renderMarket();}
 function setPanel(html){$('#panel').innerHTML=html;}
 function setButtons(){
   var off=busy;
@@ -947,6 +973,160 @@ function realTool(r){
   }
   return null;
 }
+/* ---------- Mercado entre jugadores ---------- */
+var mk={open:[],mine:[],unsubA:null,unsubB:null,busy:false,cobrando:{}};
+function mkAlias(){
+  var u=fb.user||{};
+  var n=clean(u.displayName||'',40).split(' ')[0];
+  return n||('Jugador '+String(u.uid||'').slice(0,4).toUpperCase());
+}
+function mkRef(id){return fb.db.collection('mercado').doc(id);}
+function saveWith(change){
+  // Partida con un cambio aplicado (sin tocar el estado hasta que la operación se confirme)
+  var d=JSON.parse(JSON.stringify(snapshot()));change(d);d.t=Date.now();return d;
+}
+function mkStart(){
+  mkStop();
+  if(!fb.user||!fb.db)return;
+  $('#mercado').hidden=false;
+  mk.unsubA=fb.db.collection('mercado').where('estado','==','abierta').limit(60).onSnapshot(function(q){
+    mk.open=q.docs.map(function(x){var d=x.data();d.id=x.id;return d;});renderMarket();
+  },function(){mk.open=[];renderMarket();});
+  mk.unsubB=fb.db.collection('mercado').where('vendedor','==',fb.user.uid).limit(60).onSnapshot(function(q){
+    mk.mine=q.docs.map(function(x){var d=x.data();d.id=x.id;return d;});
+    mk.mine.forEach(function(o){if(o.estado==='vendida'&&!o.cobrado)mkCobrar(o.id);});
+    renderMarket();
+  },function(){mk.mine=[];renderMarket();});
+}
+function mkStop(){
+  if(mk.unsubA){mk.unsubA();mk.unsubA=null;}
+  if(mk.unsubB){mk.unsubB();mk.unsubB=null;}
+  mk.open=[];mk.mine=[];
+  var m=$('#mercado');if(m)m.hidden=true;
+}
+function mkMsg(t,bad){var e=$('#mkMsg');e.textContent=t;e.classList.toggle('warn',!!bad);}
+function mkErr(e){
+  var c=e&&e.code||e&&e.message||'';
+  if(c==='vendida')return 'Esa oferta ya no está disponible.';
+  if(c==='monedas')return 'No tienes monedas suficientes.';
+  if(c==='material')return 'No tienes tanta cantidad de ese material.';
+  if(c==='permission-denied')return 'El mercado ha rechazado la operación. Revisa las reglas de Firestore.';
+  return 'No se pudo completar. Revisa la conexión e inténtalo otra vez.';
+}
+async function mkPublicar(mat,cant,precio){
+  if(mk.busy||!fb.user||mode!=='firebase')return;
+  if(!MAT_BY[mat]||!(cant>=1)||!(precio>=0))return;
+  if((state.inv[mat]||0)<cant){mkMsg(mkErr({code:'material'}),true);return;}
+  mk.busy=true;mkMsg('Publicando…');
+  try{
+    var ref=fb.db.collection('mercado').doc();
+    var save=saveWith(function(d){d.inv[mat]-=cant;});
+    var b=fb.db.batch();
+    b.set(ref,{vendedor:fb.user.uid,alias:mkAlias(),mat:mat,cant:cant,precio:precio,estado:'abierta',creada:Date.now()});
+    b.set(fbDoc('save'),save);
+    await b.commit();
+    state.inv[mat]-=cant;
+    persist();renderAll();
+    mkMsg('Oferta publicada: '+cant+' de '+matName(mat)+' por '+precio+' monedas.');
+  }catch(e){mkMsg(mkErr(e),true);}
+  mk.busy=false;renderMarket();
+}
+async function mkComprar(id){
+  if(mk.busy||!fb.user||mode!=='firebase')return;
+  mk.busy=true;renderMarket();
+  var got=null;
+  try{
+    await fb.db.runTransaction(async function(tx){
+      var snap=await tx.get(mkRef(id));
+      var o=snap.exists?snap.data():null;
+      if(!o||o.estado!=='abierta'||o.vendedor===fb.user.uid)throw {code:'vendida'};
+      if(state.monedas<o.precio)throw {code:'monedas'};
+      tx.update(mkRef(id),{estado:'vendida',comprador:fb.user.uid,vendidaEn:Date.now()});
+      tx.set(fbDoc('save'),saveWith(function(d){d.monedas-=o.precio;d.inv[o.mat]=(d.inv[o.mat]||0)+o.cant;}));
+      got=o;
+    });
+    state.monedas-=got.precio;state.inv[got.mat]=(state.inv[got.mat]||0)+got.cant;
+    persist();renderAll();
+    toast('Comprado: '+got.cant+' de '+matName(got.mat)+' por '+got.precio+' monedas.');
+  }catch(e){toast(mkErr(e));}
+  mk.busy=false;renderMarket();
+}
+async function mkCancelar(id){
+  if(mk.busy||!fb.user||mode!=='firebase')return;
+  mk.busy=true;renderMarket();
+  var got=null;
+  try{
+    await fb.db.runTransaction(async function(tx){
+      var snap=await tx.get(mkRef(id));
+      var o=snap.exists?snap.data():null;
+      if(!o||o.estado!=='abierta'||o.vendedor!==fb.user.uid)throw {code:'vendida'};
+      tx.update(mkRef(id),{estado:'cancelada'});
+      tx.set(fbDoc('save'),saveWith(function(d){d.inv[o.mat]=(d.inv[o.mat]||0)+o.cant;}));
+      got=o;
+    });
+    state.inv[got.mat]=(state.inv[got.mat]||0)+got.cant;
+    persist();renderAll();
+    toast('Oferta retirada. Recuperas '+got.cant+' de '+matName(got.mat)+'.');
+  }catch(e){toast(mkErr(e));}
+  mk.busy=false;renderMarket();
+}
+async function mkCobrar(id){
+  if(mk.cobrando[id]||!fb.user||mode!=='firebase')return;
+  mk.cobrando[id]=1;
+  var got=null;
+  try{
+    await fb.db.runTransaction(async function(tx){
+      var snap=await tx.get(mkRef(id));
+      var o=snap.exists?snap.data():null;
+      if(!o||o.estado!=='vendida'||o.cobrado||o.vendedor!==fb.user.uid){got=null;return;}
+      tx.update(mkRef(id),{cobrado:true});
+      tx.set(fbDoc('save'),saveWith(function(d){d.monedas+=o.precio;}));
+      got=o;
+    });
+    if(got){
+      state.monedas+=got.precio;persist();renderAll();
+      toast('Has vendido '+got.cant+' de '+matName(got.mat)+': +'+got.precio+' monedas.');
+    }
+  }catch(e){}
+  delete mk.cobrando[id];
+}
+function renderMarket(){
+  var box=$('#mercado');if(!box||box.hidden)return;
+  // selector de material (conserva la elección)
+  var sel=$('#mk-mat'),cur=sel.value;
+  var mats=MATS.filter(function(m){return (state.inv[m.id]||0)>0;});
+  sel.innerHTML=mats.length?mats.map(function(m){return '<option value="'+m.id+'">'+m.n+' (tienes '+state.inv[m.id]+')</option>';}).join(''):'<option value="">No tienes materiales</option>';
+  if(cur&&mats.some(function(m){return m.id===cur;}))sel.value=cur;
+  $('#mkPub').disabled=!mats.length||mk.busy;
+  var m0=sel.value;
+  $('#mkRef').textContent=m0?'La tienda paga '+(VENTA[m0]||1)+' monedas por unidad de '+matName(m0).toLowerCase()+'. Los materiales quedan apartados hasta que alguien compre o retires la oferta.':'';
+  // ofertas de otros
+  var others=mk.open.filter(function(o){return fb.user&&o.vendedor!==fb.user.uid&&MAT_BY[o.mat];}).sort(function(a,b){return (b.creada||0)-(a.creada||0);});
+  $('#mkList').innerHTML=others.length?others.map(function(o){
+    var pu=o.cant?Math.round(o.precio/o.cant*10)/10:0;
+    return '<li><span class="sw mat-'+o.mat+'"></span><div class="sn"><b>'+o.cant+' de '+esc(matName(o.mat))+'</b><span class="mono">'+esc(o.alias||'Jugador')+' · '+fmt(pu)+' c/u</span></div>'+
+      '<button class="btn sm primary" type="button" data-mkbuy="'+esc(o.id)+'"'+(mk.busy||state.monedas<o.precio?' disabled':'')+'>Comprar · '+o.precio+'</button></li>';
+  }).join(''):'<li class="empty-li">Ahora mismo no hay ofertas de otros jugadores.</li>';
+  // mis ofertas
+  var mine=mk.mine.filter(function(o){return o.estado!=='cancelada'&&MAT_BY[o.mat];}).sort(function(a,b){return (b.creada||0)-(a.creada||0);}).slice(0,20);
+  $('#mkMine').innerHTML=mine.length?mine.map(function(o){
+    var right=o.estado==='abierta'?'<button class="btn sm" type="button" data-mkcancel="'+esc(o.id)+'"'+(mk.busy?' disabled':'')+'>Retirar</button>'
+      :'<span class="st ok">Vendida'+(o.cobrado?' · cobrada':'')+'</span>';
+    return '<li><span class="sw mat-'+o.mat+'"></span><div class="sn"><b>'+o.cant+' de '+esc(matName(o.mat))+'</b><span class="mono">'+o.precio+' monedas</span></div>'+right+'</li>';
+  }).join(''):'<li class="empty-li">No tienes ofertas publicadas.</li>';
+  box.querySelectorAll('[data-mkbuy]').forEach(function(b){b.addEventListener('click',function(){mkComprar(b.dataset.mkbuy);});});
+  box.querySelectorAll('[data-mkcancel]').forEach(function(b){b.addEventListener('click',function(){mkCancelar(b.dataset.mkcancel);});});
+}
+$('#mk-mat').addEventListener('change',renderMarket);
+$('#mkForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  var mat=$('#mk-mat').value,cant=Math.floor(Number($('#mk-cant').value)),precio=Math.floor(Number($('#mk-precio').value));
+  if(!mat){mkMsg('Elige un material.',true);return;}
+  if(!(cant>=1&&cant<=999)){mkMsg('La cantidad debe estar entre 1 y 999.',true);return;}
+  if(!(precio>=0&&precio<=100000)){mkMsg('El precio debe estar entre 0 y 100.000 monedas.',true);return;}
+  mkPublicar(mat,cant,precio);
+});
+
 function dropFragment(r,first){
   if(Math.random()>=(first?0.7:0.4))return null;
   var cands=[],sum=0;
