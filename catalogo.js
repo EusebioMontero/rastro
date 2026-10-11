@@ -14,6 +14,18 @@
 //   pista   texto para el jugador sobre qué fotografiar
 //   efecto  descripción del efecto (el efecto en sí está programado en index.html)
 //   precio  monedas que cuesta el plano en la tienda (cada fragmento que tengas lo abarata)
+//   g       género del nombre para el nivel: f, m, fp, mp ("Sierra fina", "Destornillador fino", "Guantes finos")
+//
+// Niveles de herramienta (nivelesHerr): Tosca, Fina, Precisa, Perfecta.
+//   fuerza  multiplicador de todos los efectos de la herramienta
+//   usos    multiplicador de usos al fabricarla o mejorarla
+//   coste   multiplicador de la receta para mejorar a ese nivel
+//   tiempo  multiplicador del tiempo de taller para mejorar a ese nivel
+//   precio  multiplicador del precio del plano de ese nivel en la tienda
+//   frags   fragmentos necesarios para completar el plano de ese nivel
+//   porUso  usos de la herramienta del nivel anterior para aprender el plano de este nivel
+//
+// raros: origen = de dónde sale (se ve al pulsar el material en el Inventario).
 //
 // venta: monedas que paga la tienda por cada unidad de material o pieza.
 //
@@ -33,6 +45,7 @@
 //   puntos  conocimiento necesario para aprenderla. Una vez abierta, solo crece con la primera
 //           extracción completa de objetos nuevos de su campo (tantos puntos como su complejidad)
 //   planos  planos de herramientas que regala al aprenderla
+//   mejoras planos de nivel superior que regala al aprenderla ({ herramienta: nivel })
 //
 // Estados del objeto (los detecta la IA): multiplicadores de material, piezas y tiempo, y rareza extra.
 //   efecto  descripción (el efecto en sí está programado en index.html)
@@ -44,6 +57,12 @@ window.RASTRO_CAT = {
     { id: 'completa', n: 'Completa', tiempo: 1,   cant: 1,   planos: true }
   ],
   maxExtr: 3,
+  nivelesHerr: [
+    { n: 'Tosca',    fuerza: 1,   usos: 1,   coste: 1, tiempo: 1, precio: 1 },
+    { n: 'Fina',     fuerza: 1.5, usos: 1.5, coste: 2, tiempo: 2, precio: 2, frags: 3, porUso: 8 },
+    { n: 'Precisa',  fuerza: 2,   usos: 2,   coste: 3, tiempo: 3, precio: 4, frags: 4, porUso: 15 },
+    { n: 'Perfecta', fuerza: 3,   usos: 3,   coste: 4, tiempo: 4, precio: 8, frags: 5, porUso: 25 }
+  ],
   campos: { mecanica: 'Mecánica', electricidad: 'Electricidad', optica: 'Óptica', materiales: 'Materiales', quimica: 'Química' },
   estados: {
     nuevo:      { n: 'Nuevo',      mat: 1,    piezas: 1,   tiempo: 1.1, rareza: 0, desc: 'Intacto: cuesta algo más desmontarlo.' },
@@ -56,21 +75,28 @@ window.RASTRO_CAT = {
     { id: 'obs', n: 'Observación', nivel: 1, req: [], campo: '*', puntos: 3, coste: {}, monedas: 0,
       efecto: 'Te fijas en cómo están hechas las cosas: +10 % de todos los materiales.' },
     { id: 'carp', n: 'Carpintería', nivel: 2, req: ['obs'], campo: 'materiales', puntos: 4, coste: { madera: 6 }, monedas: 30,
-      efecto: '+25 % de madera, y los fragmentos de planos de madera salen el doble.' },
+      mejoras: { sierra: 2 },
+      efecto: '+25 % de madera, y los fragmentos de planos de madera salen el doble. Plano de Sierra fina.' },
     { id: 'metal', n: 'Metalurgia', nivel: 2, req: ['obs'], campo: 'materiales', puntos: 5, coste: { metal: 6 }, monedas: 40,
-      efecto: '+25 % de metal.' },
+      mejoras: { iman: 2, palanca: 2 },
+      efecto: '+25 % de metal. Planos de Imán fino y Palanca fina.' },
     { id: 'elec', n: 'Electricidad', nivel: 2, req: ['obs'], campo: 'electricidad', puntos: 5, coste: { cable: 2, electronica: 3 }, monedas: 50,
-      efecto: '+1 de electrónica en aparatos y el Pelacables saca el doble de cobre.' },
+      mejoras: { pelacables: 2 },
+      efecto: '+1 de electrónica en aparatos y el Pelacables saca el doble de cobre. Plano de Pelacables fino.' },
     { id: 'opt', n: 'Óptica', nivel: 2, req: ['obs'], campo: 'optica', puntos: 4, coste: { vidrio: 6, plastico: 2 }, monedas: 50,
       efecto: '+25 % de vidrio. Entiendes cómo funciona una lupa: plano de la Lupa.', planos: ['lupa'] },
     { id: 'mec', n: 'Mecánica', nivel: 3, req: ['metal'], campo: 'mecanica', puntos: 6, coste: { tornillos: 6, muelle: 2 }, monedas: 60,
-      efecto: '+50 % de piezas mecánicas (tornillos, muelles, motores, bisagras) y −15 % de tiempo en aparatos complejos.' },
+      mejoras: { destornillador: 2 },
+      efecto: '+50 % de piezas mecánicas (tornillos, muelles, motores, bisagras) y −15 % de tiempo en aparatos complejos. Plano de Destornillador fino.' },
     { id: 'quim', n: 'Química', nivel: 3, req: ['carp'], campo: 'quimica', puntos: 4, coste: { organico: 6, resina: 1 }, monedas: 60,
-      efecto: '+25 % de orgánico y la Navaja siempre saca resina.' },
+      mejoras: { navaja: 2 },
+      efecto: '+25 % de orgánico y la Navaja siempre saca resina. Plano de Navaja fina.' },
     { id: 'recic', n: 'Reciclaje', nivel: 3, req: ['metal', 'carp'], campo: 'materiales', puntos: 8, coste: { papel: 6, plastico: 6 }, monedas: 80,
-      efecto: 'Repetir un objeto rinde menos despacio: −15 % por repetición en vez de −25 %.' },
+      mejoras: { guantes: 2 },
+      efecto: 'Repetir un objeto rinde menos despacio: −15 % por repetición en vez de −25 %. Plano de Guantes de trabajo finos.' },
     { id: 'micro', n: 'Microelectrónica', nivel: 4, req: ['elec', 'opt'], campo: 'electricidad', puntos: 8, coste: { cobre: 4, cable: 4, electronica: 6 }, monedas: 120,
-      efecto: '+50 % de chips y LED. Entiendes un circuito: plano del Kit de precisión.', planos: ['kit'] }
+      mejoras: { pelacables: 3 },
+      efecto: '+50 % de chips y LED. Entiendes un circuito: plano del Kit de precisión y de Pelacables preciso.', planos: ['kit'] }
   ],
   piezas: [
     { id: 'tornillos', n: 'Tornillos',          herramienta: 'destornillador' },
@@ -90,37 +116,37 @@ window.RASTRO_CAT = {
     tornillos: 2, muelle: 3, motor: 25, cable: 5, bisagra: 6, neodimio: 12, lente: 10, chip: 25, led: 6
   },
   raros: [
-    { id: 'cobre',   n: 'Cobre' },
-    { id: 'silicio', n: 'Silicio' },
-    { id: 'resina',  n: 'Resina' },
-    { id: 'cristal', n: 'Cristal óptico' }
+    { id: 'cobre',   n: 'Cobre',          origen: 'Sale de la electrónica si extraes con el Pelacables.' },
+    { id: 'silicio', n: 'Silicio',        origen: 'Sale de la electrónica si extraes con el Kit de precisión.' },
+    { id: 'resina',  n: 'Resina',         origen: 'A veces sale de la madera o lo orgánico si extraes con la Navaja.' },
+    { id: 'cristal', n: 'Cristal óptico', origen: 'A veces sale del vidrio si extraes con la Lupa.' }
   ],
   herramientas: [
-    { id: 'guantes', basica: true, n: 'Guantes de trabajo', precio: 0, efecto: '+20 % de todos los materiales y −10 % de tiempo.',
+    { id: 'guantes', g: 'mp', basica: true, n: 'Guantes de trabajo', precio: 0, efecto: '+20 % de todos los materiales y −10 % de tiempo.',
       frags: 0, receta: { tela: 4, cuero: 1 }, tiempo: 60, usos: 15,
       afin: ['tela', 'cuero'], claves: ['guante'], pista: 'unos guantes' },
-    { id: 'sierra', basica: true, n: 'Sierra', precio: 40, efecto: '+50 % de madera y −20 % de tiempo en objetos de madera.',
+    { id: 'sierra', g: 'f', basica: true, n: 'Sierra', precio: 40, efecto: '+50 % de madera y −20 % de tiempo en objetos de madera.',
       frags: 3, receta: { metal: 3, madera: 2 }, tiempo: 120, usos: 12,
       afin: ['madera'], claves: ['sierra', 'serrucho'], pista: 'una sierra' },
-    { id: 'iman', basica: true, n: 'Imán', precio: 40, efecto: '+50 % de metal. Saca imanes de neodimio.',
+    { id: 'iman', g: 'm', basica: true, n: 'Imán', precio: 40, efecto: '+50 % de metal. Saca imanes de neodimio.',
       frags: 3, receta: { metal: 4, piedra: 1 }, tiempo: 120, usos: 12,
       afin: ['metal'], claves: ['iman'], pista: 'un imán' },
-    { id: 'palanca', basica: true, n: 'Palanca', precio: 60, efecto: '+40 % de material y −25 % de tiempo en objetos grandes (L y XL). Saca bisagras.',
+    { id: 'palanca', g: 'f', basica: true, n: 'Palanca', precio: 60, efecto: '+40 % de material y −25 % de tiempo en objetos grandes (L y XL). Saca bisagras.',
       frags: 3, receta: { metal: 6 }, tiempo: 180, usos: 10,
       afin: ['metal', 'madera', 'piedra'], claves: ['palanca', 'pata de cabra'], pista: 'una palanca' },
-    { id: 'destornillador', basica: true, n: 'Destornillador', precio: 50, efecto: 'Saca tornillos, muelles y motores. En aparatos complejos: +2 de electrónica, +1 de metal y −25 % de tiempo.',
+    { id: 'destornillador', g: 'm', basica: true, n: 'Destornillador', precio: 50, efecto: 'Saca tornillos, muelles y motores. En aparatos complejos: +2 de electrónica, +1 de metal y −25 % de tiempo.',
       frags: 3, receta: { metal: 2, plastico: 2 }, tiempo: 120, usos: 12,
       afin: ['electronica', 'plastico', 'metal'], claves: ['destornillador'], pista: 'un destornillador' },
-    { id: 'navaja', basica: true, n: 'Navaja', precio: 45, efecto: 'De madera u orgánico, a veces saca Resina (raro).',
+    { id: 'navaja', g: 'f', basica: true, n: 'Navaja', precio: 45, efecto: 'De madera u orgánico, a veces saca Resina (raro).',
       frags: 3, receta: { metal: 2, madera: 1 }, tiempo: 120, usos: 12,
       afin: ['madera', 'organico'], claves: ['navaja', 'cuchillo', 'cutter'], pista: 'una navaja o un cuchillo' },
-    { id: 'pelacables', basica: true, n: 'Pelacables', precio: 70, efecto: 'De la electrónica saca Cobre (raro). Saca cable.',
+    { id: 'pelacables', g: 'm', basica: true, n: 'Pelacables', precio: 70, efecto: 'De la electrónica saca Cobre (raro). Saca cable.',
       frags: 3, receta: { metal: 3, goma: 2 }, tiempo: 180, usos: 10,
       afin: ['electronica', 'goma'], claves: ['alicate', 'pelacables', 'tenaza'], pista: 'unos alicates' },
-    { id: 'lupa', tech: 'opt', n: 'Lupa', precio: 90, efecto: 'A veces sube un nivel la rareza del objeto; del vidrio saca Cristal óptico (raro). Saca lentes.',
+    { id: 'lupa', g: 'f', tech: 'opt', n: 'Lupa', precio: 90, efecto: 'A veces sube un nivel la rareza del objeto; del vidrio saca Cristal óptico (raro). Saca lentes.',
       frags: 4, receta: { vidrio: 3, plastico: 1, metal: 1 }, tiempo: 180, usos: 10,
       afin: ['vidrio', 'plastico'], claves: ['lupa', 'gafas', 'lente', 'prismatico'], pista: 'una lupa o unas gafas' },
-    { id: 'kit', tech: 'micro', n: 'Kit de precisión', precio: 150, efecto: 'De la electrónica saca Silicio (raro); el doble en aparatos muy complejos. Saca chips y LED.',
+    { id: 'kit', g: 'm', tech: 'micro', n: 'Kit de precisión', precio: 150, efecto: 'De la electrónica saca Silicio (raro); el doble en aparatos muy complejos. Saca chips y LED.',
       frags: 4, receta: { cobre: 3, tornillos: 4, plastico: 2 }, tiempo: 300, usos: 8,
       afin: ['electronica'], claves: ['soldador', 'multimetro', 'placa base', 'microscopio'], pista: 'un soldador o un multímetro' }
   ]
