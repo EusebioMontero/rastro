@@ -11,10 +11,12 @@ service cloud.firestore {
     match /mercado/{id} {
       allow read: if request.auth != null;
 
-      // Publicar: siempre a tu nombre, abierta y con valores razonables (material o plano; un plano puede pedir otro a cambio)
+      // Publicar: siempre a tu nombre, abierta y con valores razonables (material o plano; un plano puede pedir otro a cambio;
+      // un invento de la IA viaja con su definición en 'inv')
       allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['vendedor', 'alias', 'tipo', 'mat', 'cant', 'precio', 'pide', 'estado', 'creada'])
+        && request.resource.data.keys().hasOnly(['vendedor', 'alias', 'tipo', 'mat', 'cant', 'precio', 'pide', 'inv', 'estado', 'creada'])
         && request.resource.data.get('tipo', 'mat') in ['mat', 'plano']
+        && request.resource.data.get('inv', {}) is map && request.resource.data.get('inv', {}).size() <= 12
         && request.resource.data.get('pide', '') is string && request.resource.data.get('pide', '').size() <= 20
         && (request.resource.data.get('tipo', 'mat') == 'mat' || request.resource.data.cant == 1)
         && request.resource.data.vendedor == request.auth.uid

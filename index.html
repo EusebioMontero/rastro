@@ -358,6 +358,13 @@ button{font-family:inherit}
 .sell li.buy summary::after{order:1}
 .sell li.buy summary .mono{order:2;flex-basis:100%;color:var(--ink-2)}
 .sell li.buy .btn{margin-top:2px}
+.pill.inv{color:var(--accent);border-style:solid;background:transparent}
+.it summary .pill{flex:none}
+.it.invento{border-color:var(--accent);border-left-width:4px}
+.it.invento.lejos{border-style:dashed;opacity:.85}
+.inv-sw{background:repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0 2px,transparent 2px 7px),var(--accent)}
+.mono.warn{color:var(--bad)}
+.grp-inv>.btn{justify-self:start}
 
 @media (prefers-reduced-motion: reduce){
   .vf.scan::after{animation:none;top:50%}
@@ -524,9 +531,9 @@ button{font-family:inherit}
     <div id="maLog" class="ma-log" aria-live="polite"></div>
     <form id="maForm" class="provs" novalidate>
       <div class="field"><label for="ma-q">Tu pregunta (opcional)</label><input id="ma-q" type="text" autocomplete="off" maxlength="200" placeholder="¿Qué fabrico primero?"></div>
-      <button class="btn primary" id="maAsk" type="submit">Pedir consejo</button>
+      <div class="row"><button class="btn primary" id="maAsk" type="submit">Pedir consejo</button><button class="btn" id="maInv" type="button">Inventa un plano</button></div>
     </form>
-    <p class="note">Ve tu inventario, planos, tecnologías y conocimiento. Cada consulta usa tu IA conectada.</p>
+    <p class="note">Ve tu inventario, planos, tecnologías y conocimiento. Para un invento puedes escribir tu idea (hasta 3 al día). Cada consulta usa tu IA conectada.</p>
   </div>
 </div>
 <nav class="tabs" aria-label="Secciones" hidden>
@@ -569,11 +576,87 @@ var CAT=window.RASTRO_CAT||{raros:[],herramientas:[]};
 CAT.raros.forEach(function(m){MATS.push({id:m.id,n:m.n,rare:true,origen:m.origen||''});});
 (CAT.piezas||[]).forEach(function(m){MATS.push({id:m.id,n:m.n,pieza:true,tool:m.herramienta});});
 var MAT_BY={};MATS.forEach(function(m){MAT_BY[m.id]=m;});
-var TOOLS=CAT.herramientas||[],TOOL_BY={};TOOLS.forEach(function(t){TOOL_BY[t.id]=t;});
+var TOOLS=(CAT.herramientas||[]).slice(),TOOL_BY={};TOOLS.forEach(function(t){TOOL_BY[t.id]=t;});
 var NIV=(CAT.nivelesHerr&&CAT.nivelesHerr.length)?CAT.nivelesHerr:[{n:'Tosca',fuerza:1,usos:1,coste:1,tiempo:1,precio:1}],NMAX=NIV.length;
 var CAMPOS=CAT.campos||{materiales:'Materiales'},EST=CAT.estados||{usado:{n:'Usado',mat:1,piezas:1,tiempo:1,rareza:0}};
 var TECHS=CAT.tecnologias||[],TECH_BY={};TECHS.forEach(function(t){TECH_BY[t.id]=t;});
 function tech(id){return !!(state&&state.tech&&state.tech[id]);}
+/* ---------- Inventos de la IA: planos únicos con efectos de una lista fija ---------- */
+var BASE_TOOLS=TOOLS.slice();
+var INV_MAX=15;
+function isBase(id){var m=MAT_BY[id];return !!m&&!m.rare&&!m.pieza;}
+function clampN(v,a,b){v=Number(v);return isFinite(v)?Math.max(a,Math.min(b,v)):a;}
+function efxText(e){
+  switch(e.t){
+    case 'mat':return '+'+pct(e.v)+' % de '+matName(e.m).toLowerCase();
+    case 'todo':return '+'+pct(e.v)+' % de todos los materiales';
+    case 'tiempo':return '−'+pct(e.v)+' % de tiempo'+(e.de?' en objetos de '+matName(e.de).toLowerCase():'');
+    case 'raro':return pct(e.v)+' % de sacar '+matName(e.r).toLowerCase()+' de '+matName(e.de).toLowerCase();
+    case 'pieza':return 'saca '+matName(e.p).toLowerCase()+' ('+pct(e.v)+' % de las que lleve)';
+    case 'rareza':return pct(e.v)+' % de subir la rareza';
+  }
+  return '';
+}
+// Valida y limita lo que inventa la IA (o lo que llega del mercado): el juego solo aplica efectos que conoce
+function cleanInv(r,id){
+  if(!r||typeof r!=='object'||!/^x[a-z0-9]{4,15}$/.test(String(id||'')))return null;
+  var n=clean(r.n||r.nombre,32);if(!n)return null;
+  var g=['m','f','mp','fp'].indexOf(r.g||r.genero)>=0?(r.g||r.genero):'m';
+  var efx=[],seenK={};
+  (Array.isArray(r.efx)?r.efx:Array.isArray(r.efectos)?r.efectos:[]).slice(0,4).forEach(function(e){
+    if(!e||typeof e!=='object'||efx.length>=2)return;
+    var t=String(e.t||e.tipo||''),v=e.v!=null?e.v:e.valor,x=null;
+    if(t==='mat'&&isBase(e.m||e.material))x={t:t,m:e.m||e.material,v:clampN(v,0.15,0.8)};
+    else if(t==='todo')x={t:t,v:clampN(v,0.05,0.3)};
+    else if(t==='tiempo'){var de=e.de||e.material||'';x={t:t,de:isBase(de)?de:'',v:clampN(v,0.1,0.35)};}
+    else if(t==='raro'){var rr=e.r||e.raro,dd=e.de||e.material;if(MAT_BY[rr]&&MAT_BY[rr].rare&&isBase(dd))x={t:t,r:rr,de:dd,v:clampN(v,0.15,0.5)};}
+    else if(t==='pieza'){var pp=e.p||e.pieza;if(MAT_BY[pp]&&MAT_BY[pp].pieza)x={t:t,p:pp,v:clampN(v,0.3,1)};}
+    else if(t==='rareza')x={t:t,v:clampN(v,0.1,0.3)};
+    if(!x)return;
+    var k=x.t+(x.m||x.r||x.p||x.de||'');if(seenK[k])return;seenK[k]=1;
+    x.v=Math.round(x.v*100)/100;efx.push(x);
+  });
+  if(!efx.length)return null;
+  var rec={},tot=0,src=r.receta&&typeof r.receta==='object'?r.receta:{};
+  Object.keys(src).slice(0,6).forEach(function(k){
+    if(!MAT_BY[k]||Object.keys(rec).length>=4)return;
+    var q=Math.round(clampN(src[k],1,8));if(tot+q>16)q=16-tot;if(q>0){rec[k]=q;tot+=q;}
+  });
+  if(!Object.keys(rec).length)return null;
+  var pw=efx.reduce(function(a,e){return a+e.v*({mat:1,todo:3,tiempo:1.5,raro:2,pieza:1.5,rareza:3}[e.t]||1);},0);
+  return {id:id,inv:true,n:n,g:g,desc:clean(r.desc||r.descripcion,200),efx:efx,receta:rec,
+    req:TECH_BY[r.req||r.tecnologia]?(r.req||r.tecnologia):'',
+    usos:Math.round(clampN(r.usos,5,15)),tiempo:Math.round(clampN(r.tiempo,60,600)),
+    frags:1,afin:[],claves:[],pista:'',precio:Math.round(30+80*pw),
+    efecto:efx.map(efxText).join('. ').replace(/^./,function(c){return c.toUpperCase();})+'.',
+    origen:clean(r.origen,60),creado:Number(r.creado)||Date.now()};
+}
+function invData(t){return {n:t.n,g:t.g,desc:t.desc,efx:t.efx,receta:t.receta,req:t.req,usos:t.usos,tiempo:t.tiempo,origen:t.origen,creado:t.creado};}
+// Reconstruye la lista de herramientas: las del catálogo más tus inventos
+function syncInv(){
+  TOOLS.length=0;BASE_TOOLS.forEach(function(t){TOOLS.push(t);});
+  TOOL_BY={};BASE_TOOLS.forEach(function(t){TOOL_BY[t.id]=t;});
+  Object.keys(state.inventos||{}).forEach(function(id){var t=cleanInv(state.inventos[id],id);if(t){TOOLS.push(t);TOOL_BY[id]=t;}});
+}
+function maxL(t){return t&&t.inv?1:NMAX;}
+function seen(m){return !!(state.visto&&state.visto[m])||(state.inv[m]||0)>0;}
+// ¿Se puede fabricar ya? (tecnología aprendida y todos los materiales vistos alguna vez)
+function invReach(t){
+  var f=[];
+  if(t.req&&!tech(t.req))f.push('estudiar '+(TECH_BY[t.req]?TECH_BY[t.req].n:t.req));
+  var nv=Object.keys(t.receta).filter(function(m){return !seen(m);});
+  if(nv.length)f.push('conseguir alguna vez '+nv.map(matName).join(', ').toLowerCase());
+  return {ok:!f.length,falta:f};
+}
+function invApplies(t,o){
+  return t.efx.some(function(e){
+    if(e.t==='mat')return hasMat(o,e.m);
+    if(e.t==='raro')return hasMat(o,e.de);
+    if(e.t==='pieza')return hasPz(o,e.p);
+    if(e.t==='tiempo')return !e.de||hasMat(o,e.de);
+    return true;
+  });
+}
 var SIZES=[
   {id:'XS',max:5,base:1,range:'<5 cm',h:16},
   {id:'S',max:20,base:2,range:'5–20 cm',h:28},
@@ -625,7 +708,7 @@ var PROMPT=[
 ].join('\n');
 
 /* ---------- Estado ---------- */
-var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{}};
+var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0}};
 MATS.forEach(function(m){state.inv[m.id]=0;});
 var ready=false,aiOk=false,aiWhy='',visorOk=false,busy=false,sampleFn=null,ctl=null,lastBlob=null,previewUrl=null;
 var mode='local',ref=null,unsub=null,saveState='',dirty=false,inflight=0,chain=Promise.resolve();
@@ -651,7 +734,7 @@ function hace(ts){
 }
 
 /* ---------- Guardado ---------- */
-function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,tech:state.tech,topen:state.topen,techp:state.techp,planNiv:state.planNiv,pfrag:state.pfrag,tnivel:state.tnivel,texp:state.texp,t:Date.now()};}
+function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,tech:state.tech,topen:state.topen,techp:state.techp,planNiv:state.planNiv,pfrag:state.pfrag,tnivel:state.tnivel,texp:state.texp,inventos:state.inventos,visto:state.visto,invc:state.invc,invd:state.invd,t:Date.now()};}
 function merge(d){
   if(!d||typeof d!=='object')return;
   var inv={};
@@ -660,6 +743,13 @@ function merge(d){
   state.disc=(d.disc&&typeof d.disc==='object')?d.disc:{};
   state.day=(d.day&&typeof d.day.d==='string')?{d:d.day.d,n:Math.max(0,Number(d.day.n)||0)}:{d:'',n:0};
   state.xp=Math.max(0,Number(d.xp)||0);
+  var iv={},di=d.inventos&&typeof d.inventos==='object'?d.inventos:{};
+  Object.keys(di).slice(0,60).forEach(function(id){var t=cleanInv(di[id],id);if(t)iv[id]=invData(t);});
+  state.inventos=iv;syncInv();
+  var vs={},dv=d.visto||{};MATS.forEach(function(m){if(dv[m.id]||inv[m.id]>0)vs[m.id]=1;});
+  Object.keys(state.disc).forEach(function(k){var e=state.disc[k];Object.keys(e&&e.mats||{}).forEach(function(m){if(MAT_BY[m])vs[m]=1;});});
+  state.visto=vs;state.invc=Math.max(0,Math.floor(Number(d.invc)||0));
+  state.invd=(d.invd&&typeof d.invd.d==='string')?{d:d.invd.d,n:Math.max(0,Math.floor(Number(d.invd.n)||0))}:{d:'',n:0};
   var pl={},dp=d.planos||{},tl={},dt=d.tools||{};
   TOOLS.forEach(function(t){
     var a=Math.floor(Number(dp[t.id])||0);if(a>0)pl[t.id]=Math.min(a,t.frags);
@@ -681,8 +771,15 @@ function merge(d){
   TECHS.forEach(function(t){if(dtc[t.id])tc[t.id]=true;if(dto[t.id])to[t.id]=true;var v=Math.floor(Number(dtp[t.id])||0);if(v>0)tp[t.id]=Math.min(v,t.puntos||v);});
   state.tech=tc;state.topen=to;state.techp=tp;
   state.extr=(Array.isArray(d.extr)?d.extr:[]).filter(function(e){return e&&e.id&&e.clave&&Array.isArray(e.mats)&&Number(e.fin)>0;}).slice(0,10);
+  // inventos que ya no son tuyos (vendidos) y de los que no te queda herramienta: se olvidan
+  Object.keys(state.inventos).forEach(function(id){
+    var busy=(state.cola&&state.cola.id===id)||state.extr.some(function(e){return (e.tools||[]).indexOf(id)>=0;});
+    if(!pl[id]&&!tl[id]&&!busy)delete state.inventos[id];
+  });
+  syncInv();
 }
 function persist(){
+  MATS.forEach(function(m){if(state.inv[m.id]>0)state.visto[m.id]=1;});
   dirty=true;
   chain=chain.then(function(){
     if(!dirty)return;
@@ -740,8 +837,9 @@ function loadScript(src){
   });
 }
 function freshState(){
-  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{}};
+  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0}};
   MATS.forEach(function(m){state.inv[m.id]=0;});
+  syncInv();
 }
 function loadLocal(){
   freshState();
@@ -1055,7 +1153,7 @@ function planPrice(t,L){return L<=1?(t.precio||0):Math.max(t.precio||0,25)*(NIV[
 function precioPlano(t){
   var L=planLevel(t);
   if(!L)return Math.ceil((t.precio||0)*(1-(state.planos[t.id]||0)/Math.max(1,t.frags)));
-  if(L>=NMAX)return 0;
+  if(L>=maxL(t))return 0;
   var need=NIV[L].frags||1;
   return Math.ceil(planPrice(t,L+1)*(1-Math.min(need,state.pfrag[t.id]||0)/need));
 }
@@ -1071,7 +1169,7 @@ var toastT=null;
 function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true;},3500);}
 function craft(id){
   var t=TOOL_BY[id];
-  if(!t||!known(t)||state.cola||has(id)||!canPay(t,1))return;
+  if(!t||!known(t)||state.cola||has(id)||!canPay(t,1)||(t.inv&&!invReach(t).ok))return;
   pay(t,1);
   state.cola={id:id,fin:Date.now()+(inst?0:t.tiempo*1000),dur:t.tiempo,niv:1};
   persist();renderAll();
@@ -1091,7 +1189,7 @@ function upgrade(id){
   toast('Mejorando a '+toolName(t,L+1)+'. Tardará '+fmtT(dur)+'.');
 }
 function buyPlano(id){
-  var t=TOOL_BY[id];if(!t)return;
+  var t=TOOL_BY[id];if(!t||t.inv)return;
   var L=planLevel(t);
   if(L>=NMAX||(!L&&t.tech&&!tech(t.tech)))return;
   var pr=precioPlano(t);if(state.monedas<pr)return;
@@ -1146,11 +1244,18 @@ function lvlBar(t){
 }
 function nextInfo(t){
   // Cómo conseguir el plano del siguiente nivel
-  var P=planLevel(t);if(!P||P>=NMAX)return '';
+  var P=planLevel(t);if(!P||P>=maxL(t))return '';
   var n=NIV[P],T=tlevel(t.id),f=state.pfrag[t.id]||0,u=state.texp[t.id]||0;
   return '<p class="mono">'+esc(planName(t,P+1))+': fragmentos '+f+'/'+(n.frags||1)+' · uso '+(T===P?u:'–')+'/'+(n.porUso||'–')+'</p>';
 }
 function toolDesc(t){
+  if(t.inv){
+    var r=invReach(t);
+    return (t.desc?'<p>'+esc(t.desc)+'</p>':'')+'<p><b>'+esc(t.efecto)+'</b></p>'+
+      '<p class="mono">Invento de la IA'+(t.origen?' a partir de '+esc(t.origen):'')+' · '+t.usos+' usos · '+fmtT(t.tiempo)+(t.req?' · requiere '+esc(TECH_BY[t.req]?TECH_BY[t.req].n:t.req):'')+'</p>'+
+      (r.ok?'':'<p>Inalcanzable por ahora: te falta '+esc(r.falta.join(' y '))+'.</p>')+
+      '<p>Es único: si lo vendes o lo cambias, dejas de tener el plano. No tiene niveles.</p>';
+  }
   var P=planLevel(t),T=tlevel(t.id),lock=!P&&t.tech&&!tech(t.tech);
   var h='<p>'+esc(t.efecto)+'</p>';
   if(T>=2)h+='<p class="mono">Fuerza ×'+fmt(NIV[T-1].fuerza)+': todos sus efectos aumentan.</p>';
@@ -1167,13 +1272,19 @@ function toolItem(t){
   var P=planLevel(t),T=tlevel(t.id),lock=!P&&t.tech&&!tech(t.tech),fr=state.planos[t.id]||0;
   var busy=state.cola&&state.cola.id===t.id;
   var tag='';
-  if(T)tag='<span class="pill r'+T+'">'+adjN(t,T)+'</span><em class="mono">'+state.tools[t.id]+' usos</em>';
+  if(t.inv)tag='<span class="pill inv">Invento</span>'+(T?'<em class="mono">'+state.tools[t.id]+' usos</em>':'');
+  else if(T)tag='<span class="pill r'+T+'">'+adjN(t,T)+'</span><em class="mono">'+state.tools[t.id]+' usos</em>';
   else if(busy)tag='<em class="mono">en el taller</em>';
   else if(P)tag='<span class="pill r'+P+' off">'+adjN(t,P)+'</span>';
   else if(lock)tag='<em class="mono">bloqueada</em>';
   else tag=pips(fr,t.frags);
   var act='';
+  var rch=t.inv?invReach(t):{ok:true};
   if(busy){}
+  else if(t.inv&&P&&!T&&!rch.ok){
+    act='<div class="chips">'+recetaChips(t,1)+'</div><p class="mono warn">Inalcanzable por ahora: te falta '+esc(rch.falta.join(' y '))+'.</p>';
+  }
+  else if(t.inv&&T){}
   else if(P&&!T){
     var okP=canPay(t,1);
     act='<div class="chips">'+recetaChips(t,1)+'</div><button class="btn primary sm" type="button" data-craft="'+t.id+'"'+(state.cola||!okP?' disabled':'')+'>'+(state.cola?'El taller está ocupado':okP?'Fabricar · '+fmtT(t.tiempo):'Faltan materiales')+'</button>';
@@ -1182,12 +1293,12 @@ function toolItem(t){
     act='<div class="chips">'+recetaChips(t,k)+'</div><button class="btn primary sm" type="button" data-up="'+t.id+'"'+(state.cola||!okU?' disabled':'')+'>'+(state.cola?'El taller está ocupado':okU?'Mejorar a '+adjN(t,T+1).toLowerCase()+' · '+fmtT(upTime(t,T)):'Faltan materiales para mejorarla')+'</button>';
   }else if(T&&T>=NMAX){
     act='<p class="mono">Nivel máximo.</p>';
-  }else if(P&&P<NMAX){
+  }else if(P&&P<maxL(t)){
     act=nextInfo(t)+'<button class="btn sm" type="button" data-goshop="1">'+esc(planName(t,P+1))+' en la Tienda · '+precioPlano(t)+'</button>';
   }else if(!P&&!lock){
     act='<button class="btn sm" type="button" data-goshop="1">En la Tienda · '+precioPlano(t)+' monedas</button>';
   }
-  return '<article class="it'+(P?'':' dash')+'">'+det('tl:'+t.id,'<span class="nm">'+esc(T?toolName(t,T):t.n)+'</span>'+(P?lvlBar(t):'')+tag,toolDesc(t))+(act?'<div class="act">'+act+'</div>':'')+'</article>';
+  return '<article class="it'+(P?'':' dash')+(t.inv?' invento'+(rch.ok?'':' lejos'):'')+'">'+det('tl:'+t.id,'<span class="nm">'+esc(T&&!t.inv?toolName(t,T):t.n)+'</span>'+(P&&!t.inv?lvlBar(t):'')+tag,toolDesc(t))+(act?'<div class="act">'+act+'</div>':'')+'</article>';
 }
 function renderTaller(){
   var el=$('#tallerBody');if(!el)return;
@@ -1199,10 +1310,13 @@ function renderTaller(){
   }
   var inCola=function(t){return state.cola&&state.cola.id===t.id;};
   var mine=TOOLS.filter(function(t){return has(t.id)||inCola(t);});
-  var ready=TOOLS.filter(function(t){return mine.indexOf(t)<0&&planLevel(t)>0;});
-  var todo=TOOLS.filter(function(t){return !planLevel(t)&&!(t.tech&&!tech(t.tech));}).sort(function(a,b){return (state.planos[b.id]||0)/b.frags-(state.planos[a.id]||0)/a.frags;});
-  var adv=TOOLS.filter(function(t){return !planLevel(t)&&t.tech&&!tech(t.tech);});
+  var invs=TOOLS.filter(function(t){return t.inv&&mine.indexOf(t)<0&&planLevel(t)>0;}).sort(function(a,b){return (invReach(b).ok-invReach(a).ok)||(b.creado-a.creado);});
+  var ready=TOOLS.filter(function(t){return !t.inv&&mine.indexOf(t)<0&&planLevel(t)>0;});
+  var todo=TOOLS.filter(function(t){return !t.inv&&!planLevel(t)&&!(t.tech&&!tech(t.tech));}).sort(function(a,b){return (state.planos[b.id]||0)/b.frags-(state.planos[a.id]||0)/a.frags;});
+  var adv=TOOLS.filter(function(t){return !t.inv&&!planLevel(t)&&t.tech&&!tech(t.tech);});
   h+=grp('Tus herramientas',mine.length+'',mine.length?mine.map(toolItem).join(''):'<p class="sub">Aún no tienes ninguna. Fabrica unos Guantes de trabajo para empezar: el plano ya es tuyo.</p>');
+  h+=grp('Inventos de la IA',invs.length+'',(invs.length?invs.map(toolItem).join(''):'<p class="sub">La IA inventa planos únicos al desmontar objetos nuevos. También puedes pedirle uno al maestro.</p>')+
+    '<button class="btn sm" type="button" data-inventar="1"'+(invBusy?' disabled':'')+'>'+(invBusy?'Inventando…':'Pedir un invento a la IA')+'</button>','grp-inv');
   if(ready.length)h+=grp('Para fabricar',ready.length+'',ready.map(toolItem).join(''));
   if(todo.length)h+=grp('Planos por conseguir',todo.length+'',todo.map(toolItem).join(''));
   if(adv.length)h+=grp('Avanzadas',adv.length+'',adv.map(toolItem).join(''));
@@ -1210,8 +1324,9 @@ function renderTaller(){
   el.innerHTML=h;
   el.querySelectorAll('[data-craft]').forEach(function(b){b.addEventListener('click',function(){craft(b.dataset.craft);});});
   el.querySelectorAll('[data-up]').forEach(function(b){b.addEventListener('click',function(){upgrade(b.dataset.up);});});
+  el.querySelectorAll('[data-inventar]').forEach(function(b){b.addEventListener('click',function(){inventarYa('pedido',null,'');});});
   el.querySelectorAll('[data-goshop]').forEach(function(b){b.addEventListener('click',function(){show('tienda');});});
-  var canMake=!state.cola&&TOOLS.some(function(t){var T=tlevel(t.id);return (known(t)&&!T&&canPay(t,1))||(T&&T<planLevel(t)&&canPay(t,NIV[T].coste||1));});
+  var canMake=!state.cola&&TOOLS.some(function(t){var T=tlevel(t.id);return (known(t)&&!T&&canPay(t,1)&&(!t.inv||invReach(t).ok))||(T&&T<planLevel(t)&&canPay(t,NIV[T].coste||1));});
   $('#tallerDot').hidden=!canMake;
 }
 function matKinds(){
@@ -1256,7 +1371,7 @@ function renderTienda(){
     var body='<p>'+esc(t.efecto)+'</p>'+(P?'<p class="mono">Fuerza ×'+fmt(NIV[P].fuerza)+' con la herramienta '+esc(adjN(t,P+1).toLowerCase())+'. Para usarlo tienes que mejorar tu herramienta en el Taller.</p>':'');
     return '<li class="buy">'+det('sh:'+t.id,sum,body)+'<button class="btn sm'+(lock?'':' primary')+'" type="button" data-buy="'+t.id+'"'+(lock||state.monedas<pr?' disabled':'')+'>'+(lock?'Bloqueado':pr+' monedas')+'</button></li>';
   };
-  var nuevos=TOOLS.filter(function(t){return !planLevel(t);}),mejoras=TOOLS.filter(function(t){var P=planLevel(t);return P>0&&P<NMAX;});
+  var nuevos=TOOLS.filter(function(t){return !t.inv&&!planLevel(t);}),mejoras=TOOLS.filter(function(t){var P=planLevel(t);return !t.inv&&P>0&&P<NMAX;});
   h+='<div class="card"><h2>Planos a la venta</h2>'+
     (nuevos.length?'<h3 class="st-h">Planos nuevos</h3><ul class="sell">'+nuevos.map(buyRow).join('')+'</ul>':'')+
     (mejoras.length?'<h3 class="st-h">Mejoras</h3><ul class="sell">'+mejoras.map(buyRow).join('')+'</ul>':'')+
@@ -1396,12 +1511,12 @@ function mkErr(e){
   return 'No se pudo completar. Revisa la conexión e inténtalo otra vez.';
 }
 // Planos en el mercado: 'sierra' es el plano normal y 'sierra@3' el de nivel 3 (Precisa)
-function parsePl(s){var m=String(s||'').split('@'),t=TOOL_BY[m[0]],L=m.length>1?Math.floor(Number(m[1])):1;if(!t||m.length>2||!(L>=1&&L<=NMAX)||(L===1&&!t.frags))return null;return {t:t,L:L};}
+function parsePl(s,inv){var m=String(s||'').split('@'),t=TOOL_BY[m[0]]||(inv&&m.length===1?cleanInv(inv,m[0]):null),L=m.length>1?Math.floor(Number(m[1])):1;if(!t||m.length>2||!(L>=1&&L<=NMAX)||(L===1&&!t.frags))return null;return {t:t,L:L};}
 function plKey(t,L){return L>=2?t.id+'@'+L:t.id;}
 function offTipo(o){return o.tipo==='plano'?'plano':'mat';}
-function offValid(o){return offTipo(o)==='plano'?!!parsePl(o.mat):!!MAT_BY[o.mat];}
-function offName(o){if(offTipo(o)==='plano'){var p=parsePl(o.mat);return planName(p.t,p.L);}return o.cant+' de '+matName(o.mat);}
-function offSw(o){return offTipo(o)==='plano'?'<span class="sw plano-sw" aria-hidden="true"></span>':'<span class="sw mat-'+o.mat+'"></span>';}
+function offValid(o){return offTipo(o)==='plano'?!!parsePl(o.mat,o.inv):!!MAT_BY[o.mat];}
+function offName(o){if(offTipo(o)==='plano'){var p=parsePl(o.mat,o.inv);return planName(p.t,p.L)+(p.t.inv?' (invento)':'');}return o.cant+' de '+matName(o.mat);}
+function offSw(o){return offTipo(o)==='plano'?'<span class="sw plano-sw'+(o.inv?' inv-sw':'')+'" aria-hidden="true"></span>':'<span class="sw mat-'+o.mat+'"></span>';}
 function offPide(o){var pq=parsePl(o.pide);return pq?toolName(pq.t,pq.L):'';}
 function offTerms(o){
   var pp=o.pide?parsePl(o.pide):null,pide=pp?'a cambio del plano de '+toolName(pp.t,pp.L):'';
@@ -1428,6 +1543,7 @@ async function mkPublicar(tipo,item,cant,precio,pide){
     var b=fb.db.batch();
     var doc={vendedor:fb.user.uid,alias:mkAlias(),tipo:tipo,mat:item,cant:cant,precio:precio,estado:'abierta',creada:Date.now()};
     if(pide)doc.pide=pide;
+    if(tipo==='plano'&&pi.t.inv)doc.inv=invData(pi.t);
     b.set(ref,doc);
     b.set(fbDoc('save'),save);
     await b.commit();
@@ -1447,20 +1563,20 @@ async function mkComprar(id){
       var o=snap.exists?snap.data():null;
       if(!o||o.estado!=='abierta'||o.vendedor===fb.user.uid||!offValid(o))throw {code:'vendida'};
       if(state.monedas<o.precio)throw {code:'monedas'};
-      var plano=offTipo(o)==='plano',p=plano?parsePl(o.mat):null,pq=plano&&o.pide?parsePl(o.pide):null;
+      var plano=offTipo(o)==='plano',p=plano?parsePl(o.mat,o.inv):null,pq=plano&&o.pide?parsePl(o.pide):null;
       if(plano&&planLevel(p.t)>=p.L)throw {code:'yaplano'};
       if(plano&&planLevel(p.t)<p.L-1)throw {code:'nivelplano'};
       if(plano&&o.pide&&(!pq||pq.t===p.t||planTop(pq.t)!==pq.L))throw {code:'faltaplano'};
       tx.update(mkRef(id),{estado:'vendida',comprador:fb.user.uid,vendidaEn:Date.now()});
       tx.set(fbDoc('save'),saveWith(function(d){
         d.monedas-=o.precio;
-        if(plano){setPl(d,p.t,p.L);if(pq)setPl(d,pq.t,pq.L-1);}
+        if(plano){if(p.t.inv){d.inventos=d.inventos||{};d.inventos[p.t.id]=invData(p.t);}setPl(d,p.t,p.L);if(pq)setPl(d,pq.t,pq.L-1);}
         else d.inv[o.mat]=(d.inv[o.mat]||0)+o.cant;
       }));
       got=o;
     });
     state.monedas-=got.precio;
-    if(offTipo(got)==='plano'){var gp=parsePl(got.mat),gq=got.pide?parsePl(got.pide):null;setPl(state,gp.t,gp.L);if(gq)setPl(state,gq.t,gq.L-1);}
+    if(offTipo(got)==='plano'){var gp=parsePl(got.mat,got.inv),gq=got.pide?parsePl(got.pide):null;if(gp.t.inv){state.inventos[gp.t.id]=invData(gp.t);syncInv();gp.t=TOOL_BY[gp.t.id];}setPl(state,gp.t,gp.L);if(gq)setPl(state,gq.t,gq.L-1);}
     else state.inv[got.mat]=(state.inv[got.mat]||0)+got.cant;
     persist();renderAll();
     toast((got.pide?'Cambio hecho: ':'Comprado: ')+offName(got)+(got.pide?' por el plano de '+offPide(got):'')+(got.precio?' ('+got.precio+' monedas)':'')+'.');
@@ -1477,10 +1593,10 @@ async function mkCancelar(id){
       var o=snap.exists?snap.data():null;
       if(!o||o.estado!=='abierta'||o.vendedor!==fb.user.uid||!offValid(o))throw {code:'vendida'};
       tx.update(mkRef(id),{estado:'cancelada'});
-      tx.set(fbDoc('save'),saveWith(function(d){if(offTipo(o)==='plano'){var p=parsePl(o.mat);setPl(d,p.t,Math.max(plOf(d,p.t),p.L));}else d.inv[o.mat]=(d.inv[o.mat]||0)+o.cant;}));
+      tx.set(fbDoc('save'),saveWith(function(d){if(offTipo(o)==='plano'){var p=parsePl(o.mat,o.inv);if(p.t.inv){d.inventos=d.inventos||{};d.inventos[p.t.id]=invData(p.t);}setPl(d,p.t,Math.max(plOf(d,p.t),p.L));}else d.inv[o.mat]=(d.inv[o.mat]||0)+o.cant;}));
       got=o;
     });
-    if(offTipo(got)==='plano'){var cp=parsePl(got.mat);setPl(state,cp.t,Math.max(planLevel(cp.t),cp.L));}else state.inv[got.mat]=(state.inv[got.mat]||0)+got.cant;
+    if(offTipo(got)==='plano'){var cp=parsePl(got.mat,got.inv);if(cp.t.inv){state.inventos[cp.t.id]=invData(cp.t);syncInv();cp.t=TOOL_BY[cp.t.id];}setPl(state,cp.t,Math.max(planLevel(cp.t),cp.L));}else state.inv[got.mat]=(state.inv[got.mat]||0)+got.cant;
     persist();renderAll();
     toast('Oferta retirada. Recuperas: '+offName(got)+'.');
   }catch(e){toast(mkErr(e));}
@@ -1524,7 +1640,7 @@ function renderMarket(){
   if(isPlan){
     var ps=$('#mk-pide'),pc=ps.value;
     var ip=parsePl(item);
-    var wants=TOOLS.filter(function(t){var P=planLevel(t);return P<NMAX&&(P>0||t.frags>0)&&(!ip||t!==ip.t);});
+    var wants=TOOLS.filter(function(t){var P=planLevel(t);return !t.inv&&P<NMAX&&(P>0||t.frags>0)&&(!ip||t!==ip.t);});
     ps.innerHTML='<option value="">Nada, solo monedas</option>'+wants.map(function(t){var L=planLevel(t)+1;return '<option value="'+plKey(t,L)+'">'+esc(planName(t,L))+'</option>';}).join('');
     if(pc&&ps.querySelector('option[value="'+pc+'"]'))ps.value=pc;
   }
@@ -1535,13 +1651,13 @@ function renderMarket(){
   // ofertas de otros
   var others=mk.open.filter(function(o){return fb.user&&o.vendedor!==fb.user.uid&&offValid(o);}).sort(function(a,b){return (b.creada||0)-(a.creada||0);});
   $('#mkList').innerHTML=others.length?others.map(function(o){
-    var plano=offTipo(o)==='plano',why='',op=plano?parsePl(o.mat):null,oq=plano&&o.pide?parsePl(o.pide):null;
+    var plano=offTipo(o)==='plano',why='',op=plano?parsePl(o.mat,o.inv):null,oq=plano&&o.pide?parsePl(o.pide):null;
     if(plano&&planLevel(op.t)>=op.L)why='Ya lo tienes';
     else if(plano&&planLevel(op.t)<op.L-1)why='Te falta el nivel anterior';
     else if(plano&&o.pide&&(!oq||planTop(oq.t)!==oq.L))why='Te falta el plano de '+(oq?toolName(oq.t,oq.L):'?');
     else if(state.monedas<o.precio)why='Faltan monedas';
     var label=why||(o.pide?'Cambiar'+(o.precio?' + '+o.precio:''):'Comprar · '+o.precio);
-    var sub=plano?offTerms(o):(o.cant?fmt(Math.round(o.precio/o.cant*10)/10)+' c/u · ':'')+o.precio+' monedas';
+    var sub=plano?(op.t.inv?op.t.efecto+' · ':'')+offTerms(o):(o.cant?fmt(Math.round(o.precio/o.cant*10)/10)+' c/u · ':'')+o.precio+' monedas';
     return '<li>'+offSw(o)+'<div class="sn"><b>'+esc(offName(o))+'</b><span class="mono">'+esc(o.alias||'Jugador')+' · '+esc(sub)+'</span></div>'+
       '<button class="btn sm'+(why?'':' primary')+'" type="button" data-mkbuy="'+esc(o.id)+'"'+(mk.busy||why?' disabled':'')+'>'+esc(label)+'</button></li>';
   }).join(''):'<li class="empty-li">Ahora mismo no hay ofertas de otros jugadores.</li>';
@@ -1584,7 +1700,7 @@ function dropFragment(r,first){
   var cands=[],sum=0;
   TOOLS.forEach(function(t){
     var L=planLevel(t);
-    if(L>=NMAX||(!L&&t.tech&&!tech(t.tech)))return;
+    if(t.inv||L>=NMAX||(!L&&t.tech&&!tech(t.tech)))return;
     var w=0;r.mats.forEach(function(m){if((t.afin||[]).indexOf(m.id)>=0)w+=m.peso;});
     if(!(w>0))return;
     if(tech('carp')&&(t.afin||[]).indexOf('madera')>=0)w*=2;
@@ -1714,7 +1830,7 @@ function applies(tid,o){
     case 'pelacables':return hasMat(o,'electronica')||hasPz(o,'cable');
     case 'kit':return hasMat(o,'electronica')||hasPz(o,'chip')||hasPz(o,'led');
   }
-  return false;
+  var it=TOOL_BY[tid];return !!(it&&it.inv&&invApplies(it,o));
 }
 function piecesFor(tid,o){return (o.piezas||[]).filter(function(p){return MAT_BY[p.id]&&MAT_BY[p.id].tool===tid;});}
 function pct(x){return Math.round(x*100);}
@@ -1734,7 +1850,10 @@ function fx(tid,K){
   return {};
 }
 function pzMul(K){return 1+0.5*(K-1);}
+function invOn(tools){return tools.map(function(id){return TOOL_BY[id];}).filter(function(t){return t&&t.inv;});}
 function toolNote(tid,o){
+  var it=TOOL_BY[tid];
+  if(it&&it.inv)return it.efx.filter(function(e){return invApplies({efx:[e]},o);}).map(efxText).join(' · ');
   var big=sizeById(o.size).base>=8,n=[],K=KF(o,tid),f=fx(tid,K);
   var pz=piecesFor(tid,o).map(function(p){return Math.max(1,Math.round(p.cant*pzMul(K)))+' '+MAT_BY[p.id].n.toLowerCase();});
   if(pz.length)n.push('saca '+pz.join(', '));
@@ -1759,6 +1878,8 @@ function extTime(o,tools,modo){
   if(T.destornillador&&o.comp>=3)f*=fx('destornillador',KF(o,'destornillador')).t;
   if(T.sierra&&hasMat(o,'madera'))f*=fx('sierra',KF(o,'sierra')).t;
   if(tech('mec')&&o.comp>=3)f*=0.85;
+  invOn(tools).forEach(function(t){t.efx.forEach(function(e){if(e.t==='tiempo'&&(!e.de||hasMat(o,e.de)))f*=1-e.v;});});
+  f=Math.max(0.3,f);
   f*=((EST[o.estado]||{}).tiempo||1);
   return Math.max(5,Math.round(base*f*modo.tiempo));
 }
@@ -1770,7 +1891,10 @@ function yieldOf(o,tools,modo,roll){
   if(es.rareza)eff.push(['#'+o.estado,'rareza +'+es.rareza]);
   var chance=function(p){return roll?Math.random()<p:false;};
   if(T.lupa&&comp<4){var lp=F('lupa').p;if(lp>=1||chance(lp)){comp++;eff.push(['lupa','rareza +1']);}else if(!roll)pos.push('rareza +1 ('+pct(lp)+' %)');}
+  var IV=invOn(tools);
+  IV.forEach(function(t){t.efx.forEach(function(e){if(e.t==='rareza'&&comp<4){if(chance(e.v)){comp++;eff.push([t.id,'rareza +1']);}else if(!roll)pos.push('rareza +1 ('+pct(e.v)+' %)');}});});
   var rar=RAR[comp-1],mult=1;
+  IV.forEach(function(t){t.efx.forEach(function(e){if(e.t==='todo'){mult*=1+e.v;eff.push([t.id,'+'+pct(e.v)+' % de todo']);}});});
   if(T.guantes){var gx=F('guantes').mult;mult*=gx;eff.push(['guantes','+'+pct(gx-1)+' % de todo']);}
   if(T.palanca&&size.base>=8){var px=F('palanca').mult;mult*=px;eff.push(['palanca','+'+pct(px-1)+' % por ser grande']);}
   if(tech('obs')){mult*=1.1;eff.push(['@obs','+10 %']);}
@@ -1794,6 +1918,12 @@ function yieldOf(o,tools,modo,roll){
   if(T.pelacables&&gm.electronica){var cu=Math.max(1,Math.round(Math.max(1,Math.floor(gm.electronica/2))*(tech('elec')?2:1)*F('pelacables').k));add('cobre',cu);eff.push(['pelacables','+'+cu+' cobre']);}
   if(T.lupa&&gm.vidrio){var lz=F('lupa');if(lz.p2>=1||chance(lz.p2)){add('cristal',lz.cr);eff.push(['lupa','+'+lz.cr+' cristal óptico']);}else if(!roll)pos.push(lz.cr+' cristal óptico ('+pct(lz.p2)+' %)');}
   if(T.kit&&gm.electronica){var si=Math.max(1,Math.round((comp>=4?2:1)*F('kit').k));add('silicio',si);eff.push(['kit','+'+si+' silicio']);}
+  IV.forEach(function(t){t.efx.forEach(function(e){
+    if(e.t==='mat'&&gm[e.m]){var dmv=bump(e.m,1+e.v);if(dmv)eff.push([t.id,'+'+dmv+' '+matName(e.m).toLowerCase()]);}
+    if(e.t==='raro'&&gm[e.de]){var nr=gm[e.de]>=8?2:1;if(chance(e.v)){add(e.r,nr);eff.push([t.id,'+'+nr+' '+matName(e.r).toLowerCase()]);}else if(!roll)pos.push(nr+' '+matName(e.r).toLowerCase()+' ('+pct(e.v)+' %)');}
+    if(e.t==='pieza'){var pzi=(o.piezas||[]).filter(function(x){return x.id===e.p;})[0];
+      if(pzi&&!T[MAT_BY[e.p].tool]){var np=Math.max(1,Math.round(pzi.cant*q*e.v*(es.piezas||1)));add(e.p,np);eff.push([t.id,'+'+np+' '+matName(e.p).toLowerCase()]);}}
+  });});
   (o.piezas||[]).forEach(function(pz){
     var tl=MAT_BY[pz.id]&&MAT_BY[pz.id].tool;
     if(tl&&T[tl]){var pk=(tech('mec')&&['tornillos','muelle','motor','bisagra'].indexOf(pz.id)>=0)||(tech('micro')&&['chip','led'].indexOf(pz.id)>=0)?1.5:1;
@@ -1830,7 +1960,8 @@ function renderSetup(){
   var y=yieldOf(o,o.tools,modo,false),secs=extTime(o,o.tools,modo);
   var full=state.extr.length>=MAXE;
   var pzs=(o.piezas||[]).map(function(p){
-    var m=MAT_BY[p.id],t=TOOL_BY[m.tool],ok=o.tools.indexOf(m.tool)>=0;
+    var m=MAT_BY[p.id],t=TOOL_BY[m.tool],iv=invOn(o.tools).filter(function(x){return x.efx.some(function(e){return e.t==='pieza'&&e.p===p.id;});})[0],ok=o.tools.indexOf(m.tool)>=0;
+    if(!ok&&iv){ok=true;t=iv;}
     return '<li><span class="sw mat-'+p.id+'"></span><span class="nm">'+p.cant+' '+esc(m.n.toLowerCase())+'</span><span class="mono '+(ok?'okc':'warn')+'">'+(ok?'con '+esc(t.n):(has(m.tool)?'activa '+esc(t.n):'necesitas '+esc(t?t.n:m.tool)))+'</span></li>';
   }).join('');
   var tl=own.length?own.map(function(t){
@@ -1933,11 +2064,13 @@ function collect(id){
   (o.tools||[]).forEach(function(id){
     var t=TOOL_BY[id];if(!t)return;
     var L=lvAt(o,id),P=planLevel(t);
-    if(L!==P||P>=NMAX||!NIV[P].porUso)return;
+    if(t.inv||L!==P||P>=NMAX||!NIV[P].porUso)return;
     var need=NIV[P].porUso,v=(state.texp[id]||0)+1;
     if(v>=need){setPl(state,t,P+1);aprende.push({t:t,L:P+1,done:true});}
     else{state.texp[id]=v;aprende.push({t:t,L:P+1,v:v,need:need});}
   });
+  var invTry=false;
+  if(modo.planos&&first){state.invc=(state.invc||0)+1;if(state.invc>=INV_CADA||Math.random()<INV_PROB){state.invc=0;invTry=aiOk&&!invBusy;}}
   state.extr.splice(i,1);delete extDone[id];
   persist();renderAll();setButtons();
   show('scan');
@@ -1962,10 +2095,11 @@ function collect(id){
     '<h2 class="name">'+esc(o.nombre)+'</h2>'+
     ent+'<ul class="gains">'+list+'</ul>'+fxl+
     '<p class="calc">'+sizeById(o.size).base+' base × '+fmt(RAR[y.comp-1].m)+' rareza × '+fmt(o.decay||1)+' repetición × '+fmt(modo.cant)+' '+esc(modo.n.toLowerCase())+(y.mult!==1?' × '+fmt(y.mult)+' herramientas':'')+'</p>'+
-    fr+'<p class="xp">+'+xpGain+' XP</p>'+
+    fr+(invTry?'<p class="mono" id="invSlot">La IA está pensando un invento a partir de este objeto…</p>':'')+'<p class="xp">+'+xpGain+' XP</p>'+
     (lvlAfter>lvlBefore?'<p class="lvlup">Subes al nivel '+lvlAfter+'</p>':'')+
     '<button class="btn primary" id="again" type="button">Seguir</button></article>');
   $('#again').addEventListener('click',function(){resetViewfinder();showIdle();});
+  if(invTry)inventarYa('objeto',o,'');
 }
 async function scan(file){
   if(busy||!file)return;
@@ -2073,6 +2207,78 @@ async function aiText(prompt,signal){
   throw {code:'upstream_error'};
 }
 
+/* ---------- La IA inventa planos ---------- */
+var invBusy=false,INV_DIA=3,INV_CADA=5,INV_PROB=0.2,INV_LEJOS=0.25;
+function lista(ids){return ids.map(function(id){return id+'='+matName(id);}).join(', ');}
+function invPrompt(src,idea,lejos){
+  var base=MATS.filter(function(m){return !m.rare&&!m.pieza;}).map(function(m){return m.id;});
+  var raros=MATS.filter(function(m){return m.rare;}).map(function(m){return m.id;});
+  var piezas=MATS.filter(function(m){return m.pieza;}).map(function(m){return m.id;});
+  var vistos=MATS.filter(function(m){return seen(m.id);}).map(function(m){return m.id;});
+  var noVistos=MATS.filter(function(m){return !seen(m.id);}).map(function(m){return m.id;});
+  var sabe=TECHS.filter(function(t){return tech(t.id);}),noSabe=TECHS.filter(function(t){return !tech(t.id);});
+  var tn=function(l){return l.map(function(t){return t.id+'='+t.n;}).join(', ')||'ninguna';};
+  var fuente=src?('el objeto que acaba de desmontar: '+src.nombre+' (materiales: '+src.mats.map(function(m){return matName(m.id).toLowerCase();}).join(', ')+(src.piezas&&src.piezas.length?'; piezas: '+src.piezas.map(function(p){return matName(p.id).toLowerCase();}).join(', '):'')+(src.funciona?'; '+src.funciona:'')+')')
+    :idea?('esta idea del jugador: «'+idea+'»'):('lo último que ha desmontado: '+Object.keys(state.disc).map(function(k){return state.disc[k];}).sort(function(a,b){return (b.ultimo||0)-(a.ultimo||0);}).slice(0,5).map(function(e){return e.nombre;}).join(', ')||'objetos cotidianos de casa');
+  return ['Eres el inventor del taller de Rastro, un juego de crafteo en el que se desmontan objetos reales para sacar materiales.',
+  'Inventa UNA herramienta nueva, ingeniosa y verosímil (algo que un manitas podría fabricarse), distinta de estas: '+TOOLS.map(function(t){return t.n;}).join(', ')+'.',
+  'Inspírate en '+fuente+'.',
+  'Efectos posibles (elige 1 o 2, con valores moderados y coherentes con la herramienta):',
+  '- {"tipo":"mat","material":ID,"valor":0.15-0.8}: más cantidad de ese material',
+  '- {"tipo":"todo","valor":0.05-0.3}: más de todos los materiales',
+  '- {"tipo":"tiempo","material":ID o "","valor":0.1-0.35}: menos tiempo de extracción (en objetos de ese material o en todos)',
+  '- {"tipo":"raro","raro":ID_RARO,"material":ID,"valor":0.15-0.5}: probabilidad de sacar ese material raro de ese material',
+  '- {"tipo":"pieza","pieza":ID_PIEZA,"valor":0.3-1}: saca esa pieza sin su herramienta habitual',
+  '- {"tipo":"rareza","valor":0.1-0.3}: probabilidad de subir la rareza del objeto',
+  'Materiales: '+lista(base)+'. Raros: '+lista(raros)+'. Piezas: '+lista(piezas)+'.',
+  lejos?('Esta vez inventa algo ambicioso que el jugador todavía NO pueda fabricar y algo más potente: en "tecnologia" pon una que aún no ha aprendido ('+tn(noSabe)+') o usa en la receta algún material que nunca ha conseguido ('+(noVistos.length?lista(noVistos):'ninguno')+').')
+    :('Tiene que poder fabricarlo YA: en la receta usa solo materiales que ya ha conseguido ('+(vistos.length?lista(vistos):lista(base.slice(0,4)))+') y en "tecnologia" pon "" o una que ya sabe ('+tn(sabe)+').'),
+  'Responde SOLO con un JSON, sin texto alrededor: {"nombre":"máximo 3 palabras","genero":"m, f, mp o fp (género y número del nombre)","descripcion":"una frase de qué es y cómo se usa","efectos":[...],"receta":{"ID":cantidad de 1 a 8, total 16 como mucho},"tecnologia":"ID o \\"\\"","usos":5-15,"tiempo":segundos de fabricación 60-600}'].join('\n');
+}
+// Ajusta el alcance: la mayoría se pueden fabricar ya; unos pocos, todavía no
+function fixReach(d,lejos){
+  var ok=function(){var t=cleanInv(d,'xtmp0');return t&&invReach(t).ok;};
+  if(!lejos){
+    if(d.req&&!tech(d.req))d.req='';
+    var r={};Object.keys(d.receta).forEach(function(k){if(seen(k))r[k]=d.receta[k];});
+    if(!Object.keys(r).length){var best=MATS.filter(function(m){return seen(m.id)&&!m.pieza;}).sort(function(a,b){return (state.inv[b.id]||0)-(state.inv[a.id]||0);})[0];r[best?best.id:'madera']=4;}
+    d.receta=r;
+  }else if(ok()){
+    var nt=TECHS.filter(function(t){return !tech(t.id);}),nm=MATS.filter(function(m){return !seen(m.id);});
+    if(nt.length)d.req=nt[Math.floor(Math.random()*nt.length)].id;
+    else if(nm.length){d.receta[nm[Math.floor(Math.random()*nm.length)].id]=2;}
+  }
+  return d;
+}
+// kind: 'objeto' (al desmontar algo nuevo o cada pocos objetos) o 'pedido' (Taller o maestro, con límite diario)
+async function inventar(kind,src,idea){
+  if(invBusy)return {err:'Ya está inventando algo.'};
+  if(!aiOk)return {err:whyText()};
+  if(TOOLS.filter(function(t){return t.inv&&planLevel(t)>0;}).length>=INV_MAX)return {err:'Ya tienes '+INV_MAX+' inventos: vende o cambia alguno para que la IA invente más.'};
+  if(kind==='pedido'){var dd=today();if(state.invd.d!==dd)state.invd={d:dd,n:0};if(state.invd.n>=INV_DIA)return {err:'Hoy ya te ha inventado '+INV_DIA+' planos a petición. Mañana más, o desmonta objetos nuevos.'};}
+  invBusy=true;renderTaller();
+  var lejos=Math.random()<INV_LEJOS,res;
+  try{
+    var j=parseLoose(await aiText(invPrompt(src,idea,lejos)));
+    var d={nombre:j.nombre,genero:j.genero,descripcion:j.descripcion,efectos:j.efectos,receta:j.receta||{},req:TECH_BY[j.tecnologia]?j.tecnologia:'',usos:j.usos,tiempo:j.tiempo,
+      origen:src?src.nombre:(idea?'tu idea':'tu taller'),creado:Date.now()};
+    var nn=clean(d.nombre,28),k=1,nm=function(){return k>1?nn+' '+k:nn;};
+    while(TOOLS.some(function(x){return norm(x.n)===norm(nm());}))k++;
+    d.nombre=nm();
+    var id='x'+Date.now().toString(36).slice(-6)+Math.random().toString(36).slice(2,6);
+    var t0=cleanInv(d,id);if(!t0)throw {code:'bad'};
+    var t=cleanInv(fixReach(invData(t0),lejos),id);if(!t)throw {code:'bad'};
+    state.inventos[id]=invData(t);syncInv();setPl(state,TOOL_BY[id],1);
+    if(kind==='pedido')state.invd.n++;
+    persist();
+    res={t:TOOL_BY[id],ok:invReach(TOOL_BY[id]).ok};
+  }catch(e){res={err:'La IA no ha conseguido dibujar un plano ahora. Inténtalo otra vez.'};}
+  invBusy=false;renderAll();
+  return res;
+}
+function invMsg(r){return r.err?r.err:'La IA ha inventado: '+r.t.n+'. '+r.t.efecto+(r.ok?' Ya puedes fabricarlo en el Taller.':' Inalcanzable por ahora: te falta '+invReach(r.t).falta.join(' y ')+'.');}
+function inventarYa(kind,src,idea){return inventar(kind,src,idea).then(function(r){toast(invMsg(r));var sl=$('#invSlot');if(sl&&src){sl.className=r.err?'mono':'fragok';sl.textContent=r.err?'Esta vez a la IA no se le ha ocurrido nada.':invMsg(r);}return r;});}
+
 /* ---------- El maestro del taller ---------- */
 var maLog=[],maBusy=false;
 function falta(t){
@@ -2090,6 +2296,7 @@ function maestroCtx(){
     planos:TOOLS.map(function(t){
       var k=known(t),lock=t.tech&&!tech(t.tech);
       var P=planLevel(t),T=tlevel(t.id);
+      if(t.inv)return {herramienta:t.n,invento_de_la_IA:true,efecto:t.efecto,estado:P?(invReach(t).ok?'plano conocido, se puede fabricar':'inalcanzable por ahora: falta '+invReach(t).falta.join(' y ')):'ya no es suyo',herramienta_que_tiene:T?'sí':'no',receta:Object.keys(t.receta).map(function(k){return t.receta[k]+' '+matName(k);}).join(', ')};
       return {herramienta:t.n,efecto:t.efecto,plano_hasta_nivel:P?NIV[P-1].n:'ninguno',herramienta_que_tiene:T?NIV[T-1].n:'no la tiene',
         siguiente_plano:P&&P<NMAX?{nivel:NIV[P].n,fragmentos:(state.pfrag[t.id]||0)+'/'+(NIV[P].frags||1),usos_para_aprenderlo:(T===P?(state.texp[t.id]||0):0)+'/'+(NIV[P].porUso||0),en_tienda:precioPlano(t)+' monedas'}:undefined,
         puede_mejorar:!!(T&&T<P),estado:k?'plano conocido':lock?'requiere estudiar '+(TECH_BY[t.tech]||{}).n:'fragmentos '+(state.planos[t.id]||0)+'/'+t.frags+', en tienda '+precioPlano(t)+' monedas',
@@ -2120,13 +2327,23 @@ function renderMaestro(){
   $('#maLog').innerHTML=maLog.length?maLog.map(function(m){
     return (m.q?'<p class="ma-q">'+esc(m.q)+'</p>':'')+'<p class="ma-a'+(m.err?' warn':'')+'">'+esc(m.a)+'</p>';
   }).join(''):'<p class="sub">Pregúntale qué hacer a continuación o algo concreto sobre tu partida.</p>';
-  $('#maAsk').disabled=maBusy;$('#maAsk').textContent=maBusy?'Pensando…':'Pedir consejo';
+  $('#maAsk').disabled=maBusy;$('#maAsk').textContent=maBusy?'Pensando…':'Pedir consejo';$('#maInv').disabled=maBusy||invBusy;
   var lg=$('#maLog');lg.scrollTop=lg.scrollHeight;
 }
 function openMaestro(){$('#maestro').hidden=false;renderMaestro();setTimeout(function(){$('#ma-q').focus();},50);}
 function closeMaestro(){$('#maestro').hidden=true;}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-maestro]');if(b)openMaestro();});
 $('#maClose').addEventListener('click',closeMaestro);
+$('#maInv').addEventListener('click',async function(){
+  if(maBusy||invBusy)return;
+  var q=clean($('#ma-q').value,200);
+  maBusy=true;maLog.push({q:q?'Invéntame: '+q:'Invéntame un plano',a:'…'});renderMaestro();
+  var r=await inventar('pedido',null,q);
+  maLog[maLog.length-1].a=r.err?r.err:'Te he dibujado el plano de '+r.t.n+(r.t.desc?': '+r.t.desc:'.')+' '+r.t.efecto+(r.ok?' Ya puedes fabricarlo en el Taller.':' Aún no puedes fabricarlo: te falta '+invReach(r.t).falta.join(' y ')+'.');
+  if(r.err)maLog[maLog.length-1].err=true;else $('#ma-q').value='';
+  if(maLog.length>6)maLog=maLog.slice(-6);
+  maBusy=false;renderMaestro();
+});
 $('#maestro').addEventListener('click',function(e){if(e.target===$('#maestro'))closeMaestro();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#maestro').hidden)closeMaestro();});
 $('#maForm').addEventListener('submit',async function(e){
