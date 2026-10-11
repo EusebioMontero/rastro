@@ -2,51 +2,52 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Partida y configuración de cada jugador: solo su dueño
+    // Partida y configuración: solo su dueño
     match /users/{uid}/rastro/{doc} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
 
     // Mercado entre jugadores
     match /mercado/{id} {
+      function d() { return request.resource.data; }
+      function o() { return resource.data; }
+      function yo() { return request.auth.uid; }
+      function solo(ks) { return d().diff(o()).affectedKeys().hasOnly(ks); }
+      function texto(v, n) { return v is string && v.size() <= n; }
+      function entero(v, a, b) { return v is int && v >= a && v <= b; }
+
+      // Campos opcionales: tipo (mat o plano), pide (plano a cambio), inv (invento de la IA)
+      function tipoOk() { return !('tipo' in d()) || d().tipo == 'mat' || (d().tipo == 'plano' && d().cant == 1); }
+      function pideOk() { return !('pide' in d()) || texto(d().pide, 20); }
+      function invOk() { return !('inv' in d()) || (d().inv is map && d().inv.size() <= 12); }
+
       allow read: if request.auth != null;
 
-      // Publicar: a tu nombre, abierta y con valores razonables.
-      // tipo: mat o plano (opcional). pide: plano pedido a cambio (opcional). inv: definición de un invento (opcional).
+      // Publicar: a tu nombre, abierta y con valores razonables
       allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['vendedor', 'alias', 'tipo', 'mat', 'cant', 'precio', 'pide', 'inv', 'estado', 'creada'])
-        && request.resource.data.keys().hasAll(['vendedor', 'alias', 'mat', 'cant', 'precio', 'estado', 'creada'])
-        && request.resource.data.vendedor == request.auth.uid
-        && request.resource.data.estado == 'abierta'
-        && request.resource.data.mat is string && request.resource.data.mat.size() <= 20
-        && request.resource.data.alias is string && request.resource.data.alias.size() <= 40
-        && request.resource.data.cant is int && request.resource.data.cant >= 1 && request.resource.data.cant <= 999
-        && request.resource.data.precio is int && request.resource.data.precio >= 0 && request.resource.data.precio <= 100000
-        && request.resource.data.creada is number
-        && (!('tipo' in request.resource.data) || request.resource.data.tipo == 'mat'
-            || (request.resource.data.tipo == 'plano' && request.resource.data.cant == 1))
-        && (!('pide' in request.resource.data) || (request.resource.data.pide is string && request.resource.data.pide.size() <= 20))
-        && (!('inv' in request.resource.data) || (request.resource.data.inv is map && request.resource.data.inv.size() <= 12));
+        && d().keys().hasOnly(['vendedor', 'alias', 'tipo', 'mat', 'cant', 'precio', 'pide', 'inv', 'estado', 'creada'])
+        && d().keys().hasAll(['vendedor', 'alias', 'mat', 'cant', 'precio', 'estado', 'creada'])
+        && d().vendedor == yo() && d().estado == 'abierta'
+        && texto(d().mat, 20) && texto(d().alias, 40)
+        && entero(d().cant, 1, 999) && entero(d().precio, 0, 100000)
+        && d().creada is number
+        && tipoOk() && pideOk() && invOk();
 
-      allow update: if request.auth != null && (
-        // Comprar: una oferta abierta de otro jugador pasa a vendida a tu nombre
-        (resource.data.estado == 'abierta'
-          && resource.data.vendedor != request.auth.uid
-          && request.resource.data.estado == 'vendida'
-          && request.resource.data.comprador == request.auth.uid
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'comprador', 'vendidaEn']))
-        // Retirar: el vendedor cancela su oferta mientras siga abierta
-        || (resource.data.vendedor == request.auth.uid
-          && resource.data.estado == 'abierta'
-          && request.resource.data.estado == 'cancelada'
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado']))
-        // Cobrar: el vendedor marca como cobrada una oferta vendida (una sola vez)
-        || (resource.data.vendedor == request.auth.uid
-          && resource.data.estado == 'vendida'
-          && (!('cobrado' in resource.data) || resource.data.cobrado == false)
-          && request.resource.data.cobrado == true
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['cobrado']))
-      );
+      // Comprar: una oferta abierta de otro pasa a vendida a tu nombre
+      allow update: if request.auth != null
+        && o().estado == 'abierta' && o().vendedor != yo()
+        && d().estado == 'vendida' && d().comprador == yo()
+        && solo(['estado', 'comprador', 'vendidaEn']);
+
+      // Retirar: el vendedor cancela su oferta abierta
+      allow update: if request.auth != null
+        && o().vendedor == yo() && o().estado == 'abierta'
+        && d().estado == 'cancelada' && solo(['estado']);
+
+      // Cobrar: el vendedor marca como cobrada una oferta vendida (una sola vez)
+      allow update: if request.auth != null
+        && o().vendedor == yo() && o().estado == 'vendida'
+        && !('cobrado' in o()) && d().cobrado == true && solo(['cobrado']);
 
       allow delete: if false;
     }
