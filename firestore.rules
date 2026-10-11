@@ -11,21 +11,22 @@ service cloud.firestore {
     match /mercado/{id} {
       allow read: if request.auth != null;
 
-      // Publicar: siempre a tu nombre, abierta y con valores razonables (material o plano; un plano puede pedir otro a cambio;
-      // un invento de la IA viaja con su definición en 'inv')
+      // Publicar: a tu nombre, abierta y con valores razonables.
+      // tipo: mat o plano (opcional). pide: plano pedido a cambio (opcional). inv: definición de un invento (opcional).
       allow create: if request.auth != null
         && request.resource.data.keys().hasOnly(['vendedor', 'alias', 'tipo', 'mat', 'cant', 'precio', 'pide', 'inv', 'estado', 'creada'])
-        && request.resource.data.get('tipo', 'mat') in ['mat', 'plano']
-        && request.resource.data.get('inv', {}) is map && request.resource.data.get('inv', {}).size() <= 12
-        && request.resource.data.get('pide', '') is string && request.resource.data.get('pide', '').size() <= 20
-        && (request.resource.data.get('tipo', 'mat') == 'mat' || request.resource.data.cant == 1)
+        && request.resource.data.keys().hasAll(['vendedor', 'alias', 'mat', 'cant', 'precio', 'estado', 'creada'])
         && request.resource.data.vendedor == request.auth.uid
         && request.resource.data.estado == 'abierta'
         && request.resource.data.mat is string && request.resource.data.mat.size() <= 20
         && request.resource.data.alias is string && request.resource.data.alias.size() <= 40
         && request.resource.data.cant is int && request.resource.data.cant >= 1 && request.resource.data.cant <= 999
         && request.resource.data.precio is int && request.resource.data.precio >= 0 && request.resource.data.precio <= 100000
-        && request.resource.data.creada is number;
+        && request.resource.data.creada is number
+        && (!('tipo' in request.resource.data) || request.resource.data.tipo == 'mat'
+            || (request.resource.data.tipo == 'plano' && request.resource.data.cant == 1))
+        && (!('pide' in request.resource.data) || (request.resource.data.pide is string && request.resource.data.pide.size() <= 20))
+        && (!('inv' in request.resource.data) || (request.resource.data.inv is map && request.resource.data.inv.size() <= 12));
 
       allow update: if request.auth != null && (
         // Comprar: una oferta abierta de otro jugador pasa a vendida a tu nombre
@@ -42,7 +43,7 @@ service cloud.firestore {
         // Cobrar: el vendedor marca como cobrada una oferta vendida (una sola vez)
         || (resource.data.vendedor == request.auth.uid
           && resource.data.estado == 'vendida'
-          && resource.data.get('cobrado', false) == false
+          && (!('cobrado' in resource.data) || resource.data.cobrado == false)
           && request.resource.data.cobrado == true
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['cobrado']))
       );
