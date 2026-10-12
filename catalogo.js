@@ -49,6 +49,16 @@
 //
 // Estados del objeto (los detecta la IA): multiplicadores de material, piezas y tiempo, y rareza extra.
 //   efecto  descripción (el efecto en sí está programado en index.html)
+//
+// Objetos singulares (los detecta la IA): 0 corriente, 1 curioso, 2 antigüedad, 3 pieza de museo.
+//   rareza   niveles de rareza extra (solo la pieza de museo puede llegar a Legendario)
+//   epicos   materiales épicos en la primera extracción de ese objeto (se multiplica por el modo; +1 si es L o XL)
+//   pEpico   probabilidad de sacarlos (1 = siempre)
+//   fragSup  la primera extracción completa da seguro un fragmento, a ser posible de un plano de nivel superior
+//   invento  probabilidad de que la IA invente un plano épico a partir de él (primera extracción completa)
+//   xp       experiencia extra
+//
+// epicos: materiales épicos. de = materiales del objeto de los que sale (se elige el que más pese).
 window.RASTRO_CAT = {
   tiempoTalla: { XS: 15, S: 30, M: 60, L: 120, XL: 240 },
   modos: [
@@ -113,6 +123,7 @@ window.RASTRO_CAT = {
     madera: 2, metal: 3, plastico: 1, vidrio: 2, tela: 2, papel: 1, piedra: 1, goma: 2,
     ceramica: 2, electronica: 5, organico: 1, cuero: 3,
     cobre: 12, silicio: 20, resina: 10, cristal: 15,
+    bronce: 40, madnoble: 35, esmalte: 35, baquelita: 30,
     tornillos: 2, muelle: 3, motor: 25, cable: 5, bisagra: 6, neodimio: 12, lente: 10, chip: 25, led: 6
   },
   raros: [
@@ -120,6 +131,25 @@ window.RASTRO_CAT = {
     { id: 'silicio', n: 'Silicio',        origen: 'Sale de la electrónica si extraes con el Kit de precisión.' },
     { id: 'resina',  n: 'Resina',         origen: 'A veces sale de la madera o lo orgánico si extraes con la Navaja.' },
     { id: 'cristal', n: 'Cristal óptico', origen: 'A veces sale del vidrio si extraes con la Lupa.' }
+  ],
+  epicos: [
+    { id: 'bronce',    n: 'Bronce antiguo', de: ['metal', 'electronica'],
+      origen: 'Épico. Sale del metal de objetos singulares: antigüedades y piezas de museo.' },
+    { id: 'madnoble',  n: 'Madera noble',   de: ['madera', 'organico', 'cuero', 'papel', 'tela'],
+      origen: 'Épico. Sale de la madera y las fibras naturales de objetos singulares.' },
+    { id: 'esmalte',   n: 'Esmalte',        de: ['ceramica', 'vidrio', 'piedra'],
+      origen: 'Épico. Sale de la cerámica, el vidrio o la piedra de objetos singulares.' },
+    { id: 'baquelita', n: 'Baquelita',      de: ['plastico', 'goma'],
+      origen: 'Épico. El plástico de los objetos de época: sale de objetos singulares.' }
+  ],
+  singular: [
+    { n: 'Corriente' },
+    { n: 'Objeto curioso', rareza: 1, epicos: 1, pEpico: 0.35, fragSup: false, invento: 0,   xp: 5,
+      desc: 'Objeto poco frecuente o de colección: +1 de rareza y a veces un material épico la primera vez.' },
+    { n: 'Antigüedad',  rareza: 2, epicos: 1, pEpico: 1,    fragSup: true,  invento: 0.5, xp: 10,
+      desc: 'Antigüedad de verdad: +2 de rareza, un material épico la primera vez, un fragmento de plano seguro y la mitad de las veces un plano épico.' },
+    { n: 'Pieza de museo', rareza: 3, epicos: 3, pEpico: 1,    fragSup: true,  invento: 1,   xp: 20,
+      desc: 'Pieza de museo: puede ser Legendaria, da varios materiales épicos la primera vez, un fragmento de plano seguro y siempre un plano épico.' }
   ],
   herramientas: [
     { id: 'guantes', g: 'mp', basica: true, n: 'Guantes de trabajo', precio: 0, efecto: '+20 % de todos los materiales y −10 % de tiempo.',

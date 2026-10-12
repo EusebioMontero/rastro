@@ -15,6 +15,7 @@
   --on-hi:#1A1400;
   --bad:#B3361F;
   --good:#1C7A4B;
+  --epic:#7E3FB5;
   --f-display:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;
   --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
@@ -24,13 +25,13 @@
   :root:not([data-theme="light"]){
     --bg:#0A1B28;--surface:#102636;--ink:#E3EEF4;--ink-2:#8DA8B7;--line:#244559;
     --grid:rgba(160,205,230,.07);--accent:#63B8EA;--on-accent:#06202F;--hi:#F0C23A;--on-hi:#1A1400;
-    --bad:#FF8C75;--good:#6FD9A0;color-scheme:dark;
+    --bad:#FF8C75;--good:#6FD9A0;--epic:#C99AF0;color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0A1B28;--surface:#102636;--ink:#E3EEF4;--ink-2:#8DA8B7;--line:#244559;
   --grid:rgba(160,205,230,.07);--accent:#63B8EA;--on-accent:#06202F;--hi:#F0C23A;--on-hi:#1A1400;
-  --bad:#FF8C75;--good:#6FD9A0;color-scheme:dark;
+  --bad:#FF8C75;--good:#6FD9A0;--epic:#C99AF0;color-scheme:dark;
 }
 
 html,body{min-height:100%}
@@ -122,6 +123,18 @@ button{font-family:inherit}
 .r2{color:var(--good)}
 .r3{color:var(--accent)}
 .r4{color:var(--on-hi);background:var(--hi);border-color:var(--hi)}
+.r5{color:#fff;background:linear-gradient(120deg,#7E3FB5,#B06AD9 45%,#E5AE00);border-color:var(--epic)}
+.sz.sing{color:var(--epic);border-color:var(--epic)}
+.sz.sing.s3{color:#fff;background:var(--epic)}
+.sg{border-left:3px solid var(--epic);padding-left:8px}
+.chk{list-style:none;padding:0;display:grid;gap:8px}
+.chk li{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
+.chk li i{font:600 12px var(--f-mono);font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);grid-row:span 2;align-self:start}
+.chk li.ok i{border-color:var(--good);color:var(--good)}
+.chk li.err i{border-color:var(--bad);color:var(--bad)}
+.chk li.run i{border-color:var(--accent);color:var(--accent)}
+.chk li span{font-size:13px;color:var(--ink-2)}
+.warn-note{border-left:3px solid var(--bad);padding-left:8px;color:var(--ink)}
 .sz{color:var(--ink)}
 .new{color:var(--on-accent);background:var(--accent);border-color:var(--accent)}
 .name{font:800 34px/1.02 var(--f-display);letter-spacing:.03em;text-transform:uppercase;text-wrap:balance;overflow-wrap:anywhere}
@@ -240,6 +253,13 @@ button{font-family:inherit}
 .mat-cobre{background:linear-gradient(120deg,#8a4b22 0,#d98a52 35%,#a85a2c 60%,#e8a070 85%,#7c4220 100%)}
 .mat-silicio{background:linear-gradient(90deg,rgba(255,255,255,.12) 1px,transparent 1px) 0 0/7px 7px,linear-gradient(0deg,rgba(255,255,255,.12) 1px,transparent 1px) 0 0/7px 7px,linear-gradient(135deg,#3b4a63,#6d7f9e 50%,#2f3b50)}
 .mat-resina{background:radial-gradient(circle at 30% 35%,rgba(255,255,255,.55) 0 8%,transparent 9%),linear-gradient(160deg,#f2b33d,#c9761a 60%,#9b5410)}
+.mat-bronce{background:linear-gradient(135deg,#5b3a1a,#a8793a 35%,#6e8f6a 55%,#c49a52 75%,#4d3216)}
+.mat-madnoble{background:repeating-linear-gradient(100deg,#4a2412 0 3px,#6b3518 3px 7px,#3a1c0e 7px 9px)}
+.mat-esmalte{background:radial-gradient(circle at 30% 30%,#fff 0 10%,transparent 11%),linear-gradient(135deg,#1c5fa8,#3fa0d8 50%,#e8f2fa 51%,#1c5fa8)}
+.mat-baquelita{background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.4) 0 10%,transparent 12%),linear-gradient(160deg,#7a2e12,#b8501c 50%,#5a1f0b)}
+.raro.ep{background:var(--epic);color:#fff}
+.chip.ep{border-color:var(--epic);border-width:2px}
+.pill.inv.ep{color:var(--epic)}
 .mat-cristal{background:conic-gradient(from 30deg,#dff6ff,#9fd8f0,#ffffff,#b8e6f7,#e8fbff,#a5d9ee,#dff6ff)}
 .mk{list-style:none;padding:0;display:grid;gap:8px}
 .mk li{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:8px}
@@ -426,6 +446,7 @@ button{font-family:inherit}
         <div class="btn primary pick" id="btn-cam"><span>Cámara</span><input id="in-cam" type="file" accept="image/*" capture="environment" aria-label="Hacer foto con la cámara"></div>
         <div class="btn pick" id="btn-up"><span>Galería</span><input id="in-up" type="file" accept="image/*" aria-label="Elegir foto de la galería"></div>
       </div>
+      <p class="note warn-note" id="camNote" hidden></p>
       <div id="extList" class="tbody"></div>
       <div id="panel" role="status" aria-live="polite"></div>
       <p id="diag" class="mono"></p>
@@ -481,6 +502,11 @@ button{font-family:inherit}
         <div class="row">
           <button class="btn" id="btnLogout" type="button" hidden>Cerrar sesión</button>
         </div>
+      </div>
+      <div class="card" id="chkCard">
+        <h2>Comprobación</h2>
+        <ul class="chk" id="chkList"></ul>
+        <div class="row"><button class="btn" id="btnCamTest" type="button">Probar la cámara</button><button class="btn" id="btnAiTest" type="button">Probar la IA</button></div>
       </div>
       <div class="card">
         <h2>Prototipo</h2>
@@ -574,6 +600,7 @@ var MATS=[
 ];
 var CAT=window.RASTRO_CAT||{raros:[],herramientas:[]};
 CAT.raros.forEach(function(m){MATS.push({id:m.id,n:m.n,rare:true,origen:m.origen||''});});
+(CAT.epicos||[]).forEach(function(m){MATS.push({id:m.id,n:m.n,rare:true,epico:true,de:m.de||[],origen:m.origen||''});});
 (CAT.piezas||[]).forEach(function(m){MATS.push({id:m.id,n:m.n,pieza:true,tool:m.herramienta});});
 var MAT_BY={};MATS.forEach(function(m){MAT_BY[m.id]=m;});
 var TOOLS=(CAT.herramientas||[]).slice(),TOOL_BY={};TOOLS.forEach(function(t){TOOL_BY[t.id]=t;});
@@ -602,16 +629,18 @@ function cleanInv(r,id){
   if(!r||typeof r!=='object'||!/^x[a-z0-9]{4,15}$/.test(String(id||'')))return null;
   var n=clean(r.n||r.nombre,32);if(!n)return null;
   var g=['m','f','mp','fp'].indexOf(r.g||r.genero)>=0?(r.g||r.genero):'m';
+  // Épico (de una pieza singular): hasta 3 efectos y topes un 50 % más altos
+  var ep=!!(r.ep||r.epico),kx=ep?1.5:1;
   var efx=[],seenK={};
-  (Array.isArray(r.efx)?r.efx:Array.isArray(r.efectos)?r.efectos:[]).slice(0,4).forEach(function(e){
-    if(!e||typeof e!=='object'||efx.length>=2)return;
+  (Array.isArray(r.efx)?r.efx:Array.isArray(r.efectos)?r.efectos:[]).slice(0,5).forEach(function(e){
+    if(!e||typeof e!=='object'||efx.length>=(ep?3:2))return;
     var t=String(e.t||e.tipo||''),v=e.v!=null?e.v:e.valor,x=null;
-    if(t==='mat'&&isBase(e.m||e.material))x={t:t,m:e.m||e.material,v:clampN(v,0.15,0.8)};
-    else if(t==='todo')x={t:t,v:clampN(v,0.05,0.3)};
-    else if(t==='tiempo'){var de=e.de||e.material||'';x={t:t,de:isBase(de)?de:'',v:clampN(v,0.1,0.35)};}
-    else if(t==='raro'){var rr=e.r||e.raro,dd=e.de||e.material;if(MAT_BY[rr]&&MAT_BY[rr].rare&&isBase(dd))x={t:t,r:rr,de:dd,v:clampN(v,0.15,0.5)};}
-    else if(t==='pieza'){var pp=e.p||e.pieza;if(MAT_BY[pp]&&MAT_BY[pp].pieza)x={t:t,p:pp,v:clampN(v,0.3,1)};}
-    else if(t==='rareza')x={t:t,v:clampN(v,0.1,0.3)};
+    if(t==='mat'&&isBase(e.m||e.material))x={t:t,m:e.m||e.material,v:clampN(v,0.15,0.8*kx)};
+    else if(t==='todo')x={t:t,v:clampN(v,0.05,0.3*kx)};
+    else if(t==='tiempo'){var de=e.de||e.material||'';x={t:t,de:isBase(de)?de:'',v:clampN(v,0.1,Math.min(0.5,0.35*kx))};}
+    else if(t==='raro'){var rr=e.r||e.raro,dd=e.de||e.material;if(MAT_BY[rr]&&MAT_BY[rr].rare&&!MAT_BY[rr].epico&&isBase(dd))x={t:t,r:rr,de:dd,v:clampN(v,0.15,0.5*kx)};}
+    else if(t==='pieza'){var pp=e.p||e.pieza;if(MAT_BY[pp]&&MAT_BY[pp].pieza)x={t:t,p:pp,v:clampN(v,0.3,1*kx)};}
+    else if(t==='rareza')x={t:t,v:clampN(v,0.1,0.3*kx)};
     if(!x)return;
     var k=x.t+(x.m||x.r||x.p||x.de||'');if(seenK[k])return;seenK[k]=1;
     x.v=Math.round(x.v*100)/100;efx.push(x);
@@ -624,14 +653,15 @@ function cleanInv(r,id){
   });
   if(!Object.keys(rec).length)return null;
   var pw=efx.reduce(function(a,e){return a+e.v*({mat:1,todo:3,tiempo:1.5,raro:2,pieza:1.5,rareza:3}[e.t]||1);},0);
-  return {id:id,inv:true,n:n,g:g,desc:clean(r.desc||r.descripcion,200),efx:efx,receta:rec,
+  return {id:id,inv:true,ep:ep,n:n,g:g,desc:clean(r.desc||r.descripcion,200),efx:efx,receta:rec,
     req:TECH_BY[r.req||r.tecnologia]?(r.req||r.tecnologia):'',
-    usos:Math.round(clampN(r.usos,5,15)),tiempo:Math.round(clampN(r.tiempo,60,600)),
-    frags:1,afin:[],claves:[],pista:'',precio:Math.round(30+80*pw),
+    usos:Math.round(clampN(r.usos,5,ep?25:15)),tiempo:Math.round(clampN(r.tiempo,60,600)),
+    frags:1,afin:[],claves:[],pista:'',precio:Math.round((30+80*pw)*(ep?1.5:1)),
     efecto:efx.map(efxText).join('. ').replace(/^./,function(c){return c.toUpperCase();})+'.',
     origen:clean(r.origen,60),creado:Number(r.creado)||Date.now()};
 }
-function invData(t){return {n:t.n,g:t.g,desc:t.desc,efx:t.efx,receta:t.receta,req:t.req,usos:t.usos,tiempo:t.tiempo,origen:t.origen,creado:t.creado};}
+function invData(t){var d={n:t.n,g:t.g,desc:t.desc,efx:t.efx,receta:t.receta,req:t.req,usos:t.usos,tiempo:t.tiempo,origen:t.origen,creado:t.creado};if(t.ep)d.ep=1;return d;}
+function singTag(o){var s=o&&o.sing|0;return s?'<span class="sz sing s'+s+'">'+esc((SING[s]||{}).n||'')+'</span>':'';}
 // Reconstruye la lista de herramientas: las del catálogo más tus inventos
 function syncInv(){
   TOOLS.length=0;BASE_TOOLS.forEach(function(t){TOOLS.push(t);});
@@ -664,7 +694,18 @@ var SIZES=[
   {id:'L',max:200,base:8,range:'0,6–2 m',h:58},
   {id:'XL',max:Infinity,base:14,range:'>2 m',h:76}
 ];
-var RAR=[{n:'Común',m:1},{n:'Poco común',m:1.25},{n:'Raro',m:1.6},{n:'Épico',m:2.2}];
+var RAR=[{n:'Común',m:1},{n:'Poco común',m:1.25},{n:'Raro',m:1.6},{n:'Épico',m:2.2},{n:'Legendario',m:3}];
+// Objetos singulares (curiosos, antigüedades, piezas de museo): más rareza, materiales épicos y planos épicos
+var SING=(CAT.singular&&CAT.singular.length)?CAT.singular:[{n:'Corriente'}];
+function sgOf(o){return SING[o&&o.sing|0]||SING[0];}
+function rarCap(o){return (o&&o.sing|0)>=3?5:4;}
+function rarOf(o){var es=EST[o.estado]||{};return Math.max(1,Math.min(rarCap(o),o.comp+(es.rareza||0)+(sgOf(o).rareza||0)));}
+// El material épico que sale de un objeto: el del material que más pesa
+function epicoOf(o){
+  var ms=(o&&o.mats||[]).slice().sort(function(a,b){return b.peso-a.peso;});
+  for(var i=0;i<ms.length;i++){var e=MATS.filter(function(m){return m.epico&&m.de.indexOf(ms[i].id)>=0;})[0];if(e)return e.id;}
+  return null;
+}
 var DAILY=20;
 var LS='rastro.save.v1';
 var LS_AI='rastro.ai.v1';
@@ -695,7 +736,7 @@ var PROMPT=[
 '- Si no hay un objeto claro (foto borrosa, oscura, un paisaje, nada reconocible): valido=false, motivo="no_objeto".',
 '- En cualquier otro caso: valido=true, motivo="ok".',
 'Formato exacto:',
-'{"valido":true,"motivo":"ok","nombre":"nombre corto en español, minúsculas, genérico (ej. lata de refresco, silla de madera)","clave":"el mismo nombre genérico, sin tildes","dimension_cm":35,"complejidad":2,"materiales":[{"id":"metal","peso":8},{"id":"plastico","peso":1}],"piezas":[{"id":"tornillos","cant":6}],"estado":"usado","campo":"mecanica","funciona":"dos frases sencillas sobre cómo funciona o cómo está hecho","dato":"una frase corta y curiosa sobre el objeto"}',
+'{"valido":true,"motivo":"ok","nombre":"nombre corto en español, minúsculas, genérico (ej. lata de refresco, silla de madera)","clave":"el mismo nombre genérico, sin tildes","dimension_cm":35,"complejidad":2,"materiales":[{"id":"metal","peso":8},{"id":"plastico","peso":1}],"piezas":[{"id":"tornillos","cant":6}],"estado":"usado","campo":"mecanica","singular":0,"epoca":"","funciona":"dos frases sencillas sobre cómo funciona o cómo está hecho","dato":"una frase corta y curiosa sobre el objeto"}',
 'Reglas de los campos:',
 '- dimension_cm: la dimensión mayor del objeto real en centímetros. Si junto al objeto hay una mano, una moneda u otra referencia de tamaño conocido, úsala para calcularlo; si no, estima a ojo.',
 '- complejidad: 1 = pieza simple de un solo material; 2 = objeto sencillo; 3 = objeto con varias piezas o mecanismos; 4 = aparato complejo con electrónica o motor.',
@@ -703,6 +744,8 @@ var PROMPT=[
 '- piezas: componentes reutilizables que el objeto lleva de verdad, con cant = número aproximado de unidades. Usa únicamente estos id: tornillos, muelle, motor (motor eléctrico pequeño), cable, bisagra, neodimio (imán permanente, p. ej. de altavoces o motores), lente, chip (circuito integrado o placa), led. Lista vacía si no lleva ninguna.',
 '- estado: uno de nuevo, usado, desgastado, roto, antiguo (antiguo si parece de hace más de 40 años o de época).',
 '- campo: el principio que mejor explica el objeto, uno de mecanica, electricidad, optica, materiales, quimica.',
+'- singular: lo especial que es el objeto. 0 = corriente (la gran mayoría: cosas de casa, de tienda, réplicas, recuerdos turísticos); 1 = curioso o de colección (poco frecuente, edición especial, artesanal, vintage de hace unos 30-60 años); 2 = antigüedad de verdad (más de 100 años, pieza de anticuario o de época); 3 = pieza de museo (se ve expuesta en un museo, en vitrina, peana o con cartela, o es un objeto histórico o arqueológico). Sé exigente: ante la duda, el nivel más bajo.',
+'- epoca: si singular es 1 o más, época o fecha aproximada en pocas palabras (ej. años 50, siglo XIX, época romana); si no, "".',
 '- funciona: máximo dos frases sencillas y correctas, para alguien curioso, sobre cómo funciona el objeto o cómo se fabrica.',
 '- Si valido es false, rellena solo valido y motivo.'
 ].join('\n');
@@ -710,6 +753,7 @@ var PROMPT=[
 /* ---------- Estado ---------- */
 var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0}};
 MATS.forEach(function(m){state.inv[m.id]=0;});
+var chk={ia:'',code:'',t:0,cam:''},chkSig=null,chkSeq=0,panelIdle=false,puterPend=false;
 var ready=false,aiOk=false,aiWhy='',visorOk=false,busy=false,sampleFn=null,ctl=null,lastBlob=null,previewUrl=null;
 var mode='local',ref=null,unsub=null,saveState='',dirty=false,inflight=0,chain=Promise.resolve();
 
@@ -1010,14 +1054,27 @@ async function initAI(){
   if(!cfg.prov)cfg.prov=visorOk?'visor':'puter';
   refreshAi();
 }
-function refreshAi(){
+// ¿Hay una IA configurada? (sesión iniciada o clave puesta)
+function aiConfigured(){
   var p=cfg.prov;
-  if(p==='visor')aiOk=visorOk;
-  else if(p==='puter')aiOk=puterIn;
-  else aiOk=!!clean(cfg.keys[p],400);
+  if(p==='visor')return visorOk;
+  if(p==='puter')return puterIn;
+  return !!(PROVS[p]&&clean(cfg.keys[p],400));
+}
+// La IA solo cuenta como lista cuando además ha respondido a una prueba real
+function refreshAi(){
+  var sig=aiSig();
+  if(sig!==chkSig){
+    chkSig=sig;chk.ia='';chk.code='';
+    if(aiConfigured())setTimeout(function(){checkAI(false);},0);
+  }
+  aiOk=aiConfigured()&&chk.ia==='ok';
 }
 function withTimeout(p,ms){return Promise.race([p,new Promise(function(r){setTimeout(r,ms);})]);}
 function whyText(){
+  if(cfg.prov==='puter'&&puterPend)return 'Comprobando tu sesión de Puter…';
+  if(aiConfigured()&&chk.ia==='run')return 'Probando que '+PROVS[cfg.prov].n+' responde…';
+  if(aiConfigured()&&chk.ia==='err'&&chk.code!=='auth')return PROVS[cfg.prov].n+' no responde: '+errorText(chk.code);
   if(cfg.prov&&PROVS[cfg.prov]&&PROVS[cfg.prov].login)return 'Conecta tu cuenta de '+PROVS[cfg.prov].n+' en Ajustes para escanear.';
   if(cfg.prov&&cfg.prov!=='visor')return 'Falta la clave de '+PROVS[cfg.prov].n+'. Ponla en Ajustes.';
   if(aiWhy==='sin-claude')return 'La página no está dentro del visor de Claude.';
@@ -1040,7 +1097,7 @@ function renderHeader(){
   else if(saveState==='err'){s.textContent='Sin guardar';s.dataset.s='err';}
   else if(mode==='cloud'||mode==='firebase'){s.textContent='En tu cuenta';s.dataset.s='ok';}
   else{s.textContent='Solo aquí';s.dataset.s='';}
-  $('#diag').textContent=ready?('IA: '+(cfg.prov?PROVS[cfg.prov].n:'?')+(cfg.prov&&cfg.prov!=='visor'?' · '+(modelOf(cfg.prov)||'modelo por defecto'):'')+' · '+(aiOk?'lista':'no lista')+(cfg.prov==='visor'&&aiWhy?' ('+aiWhy+')':'')):'';
+  $('#diag').textContent=ready?('IA: '+(cfg.prov?PROVS[cfg.prov].n:'?')+(cfg.prov&&cfg.prov!=='visor'?' · '+(modelOf(cfg.prov)||'modelo por defecto'):'')+' · '+(aiOk?'lista':(aiConfigured()&&chk.ia==='run')||puterPend?'comprobando':aiConfigured()&&chk.ia==='err'?'no responde':'sin conectar')+(cfg.prov==='visor'&&aiWhy?' ('+aiWhy+')':'')):'';
 }
 function ladder(active){
   return '<div class="ladder" role="img" aria-label="Escala de tamaños">'+SIZES.map(function(s){
@@ -1074,17 +1131,17 @@ function renderLog(){
     return;
   }
   ul.innerHTML=items.slice(0,300).map(function(it){
-    var e=it[1],comp=Math.min(4,Math.max(1,Number(e.rar)||1));
+    var e=it[1],comp=Math.min(RAR.length,Math.max(1,Number(e.rar)||1));
     var mats=Object.keys(e.mats||{}).filter(function(id){return MAT_BY[id];})
       .sort(function(a,b){return e.mats[b]-e.mats[a];}).slice(0,5)
       .map(function(id){return '<span class="chip"><i class="mat-'+id+'"></i>'+MAT_BY[id].n+' '+(e.mats[id]|0)+'</span>';}).join('');
     return '<li class="entry"><div class="top2"><h3>'+esc(e.nombre||it[0])+'</h3><span class="sz">'+esc(e.tam||'?')+'</span></div>'+
-      '<div class="info"><span class="pill r'+comp+'">'+RAR[comp-1].n+'</span><span>×'+(e.n|0)+(e.n===1?' escaneo':' escaneos')+'</span><span>'+hace(e.ultimo||Date.now())+'</span></div>'+
-      '<div class="chips">'+mats+'</div>'+(e.funciona?'<p class="dfun"><b>'+esc(CAMPOS[e.campo]||'')+'</b> · '+esc(e.funciona)+'</p>':'')+'</li>';
+      '<div class="info"><span class="pill r'+comp+'">'+RAR[comp-1].n+'</span>'+singTag(e)+'<span>×'+(e.n|0)+(e.n===1?' escaneo':' escaneos')+'</span><span>'+hace(e.ultimo||Date.now())+'</span></div>'+
+      '<div class="chips">'+mats+'</div>'+(e.sing&&e.epoca?'<p class="mono">'+esc(e.epoca)+'</p>':'')+(e.funciona?'<p class="dfun"><b>'+esc(CAMPOS[e.campo]||'')+'</b> · '+esc(e.funciona)+'</p>':'')+'</li>';
   }).join('');
 }
 function renderAll(){renderHeader();renderInv();renderLog();renderTaller();renderTec();renderTienda();renderMarket();renderExtr();}
-function setPanel(html){$('#panel').innerHTML=html;}
+function setPanel(html){panelIdle=false;$('#panel').innerHTML=html;}
 function setButtons(){
   var off=busy;
   $('#in-cam').disabled=off;$('#btn-cam').classList.toggle('off',off);
@@ -1092,22 +1149,28 @@ function setButtons(){
 }
 function showIdle(){
   var head='';
-  if(!ready){setPanel('<div class="card"><p class="busy">Cargando tu taller</p></div>');return;}
+  if(!ready){setPanel('<div class="card"><p class="busy">Cargando tu taller</p></div>');panelIdle=true;return;}
   if(!aiOk){
-    setPanel('<div class="card"><h2>Conecta una IA</h2><p class="sub">'+esc(whyText())+'</p><button class="btn primary" id="goSet" type="button">Ir a Ajustes</button></div>');
+    var probando=(cfg.prov==='puter'&&puterPend)||(aiConfigured()&&chk.ia==='run');
+    if(probando){setPanel('<div class="card"><p class="busy">Comprobando la IA</p><p class="sub">'+esc(whyText())+'</p></div>');panelIdle=true;return;}
+    var falla=aiConfigured()&&chk.ia==='err'&&chk.code!=='auth';
+    setPanel('<div class="card"><h2>'+(falla?'La IA no responde':'Conecta una IA')+'</h2><p class="sub">'+esc(whyText())+'</p><div class="row"><button class="btn primary" id="goSet" type="button">Ir a Ajustes</button>'+(falla?'<button class="btn" id="reChk" type="button">Reintentar</button>':'')+'</div></div>');
     $('#goSet').addEventListener('click',function(){show('set');});
+    if(falla)$('#reChk').addEventListener('click',function(){checkAI(true);});
+    panelIdle=true;
     return;
   }
   if(state.extr.length>=MAXE){
-    setPanel('<div class="card"><h2>Taller lleno</h2><p class="sub">Tienes '+MAXE+' extracciones en marcha. Recoge alguna para escanear otro objeto.</p></div>');
+    setPanel('<div class="card"><h2>Taller lleno</h2><p class="sub">Tienes '+MAXE+' extracciones en marcha. Recoge alguna para escanear otro objeto.</p></div>');panelIdle=true;
     return;
   }
   if(scansLeft()<=0){
-    setPanel('<div class="card"><h2>Límite de hoy</h2><p class="sub">Has hecho '+DAILY+' escaneos hoy. Vuelve mañana con objetos nuevos.</p></div>');
+    setPanel('<div class="card"><h2>Límite de hoy</h2><p class="sub">Has hecho '+DAILY+' escaneos hoy. Vuelve mañana con objetos nuevos.</p></div>');panelIdle=true;
     return;
   }
   setPanel('<div class="card"><h2>Cuanto más grande, más material</h2>'+ladder(null)+
     '<ul class="tips"><li>Un solo objeto por foto.</li><li>Una mano o una moneda al lado afina el tamaño.</li><li>Repetir el mismo objeto rinde menos cada vez.</li><li>Tras escanear eliges herramientas y modo: la extracción rápida da menos y nunca planos.</li><li>Las herramientas del Taller dan más material y piezas; estudiar Tecnologías te hace sacar aún más.</li><li>La foto no se guarda.</li></ul><button class="btn" type="button" data-maestro="1">¿Qué hago ahora? Pregunta al maestro</button></div>');
+  panelIdle=true;
 }
 function setPreview(blob,scanning){
   if(previewUrl)URL.revokeObjectURL(previewUrl);
@@ -1252,7 +1315,7 @@ function toolDesc(t){
   if(t.inv){
     var r=invReach(t);
     return (t.desc?'<p>'+esc(t.desc)+'</p>':'')+'<p><b>'+esc(t.efecto)+'</b></p>'+
-      '<p class="mono">Invento de la IA'+(t.origen?' a partir de '+esc(t.origen):'')+' · '+t.usos+' usos · '+fmtT(t.tiempo)+(t.req?' · requiere '+esc(TECH_BY[t.req]?TECH_BY[t.req].n:t.req):'')+'</p>'+
+      '<p class="mono">'+(t.ep?'Invento épico':'Invento')+' de la IA'+(t.origen?' a partir de '+esc(t.origen):'')+' · '+t.usos+' usos · '+fmtT(t.tiempo)+(t.req?' · requiere '+esc(TECH_BY[t.req]?TECH_BY[t.req].n:t.req):'')+'</p>'+
       (r.ok?'':'<p>Inalcanzable por ahora: te falta '+esc(r.falta.join(' y '))+'.</p>')+
       '<p>Es único: si lo vendes o lo cambias, dejas de tener el plano. No tiene niveles.</p>';
   }
@@ -1272,7 +1335,7 @@ function toolItem(t){
   var P=planLevel(t),T=tlevel(t.id),lock=!P&&t.tech&&!tech(t.tech),fr=state.planos[t.id]||0;
   var busy=state.cola&&state.cola.id===t.id;
   var tag='';
-  if(t.inv)tag='<span class="pill inv">Invento</span>'+(T?'<em class="mono">'+state.tools[t.id]+' usos</em>':'');
+  if(t.inv)tag='<span class="pill inv'+(t.ep?' ep':'')+'">'+(t.ep?'Épico':'Invento')+'</span>'+(T?'<em class="mono">'+state.tools[t.id]+' usos</em>':'');
   else if(T)tag='<span class="pill r'+T+'">'+adjN(t,T)+'</span><em class="mono">'+state.tools[t.id]+' usos</em>';
   else if(busy)tag='<em class="mono">en el taller</em>';
   else if(P)tag='<span class="pill r'+P+' off">'+adjN(t,P)+'</span>';
@@ -1332,7 +1395,8 @@ function renderTaller(){
 function matKinds(){
   return [
     {n:'Materiales',l:MATS.filter(function(m){return !m.rare&&!m.pieza;})},
-    {n:'Raros',l:MATS.filter(function(m){return m.rare;})},
+    {n:'Raros',l:MATS.filter(function(m){return m.rare&&!m.epico;})},
+    {n:'Épicos',l:MATS.filter(function(m){return m.epico;})},
     {n:'Piezas',l:MATS.filter(function(m){return m.pieza;})}
   ].filter(function(g){return g.l.length;});
 }
@@ -1515,7 +1579,7 @@ function parsePl(s,inv){var m=String(s||'').split('@'),t=TOOL_BY[m[0]]||(inv&&m.
 function plKey(t,L){return L>=2?t.id+'@'+L:t.id;}
 function offTipo(o){return o.tipo==='plano'?'plano':'mat';}
 function offValid(o){return offTipo(o)==='plano'?!!parsePl(o.mat,o.inv):!!MAT_BY[o.mat];}
-function offName(o){if(offTipo(o)==='plano'){var p=parsePl(o.mat,o.inv);return planName(p.t,p.L)+(p.t.inv?' (invento)':'');}return o.cant+' de '+matName(o.mat);}
+function offName(o){if(offTipo(o)==='plano'){var p=parsePl(o.mat,o.inv);return planName(p.t,p.L)+(p.t.inv?(p.t.ep?' (invento épico)':' (invento)'):'');}return o.cant+' de '+matName(o.mat);}
 function offSw(o){return offTipo(o)==='plano'?'<span class="sw plano-sw'+(o.inv?' inv-sw':'')+'" aria-hidden="true"></span>':'<span class="sw mat-'+o.mat+'"></span>';}
 function offPide(o){var pq=parsePl(o.pide);return pq?toolName(pq.t,pq.L):'';}
 function offTerms(o){
@@ -1695,22 +1759,33 @@ $('#mkForm').addEventListener('submit',function(e){
   mkPublicar(tipo,item,cant,precio,pide);
 });
 
-function dropFragment(r,first){
-  if(Math.random()>=(first?0.7:0.4))return null;
-  var cands=[],sum=0;
-  TOOLS.forEach(function(t){
-    var L=planLevel(t);
-    if(t.inv||L>=NMAX||(!L&&t.tech&&!tech(t.tech)))return;
-    var w=0;r.mats.forEach(function(m){if((t.afin||[]).indexOf(m.id)>=0)w+=m.peso;});
-    if(!(w>0))return;
-    if(tech('carp')&&(t.afin||[]).indexOf('madera')>=0)w*=2;
-    if(L){
-      // planos de nivel superior: cada nivel es más difícil; los objetos complejos ayudan
-      w*=0.7*Math.pow(0.4,L-1);if(r.comp>=3)w*=1.5;if(state.pfrag[t.id])w*=1.5;
-    }else if(state.planos[t.id])w*=1.5;
-    cands.push({t:t,w:w,L:L});sum+=w;
-  });
+// seguro: objetos singulares; siempre dan fragmento y, si puede ser, de un plano de nivel superior
+function dropFragment(r,first,seguro){
+  if(!seguro&&Math.random()>=(first?0.7:0.4))return null;
+  var build=function(todos){
+    var c=[];
+    TOOLS.forEach(function(t){
+      var L=planLevel(t);
+      if(t.inv||L>=NMAX||(!L&&t.tech&&!tech(t.tech)))return;
+      var w=0;r.mats.forEach(function(m){if((t.afin||[]).indexOf(m.id)>=0)w+=m.peso;});
+      if(!(w>0)){if(!todos)return;w=1;}
+      if(tech('carp')&&(t.afin||[]).indexOf('madera')>=0)w*=2;
+      if(L){
+        // planos de nivel superior: cada nivel es más difícil; los objetos complejos ayudan
+        w*=0.7*Math.pow(0.4,L-1);if(r.comp>=3)w*=1.5;if(state.pfrag[t.id])w*=1.5;
+      }else if(state.planos[t.id])w*=1.5;
+      c.push({t:t,w:w,L:L});
+    });
+    return c;
+  };
+  var cands=build(false);
+  if(seguro){
+    var sup=function(c){return c.filter(function(x){return x.L>=1;});};
+    var up=sup(cands);if(!up.length)up=sup(build(true));
+    if(up.length)cands=up;else if(!cands.length)cands=build(true);
+  }
   if(!cands.length)return null;
+  var sum=cands.reduce(function(a,c){return a+c.w;},0);
   var x=Math.random()*sum,pick=cands[0];
   for(var j=0;j<cands.length;j++){x-=cands[j].w;if(x<=0){pick=cands[j];break;}}
   var t=pick.t;
@@ -1761,7 +1836,8 @@ function sanitize(o){
   });
   var est=String(o.estado||'').toLowerCase();if(!EST[est])est='usado';
   var campo=String(o.campo||'').toLowerCase();if(!CAMPOS[campo])campo='materiales';
-  return {ok:true,nombre:nombre,clave:clave,cm:cm,comp:comp,mats:mats.slice(0,4),piezas:piezas.slice(0,6),dato:clean(o.dato,140),estado:est,campo:campo,funciona:clean(o.funciona,260)};
+  var sing=Math.round(Number(o.singular));if(!(sing>=0))sing=0;sing=Math.min(sing,SING.length-1,3);
+  return {ok:true,nombre:nombre,clave:clave,cm:cm,comp:comp,mats:mats.slice(0,4),piezas:piezas.slice(0,6),dato:clean(o.dato,140),estado:est,campo:campo,funciona:clean(o.funciona,260),sing:sing,epoca:sing?clean(o.epoca,40):''};
 }
 function distribute(mats,total){
   var sum=mats.reduce(function(a,m){return a+m.peso;},0);
@@ -1794,6 +1870,7 @@ function errorText(code){
     case 'model':return 'Ese modelo no existe o no acepta imágenes. Elige otro en Ajustes.';
     case 'quota':return 'Has agotado el saldo o el límite gratuito de '+(PROVS[cfg.prov]?PROVS[cfg.prov].n:'la IA')+'. Espera un rato, elige un modelo gratuito o recarga saldo en tu cuenta.';
     case 'bad':return 'El proveedor no ha devuelto una respuesta válida. Inténtalo otra vez.';
+    case 'timeout':return 'La IA no ha contestado a tiempo. Revisa la conexión y vuelve a probar.';
     default:return 'Fallo de conexión. Inténtalo de nuevo.';
   }
 }
@@ -1887,12 +1964,13 @@ function extTime(o,tools,modo){
 function yieldOf(o,tools,modo,roll){
   var T={};tools.forEach(function(t){T[t]=1;});
   var F=function(id){return fx(id,KF(o,id));};
-  var size=sizeById(o.size),es=EST[o.estado]||EST.usado||{mat:1,piezas:1,rareza:0},comp=Math.min(4,o.comp+(es.rareza||0)),eff=[],pos=[],q=modo.cant;
+  var size=sizeById(o.size),es=EST[o.estado]||EST.usado||{mat:1,piezas:1,rareza:0},comp=rarOf(o),RC=rarCap(o),sg=sgOf(o),eff=[],pos=[],q=modo.cant;
   if(es.rareza)eff.push(['#'+o.estado,'rareza +'+es.rareza]);
+  if(sg.rareza)eff.push(['*'+(o.sing|0),'rareza +'+sg.rareza]);
   var chance=function(p){return roll?Math.random()<p:false;};
-  if(T.lupa&&comp<4){var lp=F('lupa').p;if(lp>=1||chance(lp)){comp++;eff.push(['lupa','rareza +1']);}else if(!roll)pos.push('rareza +1 ('+pct(lp)+' %)');}
+  if(T.lupa&&comp<RC){var lp=F('lupa').p;if(lp>=1||chance(lp)){comp++;eff.push(['lupa','rareza +1']);}else if(!roll)pos.push('rareza +1 ('+pct(lp)+' %)');}
   var IV=invOn(tools);
-  IV.forEach(function(t){t.efx.forEach(function(e){if(e.t==='rareza'&&comp<4){if(chance(e.v)){comp++;eff.push([t.id,'rareza +1']);}else if(!roll)pos.push('rareza +1 ('+pct(e.v)+' %)');}});});
+  IV.forEach(function(t){t.efx.forEach(function(e){if(e.t==='rareza'&&comp<RC){if(chance(e.v)){comp++;eff.push([t.id,'rareza +1']);}else if(!roll)pos.push('rareza +1 ('+pct(e.v)+' %)');}});});
   var rar=RAR[comp-1],mult=1;
   IV.forEach(function(t){t.efx.forEach(function(e){if(e.t==='todo'){mult*=1+e.v;eff.push([t.id,'+'+pct(e.v)+' % de todo']);}});});
   if(T.guantes){var gx=F('guantes').mult;mult*=gx;eff.push(['guantes','+'+pct(gx-1)+' % de todo']);}
@@ -1929,15 +2007,22 @@ function yieldOf(o,tools,modo,roll){
     if(tl&&T[tl]){var pk=(tech('mec')&&['tornillos','muelle','motor','bisagra'].indexOf(pz.id)>=0)||(tech('micro')&&['chip','led'].indexOf(pz.id)>=0)?1.5:1;
       var n=Math.max(1,Math.round(pz.cant*q*pk*(es.piezas||1)*pzMul(KF(o,tl))));add(pz.id,n);eff.push([tl,'+'+n+' '+MAT_BY[pz.id].n.toLowerCase()]);}
   });
+  // Objetos singulares: material épico la primera vez que se desmontan
+  var epi=epicoOf(o);
+  if(epi&&o.first&&sg.epicos){
+    var ne=Math.max(1,Math.round((sg.epicos+(size.base>=8?1:0))*q)),pe=sg.pEpico||0;
+    if(pe>=1||chance(pe)){add(epi,ne);eff.push(['*'+(o.sing|0),'+'+ne+' '+matName(epi).toLowerCase()]);}
+    else if(!roll)pos.push(ne+' '+matName(epi).toLowerCase()+' ('+pct(pe)+' %)');
+  }
   Object.keys(gm).forEach(function(k){if(!(gm[k]>0)||!MAT_BY[k])delete gm[k];});
   return {gm:gm,comp:comp,eff:eff,pos:pos,mult:mult};
 }
-function effName(k){if(k.charAt(0)==='#')return 'Estado '+((EST[k.slice(1)]||{}).n||k.slice(1)).toLowerCase();return k.charAt(0)==='@'?(TECH_BY[k.slice(1)]?TECH_BY[k.slice(1)].n:k):(TOOL_BY[k]?TOOL_BY[k].n:k);}
+function effName(k){if(k.charAt(0)==='*')return (SING[+k.slice(1)]||{}).n||'Objeto singular';if(k.charAt(0)==='#')return 'Estado '+((EST[k.slice(1)]||{}).n||k.slice(1)).toLowerCase();return k.charAt(0)==='@'?(TECH_BY[k.slice(1)]?TECH_BY[k.slice(1)].n:k):(TOOL_BY[k]?TOOL_BY[k].n:k);}
 function gainsList(gm){
   return Object.keys(gm).map(function(id){return {id:id,amt:gm[id]};})
     .sort(function(a,b){var ka=MAT_BY[a.id].pieza?2:MAT_BY[a.id].rare?1:0,kb=MAT_BY[b.id].pieza?2:MAT_BY[b.id].rare?1:0;return (ka-kb)||(b.amt-a.amt);});
 }
-function matChip(id,amt){var m=MAT_BY[id];return '<span class="chip'+(m.rare?' rare':'')+(m.pieza?' pz':'')+'"><i class="mat-'+id+'"></i>'+esc(m.n)+' '+amt+'</span>';}
+function matChip(id,amt){var m=MAT_BY[id];return '<span class="chip'+(m.rare?' rare':'')+(m.epico?' ep':'')+(m.pieza?' pz':'')+'"><i class="mat-'+id+'"></i>'+esc(m.n)+' '+amt+'</span>';}
 
 function applyScan(out){
   var r=sanitize(out);
@@ -1946,7 +2031,7 @@ function applyScan(out){
   state.day.n=(state.day.d===today()?state.day.n:0)+1;state.day.d=today();
   var prev=state.disc[r.clave],n=prev&&prev.n?prev.n:0;
   pend={id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),nombre:r.nombre,clave:r.clave,cm:r.cm,size:sizeFor(r.cm).id,comp:r.comp,
-    mats:r.mats,piezas:r.piezas,dato:r.dato,estado:r.estado,campo:r.campo,funciona:r.funciona,decay:Math.max(0.2,1-(tech('recic')?0.15:0.25)*n),
+    mats:r.mats,piezas:r.piezas,dato:r.dato,estado:r.estado,campo:r.campo,funciona:r.funciona,sing:r.sing,epoca:r.epoca,decay:Math.max(0.2,1-(tech('recic')?0.15:0.25)*n),
     first:!prev&&!state.extr.some(function(e){return e.clave===r.clave;}),tools:[],modo:'completa'};
   pend.tools=TOOLS.filter(function(t){return has(t.id)&&applies(t.id,pend);}).map(function(t){return t.id;});
   persist();renderHeader();
@@ -1955,7 +2040,7 @@ function applyScan(out){
 }
 function renderSetup(){
   if(!pend)return;
-  var o=pend,size=sizeById(o.size),es=EST[o.estado]||{},rar=RAR[Math.min(4,o.comp+(es.rareza||0))-1],modo=MODO_BY[o.modo]||MODOS[MODOS.length-1];
+  var o=pend,size=sizeById(o.size),es=EST[o.estado]||{},sg=sgOf(o),rar=RAR[rarOf(o)-1],modo=MODO_BY[o.modo]||MODOS[MODOS.length-1];
   var own=TOOLS.filter(function(t){return has(t.id)&&applies(t.id,o);});
   var y=yieldOf(o,o.tools,modo,false),secs=extTime(o,o.tools,modo);
   var full=state.extr.length>=MAXE;
@@ -1974,15 +2059,16 @@ function renderSetup(){
   }).join('');
   var gl=gainsList(y.gm).map(function(g){return matChip(g.id,g.amt);}).join('');
   setPanel('<article class="card setup">'+
-    '<div class="meta"><span class="pill r'+Math.min(4,o.comp+(es.rareza||0))+'">'+rar.n+'</span><span class="sz">Talla '+size.id+' · '+fmtLen(o.cm)+'</span><span class="sz est">'+esc(es.n||'Usado')+'</span>'+(o.first?'<span class="new">Nuevo</span>':'')+'</div>'+
+    '<div class="meta"><span class="pill r'+rarOf(o)+'">'+rar.n+'</span>'+singTag(o)+'<span class="sz">Talla '+size.id+' · '+fmtLen(o.cm)+'</span><span class="sz est">'+esc(es.n||'Usado')+'</span>'+(o.first?'<span class="new">Nuevo</span>':'')+'</div>'+
     '<h2 class="name">'+esc(o.nombre)+'</h2>'+(o.dato?'<p class="dato">'+esc(o.dato)+'</p>':'')+
+    (o.sing?'<p class="mono sg">'+esc(sg.n)+(o.epoca?' · '+esc(o.epoca):'')+'. '+esc(sg.desc||'')+(o.first?'':' Ya lo habías desmontado: esta vez solo cuenta la rareza.')+'</p>':'')+
     (es.desc?'<p class="mono">'+esc(es.n)+': '+esc(es.desc)+'</p>':'')+
     (pzs?'<h3 class="st-h">Piezas que lleva</h3><ul class="pzl">'+pzs+'</ul>':'')+
     '<h3 class="st-h">Herramientas</h3><div class="tool-opts">'+tl+'</div>'+
     '<h3 class="st-h">Extracción</h3><div class="segs" role="group" aria-label="Modo de extracción">'+md+'</div>'+
     '<div class="sum"><p><b>'+(inst?'Al instante':fmtT(secs))+'</b> · '+esc(modo.n.toLowerCase())+'</p><div class="chips">'+gl+'</div>'+
     (y.pos.length?'<p class="mono">Posible: '+esc(y.pos.join(', '))+'</p>':'')+
-    '<p class="mono">'+(modo.planos&&!(state.disc[o.clave]&&state.disc[o.clave].ent)?'Al desmontarlo del todo entenderás cómo funciona ('+esc(CAMPOS[o.campo]||o.campo)+'): '+(techsFor(o.campo).length?'+'+o.comp+' para '+techsFor(o.campo).map(function(t){return t.n;}).join(', '):'ninguna tecnología abierta usa ese campo')+'. ':'')+(modo.planos?'Puede dar fragmentos de plano'+(function(){var rt=realTool(o);return rt&&rt.basica&&!known(rt)&&!(state.disc[o.clave]&&state.disc[o.clave].herr)?' y el plano de '+rt.n:'';})()+'.':'Sin planos: solo la extracción completa los da.')+'</p></div>'+
+    '<p class="mono">'+(modo.planos&&!(state.disc[o.clave]&&state.disc[o.clave].ent)?'Al desmontarlo del todo entenderás cómo funciona ('+esc(CAMPOS[o.campo]||o.campo)+'): '+(techsFor(o.campo).length?'+'+o.comp+' para '+techsFor(o.campo).map(function(t){return t.n;}).join(', '):'ninguna tecnología abierta usa ese campo')+'. ':'')+(modo.planos?'Puede dar fragmentos de plano'+(function(){var rt=realTool(o);return rt&&rt.basica&&!known(rt)&&!(state.disc[o.clave]&&state.disc[o.clave].herr)?' y el plano de '+rt.n:'';})()+'.':'Sin planos: solo la extracción completa los da.')+(modo.planos&&o.first&&sg.invento?(sg.invento>=1?' La IA inventará un plano épico a partir de él.':' Puede que la IA invente un plano épico a partir de él.'):'')+'</p></div>'+
     (o.tools.length?'<p class="note">Cada herramienta elegida gasta 1 uso al empezar.</p>':'')+
     '<div class="row"><button class="btn primary" id="exStart" type="button"'+(full?' disabled':'')+'>'+(full?'Ya tienes '+MAXE+' extracciones en marcha':'Empezar extracción')+'</button><button class="btn" id="exDrop" type="button">Descartar</button></div>'+
     '</article>');
@@ -2037,27 +2123,29 @@ function collect(id){
   if(i<0)return;
   var o=state.extr[i];if(Date.now()<o.fin)return;
   var modo=MODO_BY[o.modo]||MODOS[MODOS.length-1];
-  var y=yieldOf(o,o.tools,modo,true);
+  var y=yieldOf(o,o.tools,modo,true),sg=sgOf(o);
   var gains=gainsList(y.gm),units=gains.reduce(function(a,g){return a+g.amt;},0);
   var prev=state.disc[o.clave],n=prev&&prev.n?prev.n:0,now=Date.now();
   var mats=Object.assign({},prev&&prev.mats||{});
   gains.forEach(function(g){state.inv[g.id]=(state.inv[g.id]||0)+g.amt;mats[g.id]=(mats[g.id]||0)+g.amt;});
   var first=!prev;
   state.disc[o.clave]={nombre:o.nombre,tam:o.size,rar:y.comp,n:n+1,primero:prev&&prev.primero||now,ultimo:now,mats:mats,herr:!!(prev&&prev.herr),
-    ent:!!(prev&&prev.ent),campo:o.campo||(prev&&prev.campo)||'',funciona:(prev&&prev.funciona)||''};
+    ent:!!(prev&&prev.ent),campo:o.campo||(prev&&prev.campo)||'',funciona:(prev&&prev.funciona)||'',
+    sing:Math.max(o.sing|0,prev&&prev.sing|0),epoca:o.epoca||(prev&&prev.epoca)||''};
+  if(!state.disc[o.clave].sing){delete state.disc[o.clave].sing;delete state.disc[o.clave].epoca;}
   var saberGan=0,crecen=[];
   if(modo.planos&&!(prev&&prev.ent)&&o.campo&&CAMPOS[o.campo]){
     saberGan=Math.max(1,o.comp);crecen=addKnowledge(o.campo,saberGan);
     state.disc[o.clave].ent=true;if(o.funciona)state.disc[o.clave].funciona=o.funciona;
   }
-  var xpGain=units+(first?5:0)+(y.comp-1)*2+(modo.planos?3:0);
+  var xpGain=units+(first?5:0)+(y.comp-1)*2+(modo.planos?3:0)+(o.first?(sg.xp||0):0);
   var lvlBefore=levelFor(state.xp);state.xp+=xpGain;
   var real=null,frag=null;
   if(modo.planos){
     var rt=(prev&&prev.herr)?null:realTool(o);
     if(rt&&rt.basica&&!known(rt)){state.planos[rt.id]=rt.frags;state.disc[o.clave].herr=true;real={t:rt,ok:true};}
     else if(rt&&!rt.basica&&!known(rt))real={t:rt,ok:false};
-    frag=dropFragment(o,first);
+    frag=dropFragment(o,first,!!(sg.fragSup&&o.first));
   }
   // Con el uso se aprende el plano del nivel siguiente (solo ese)
   var aprende=[];
@@ -2071,11 +2159,14 @@ function collect(id){
   });
   var invTry=false;
   if(modo.planos&&first){state.invc=(state.invc||0)+1;if(state.invc>=INV_CADA||Math.random()<INV_PROB){state.invc=0;invTry=aiOk&&!invBusy;}}
+  // Las piezas singulares inspiran planos épicos
+  var invEp=false;
+  if(modo.planos&&o.first&&sg.invento&&aiOk&&!invBusy&&Math.random()<sg.invento){invEp=true;invTry=true;}
   state.extr.splice(i,1);delete extDone[id];
   persist();renderAll();setButtons();
   show('scan');
   var list=gains.map(function(g){
-    var m=MAT_BY[g.id],tag=m.rare?' <em class="raro">raro</em>':m.pieza?' <em class="raro pz">pieza</em>':'';
+    var m=MAT_BY[g.id],tag=m.epico?' <em class="raro ep">épico</em>':m.rare?' <em class="raro">raro</em>':m.pieza?' <em class="raro pz">pieza</em>':'';
     return '<li'+(m.rare||m.pieza?' class="rare"':'')+'><span class="sw mat-'+g.id+'"></span><span class="nm">'+esc(m.n)+tag+'</span><span class="qty">+'+g.amt+'</span></li>';
   }).join('');
   var fxl=y.eff.length?'<ul class="toolfx">'+y.eff.map(function(e){var tk=TOOL_BY[e[0]];return '<li><b>'+esc(tk?toolName(tk,lvAt(o,e[0])):effName(e[0]))+'</b> '+esc(e[1])+'</li>';}).join('')+'</ul>':'';
@@ -2091,15 +2182,15 @@ function collect(id){
   crecen.forEach(function(c){if(c.done)setTimeout(function(){toast('¡Has aprendido '+c.t.n+'!');},300);});
   var lvlAfter=levelFor(state.xp);
   setPanel('<article class="card">'+
-    '<div class="meta"><span class="pill r'+y.comp+'">'+RAR[y.comp-1].n+'</span><span class="sz">Talla '+o.size+' · '+fmtLen(o.cm)+'</span>'+(first?'<span class="new">Nuevo</span>':'')+'</div>'+
-    '<h2 class="name">'+esc(o.nombre)+'</h2>'+
+    '<div class="meta"><span class="pill r'+y.comp+'">'+RAR[y.comp-1].n+'</span>'+singTag(o)+'<span class="sz">Talla '+o.size+' · '+fmtLen(o.cm)+'</span>'+(first?'<span class="new">Nuevo</span>':'')+'</div>'+
+    '<h2 class="name">'+esc(o.nombre)+'</h2>'+(o.sing&&o.epoca?'<p class="mono sg">'+esc(sg.n)+' · '+esc(o.epoca)+'</p>':'')+
     ent+'<ul class="gains">'+list+'</ul>'+fxl+
     '<p class="calc">'+sizeById(o.size).base+' base × '+fmt(RAR[y.comp-1].m)+' rareza × '+fmt(o.decay||1)+' repetición × '+fmt(modo.cant)+' '+esc(modo.n.toLowerCase())+(y.mult!==1?' × '+fmt(y.mult)+' herramientas':'')+'</p>'+
-    fr+(invTry?'<p class="mono" id="invSlot">La IA está pensando un invento a partir de este objeto…</p>':'')+'<p class="xp">+'+xpGain+' XP</p>'+
+    fr+(invTry?'<p class="mono" id="invSlot">'+(invEp?'La IA está pensando un plano épico a partir de esta pieza…':'La IA está pensando un invento a partir de este objeto…')+'</p>':'')+'<p class="xp">+'+xpGain+' XP</p>'+
     (lvlAfter>lvlBefore?'<p class="lvlup">Subes al nivel '+lvlAfter+'</p>':'')+
     '<button class="btn primary" id="again" type="button">Seguir</button></article>');
   $('#again').addEventListener('click',function(){resetViewfinder();showIdle();});
-  if(invTry)inventarYa('objeto',o,'');
+  if(invTry)inventarYa('objeto',o,'',invEp);
 }
 async function scan(file){
   if(busy||!file)return;
@@ -2125,7 +2216,7 @@ async function scan(file){
     applyScan(out);
   }catch(e){
     if(e&&(e.code==='cancelled'||e.name==='AbortError')){resetViewfinder();showIdle();}
-    else showError(e&&e.code);
+    else{aiFailed(e&&e.code);showError(e&&e.code);}
   }finally{
     busy=false;ctl=null;setButtons();
   }
@@ -2210,9 +2301,9 @@ async function aiText(prompt,signal){
 /* ---------- La IA inventa planos ---------- */
 var invBusy=false,INV_DIA=3,INV_CADA=5,INV_PROB=0.2,INV_LEJOS=0.25;
 function lista(ids){return ids.map(function(id){return id+'='+matName(id);}).join(', ');}
-function invPrompt(src,idea,lejos){
+function invPrompt(src,idea,lejos,ep){
   var base=MATS.filter(function(m){return !m.rare&&!m.pieza;}).map(function(m){return m.id;});
-  var raros=MATS.filter(function(m){return m.rare;}).map(function(m){return m.id;});
+  var raros=MATS.filter(function(m){return m.rare&&!m.epico;}).map(function(m){return m.id;});
   var piezas=MATS.filter(function(m){return m.pieza;}).map(function(m){return m.id;});
   var vistos=MATS.filter(function(m){return seen(m.id);}).map(function(m){return m.id;});
   var noVistos=MATS.filter(function(m){return !seen(m.id);}).map(function(m){return m.id;});
@@ -2231,7 +2322,9 @@ function invPrompt(src,idea,lejos){
   '- {"tipo":"pieza","pieza":ID_PIEZA,"valor":0.3-1}: saca esa pieza sin su herramienta habitual',
   '- {"tipo":"rareza","valor":0.1-0.3}: probabilidad de subir la rareza del objeto',
   'Materiales: '+lista(base)+'. Raros: '+lista(raros)+'. Piezas: '+lista(piezas)+'.',
-  lejos?('Esta vez inventa algo ambicioso que el jugador todavía NO pueda fabricar y algo más potente: en "tecnologia" pon una que aún no ha aprendido ('+tn(noSabe)+') o usa en la receta algún material que nunca ha conseguido ('+(noVistos.length?lista(noVistos):'ninguno')+').')
+  ep?('Este invento es ÉPICO: el jugador acaba de desmontar una pieza singular ('+sgOf(src).n.toLowerCase()+(src.epoca?', '+src.epoca:'')+'). Hazlo memorable, con el sabor de esa época, y más potente de lo normal: 2 o 3 efectos y valores hasta un 50 % por encima de los máximos de la lista. '+
+      'En la receta pon '+(epicoOf(src)?matName(epicoOf(src))+' ('+epicoOf(src)+') y el resto ':'')+'solo materiales que ya ha conseguido ('+(vistos.length?lista(vistos):lista(base.slice(0,4)))+'); en "tecnologia" pon "" o una que ya sabe ('+tn(sabe)+'). Puede durar hasta 25 usos.')
+  :lejos?('Esta vez inventa algo ambicioso que el jugador todavía NO pueda fabricar y algo más potente: en "tecnologia" pon una que aún no ha aprendido ('+tn(noSabe)+') o usa en la receta algún material que nunca ha conseguido ('+(noVistos.length?lista(noVistos):'ninguno')+').')
     :('Tiene que poder fabricarlo YA: en la receta usa solo materiales que ya ha conseguido ('+(vistos.length?lista(vistos):lista(base.slice(0,4)))+') y en "tecnologia" pon "" o una que ya sabe ('+tn(sabe)+').'),
   'Responde SOLO con un JSON, sin texto alrededor: {"nombre":"máximo 3 palabras","genero":"m, f, mp o fp (género y número del nombre)","descripcion":"una frase de qué es y cómo se usa","efectos":[...],"receta":{"ID":cantidad de 1 a 8, total 16 como mucho},"tecnologia":"ID o \\"\\"","usos":5-15,"tiempo":segundos de fabricación 60-600}'].join('\n');
 }
@@ -2251,23 +2344,27 @@ function fixReach(d,lejos){
   return d;
 }
 // kind: 'objeto' (al desmontar algo nuevo o cada pocos objetos) o 'pedido' (Taller o maestro, con límite diario)
-async function inventar(kind,src,idea){
+async function inventar(kind,src,idea,ep){
   if(invBusy)return {err:'Ya está inventando algo.'};
   if(!aiOk)return {err:whyText()};
   if(TOOLS.filter(function(t){return t.inv&&planLevel(t)>0;}).length>=INV_MAX)return {err:'Ya tienes '+INV_MAX+' inventos: vende o cambia alguno para que la IA invente más.'};
   if(kind==='pedido'){var dd=today();if(state.invd.d!==dd)state.invd={d:dd,n:0};if(state.invd.n>=INV_DIA)return {err:'Hoy ya te ha inventado '+INV_DIA+' planos a petición. Mañana más, o desmonta objetos nuevos.'};}
   invBusy=true;renderTaller();
-  var lejos=Math.random()<INV_LEJOS,res;
+  ep=!!(ep&&src);
+  var lejos=!ep&&Math.random()<INV_LEJOS,res;
   try{
-    var j=parseLoose(await aiText(invPrompt(src,idea,lejos)));
+    var j=parseLoose(await aiText(invPrompt(src,idea,lejos,ep)));
     var d={nombre:j.nombre,genero:j.genero,descripcion:j.descripcion,efectos:j.efectos,receta:j.receta||{},req:TECH_BY[j.tecnologia]?j.tecnologia:'',usos:j.usos,tiempo:j.tiempo,
-      origen:src?src.nombre:(idea?'tu idea':'tu taller'),creado:Date.now()};
+      origen:src?src.nombre:(idea?'tu idea':'tu taller'),creado:Date.now(),ep:ep?1:0};
     var nn=clean(d.nombre,28),k=1,nm=function(){return k>1?nn+' '+k:nn;};
     while(TOOLS.some(function(x){return norm(x.n)===norm(nm());}))k++;
     d.nombre=nm();
     var id='x'+Date.now().toString(36).slice(-6)+Math.random().toString(36).slice(2,6);
     var t0=cleanInv(d,id);if(!t0)throw {code:'bad'};
-    var t=cleanInv(fixReach(invData(t0),lejos),id);if(!t)throw {code:'bad'};
+    var fd=fixReach(invData(t0),lejos);
+    // el plano épico lleva siempre el material épico de la pieza (primero, para que no se recorte)
+    var eid=ep&&epicoOf(src);if(eid&&seen(eid)&&!fd.receta[eid]){var r2={};r2[eid]=2;Object.keys(fd.receta).forEach(function(q){r2[q]=fd.receta[q];});fd.receta=r2;}
+    var t=cleanInv(fd,id);if(!t)throw {code:'bad'};
     state.inventos[id]=invData(t);syncInv();setPl(state,TOOL_BY[id],1);
     if(kind==='pedido')state.invd.n++;
     persist();
@@ -2276,8 +2373,8 @@ async function inventar(kind,src,idea){
   invBusy=false;renderAll();
   return res;
 }
-function invMsg(r){return r.err?r.err:'La IA ha inventado: '+r.t.n+'. '+r.t.efecto+(r.ok?' Ya puedes fabricarlo en el Taller.':' Inalcanzable por ahora: te falta '+invReach(r.t).falta.join(' y ')+'.');}
-function inventarYa(kind,src,idea){return inventar(kind,src,idea).then(function(r){toast(invMsg(r));var sl=$('#invSlot');if(sl&&src){sl.className=r.err?'mono':'fragok';sl.textContent=r.err?'Esta vez a la IA no se le ha ocurrido nada.':invMsg(r);}return r;});}
+function invMsg(r){return r.err?r.err:(r.t.ep?'¡Plano épico! La IA ha inventado: ':'La IA ha inventado: ')+r.t.n+'. '+r.t.efecto+(r.ok?' Ya puedes fabricarlo en el Taller.':' Inalcanzable por ahora: te falta '+invReach(r.t).falta.join(' y ')+'.');}
+function inventarYa(kind,src,idea,ep){return inventar(kind,src,idea,ep).then(function(r){toast(invMsg(r));var sl=$('#invSlot');if(sl&&src){sl.className=r.err?'mono':'fragok';sl.textContent=r.err?'Esta vez a la IA no se le ha ocurrido nada.':invMsg(r);}return r;});}
 
 /* ---------- El maestro del taller ---------- */
 var maLog=[],maBusy=false;
@@ -2314,6 +2411,7 @@ function maestroCtx(){
 function maestroPrompt(q){
   return ['Eres el maestro del taller en Rastro, un juego de crafteo con el mundo real.',
   'Reglas: el jugador fotografía objetos reales y una IA le da materiales según tamaño, rareza, estado y composición, y piezas (tornillos, muelles, motor, cable, bisagras, neodimio, lentes, chips, LED) si tiene la herramienta adecuada.',
+  'Objetos singulares (los detecta la IA): curiosos, antigüedades y piezas de museo dan más rareza (las de museo pueden ser Legendarias), materiales épicos (Bronce antiguo, Madera noble, Esmalte, Baquelita) la primera vez que se desmontan y, las antigüedades y piezas de museo, un fragmento de plano seguro y planos épicos inventados por la IA.',
   'Tras escanear elige herramientas y modo de extracción (rápida, media, completa). Solo la completa da fragmentos de plano y, en objetos nuevos, conocimiento de su campo (Mecánica, Electricidad, Óptica, Materiales, Química).',
   'Las tecnologías abiertas solo crecen con ese conocimiento (desmontar por completo objetos nuevos de su campo); al llenarse se aprenden. Desbloquear las siguientes del árbol cuesta monedas y materiales.',
   'Extraer por completo una herramienta básica real da su plano. En la Tienda se venden materiales y se compran planos; hay un mercado entre jugadores.',
@@ -2361,32 +2459,33 @@ $('#maForm').addEventListener('submit',async function(e){
   maBusy=false;renderMaestro();
 });
 
-async function identifyRemote(blob,signal){
+async function identifyRemote(blob,signal,prompt){
+  var PR=prompt||PROMPT;
   var p=cfg.prov,key=clean(cfg.keys[p],400),model=modelOf(p);
   var mime=blob.type||'image/jpeg',data=await toB64(blob),j,t;
   if(p==='gemini'){
     j=await post('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',
       {'Content-Type':'application/json','x-goog-api-key':key},
-      {contents:[{parts:[{text:PROMPT},{inline_data:{mime_type:mime,data:data}}]}],generationConfig:{responseMimeType:'application/json',temperature:0.2}},signal);
+      {contents:[{parts:[{text:PR},{inline_data:{mime_type:mime,data:data}}]}],generationConfig:{responseMimeType:'application/json',temperature:0.2}},signal);
     t=j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts||[];
     t=t.map(function(x){return x.text||'';}).join('');
   }else if(p==='anthropic'){
     j=await post('https://api.anthropic.com/v1/messages',
       {'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      {model:model,max_tokens:700,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mime,data:data}},{type:'text',text:PROMPT}]}]},signal);
+      {model:model,max_tokens:700,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mime,data:data}},{type:'text',text:PR}]}]},signal);
     t=(j&&j.content||[]).map(function(x){return x.text||'';}).join('');
   }else if(p==='openrouter'){
     model=await orModel();
     j=await post('https://openrouter.ai/api/v1/chat/completions',
       {'Content-Type':'application/json','Authorization':'Bearer '+key,'X-Title':'Rastro','HTTP-Referer':location.origin+location.pathname},
-      {model:model,max_tokens:700,messages:[{role:'user',content:[{type:'text',text:PROMPT},{type:'image_url',image_url:{url:'data:'+mime+';base64,'+data}}]}]},signal);
+      {model:model,max_tokens:700,messages:[{role:'user',content:[{type:'text',text:PR},{type:'image_url',image_url:{url:'data:'+mime+';base64,'+data}}]}]},signal);
     t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content||'';
     if(Array.isArray(t))t=t.map(function(x){return x.text||'';}).join('');
   }else if(p==='puter'){
     var P=await loadPuter();
     if(!P.auth.isSignedIn())throw {code:'auth'};
     var r;
-    try{r=await P.ai.chat(PROMPT,'data:'+mime+';base64,'+data,{model:modelOf('puter')});}
+    try{r=await P.ai.chat(PR,'data:'+mime+';base64,'+data,{model:modelOf('puter')});}
     catch(e){throw {code:puterErrCode(e)};}
     if(signal&&signal.aborted){var ab=new Error('cancelado');ab.name='AbortError';throw ab;}
     t=r&&r.message&&r.message.content;
@@ -2395,7 +2494,7 @@ async function identifyRemote(blob,signal){
   }else if(p==='openai'){
     j=await post('https://api.openai.com/v1/chat/completions',
       {'Content-Type':'application/json','Authorization':'Bearer '+key},
-      {model:model,response_format:{type:'json_object'},messages:[{role:'user',content:[{type:'text',text:PROMPT},{type:'image_url',image_url:{url:'data:'+mime+';base64,'+data}}]}]},signal);
+      {model:model,response_format:{type:'json_object'},messages:[{role:'user',content:[{type:'text',text:PR},{type:'image_url',image_url:{url:'data:'+mime+';base64,'+data}}]}]},signal);
     t=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content||'';
   }else throw {code:'upstream_error'};
   return parseLoose(t);
@@ -2409,14 +2508,23 @@ function loadPuter(){
   if(!puterP)puterP=loadScript(PUTER_JS).then(function(){if(!window.puter)throw new Error('puter');puterErr=false;return window.puter;},function(e){puterP=null;puterErr=true;throw e;});
   return puterP;
 }
+// Comprueba con el servidor de Puter que la sesión guardada en este dispositivo sigue valiendo
 async function puterRefresh(){
+  puterPend=true;if(panelIdle&&!busy)showIdle();
   try{
     var P=await loadPuter();
     puterIn=!!P.auth.isSignedIn();
     puterName='';
-    if(puterIn){try{var u=await P.auth.getUser();puterName=u&&u.username||'';}catch(e){}}
+    if(puterIn){
+      try{
+        var u=await withTimeout(P.auth.getUser(),15000);
+        if(u&&u.username)puterName=u.username;
+        else if(u)puterIn=false;
+      }catch(e){if(!(e instanceof TypeError))puterIn=false;} // TypeError = sin red: lo dirá la prueba
+    }
   }catch(e){puterIn=false;}
-  refreshAi();renderSet();renderHeader();setButtons();if(!busy)showIdle();
+  puterPend=false;
+  refreshAi();renderSet();renderChk();renderHeader();setButtons();if(panelIdle&&!busy)showIdle();
 }
 function puterErrCode(e){
   var s=JSON.stringify(e&&(e.error||e)||'').toLowerCase();
@@ -2424,6 +2532,120 @@ function puterErrCode(e){
   if(s.indexOf('auth')>=0||s.indexOf('token')>=0||s.indexOf('sign')>=0)return 'auth';
   if(s.indexOf('model')>=0)return 'model';
   return 'upstream_error';
+}
+
+/* ---------- Comprobación: cámara e IA ---------- */
+var LS_CHK='rastro.aichk.v1',CHK_TTL=12*3600*1000,camWatch=false;
+var PING='Prueba de conexión del juego Rastro. Mira la imagen y responde SOLO con este JSON, sin texto alrededor: {"ok":true,"color":"color principal de la imagen en una palabra"}';
+function hashS(x){x=String(x||'');var h=0;for(var i=0;i<x.length;i++)h=(h*31+x.charCodeAt(i))|0;return h.toString(36);}
+function aiSig(){
+  var p=cfg.prov,P=PROVS[p];if(!P)return '';
+  var who=p==='puter'?(puterIn?'in:'+puterName:'out'):p==='visor'?(visorOk?'in':'out'):hashS(clean(cfg.keys[p],400));
+  return p+'|'+(p==='visor'?'':modelOf(p))+'|'+who;
+}
+function pingImg(){
+  return new Promise(function(res){
+    try{
+      var cv=document.createElement('canvas');cv.width=cv.height=64;var g=cv.getContext('2d');
+      g.fillStyle='#d03030';g.fillRect(0,0,64,64);g.fillStyle='#ffffff';g.fillRect(18,18,28,28);
+      cv.toBlob(function(b){res(b);},'image/jpeg',0.85);
+    }catch(e){res(null);}
+  });
+}
+// Prueba real: una foto diminuta, igual que un escaneo (también comprueba que el modelo acepta imágenes)
+async function aiPing(signal){
+  var b=await pingImg();if(!b)throw {code:'image_rejected'};
+  if(cfg.prov==='visor')return await sampleFn.json(PING,{images:b,modelTier:'quick',signal:signal});
+  return await identifyRemote(b,signal,PING);
+}
+function chkCache(v){try{if(v)localStorage.setItem(LS_CHK,JSON.stringify(v));else localStorage.removeItem(LS_CHK);}catch(e){}}
+async function checkAI(force){
+  var my=++chkSeq,sig=chkSig;
+  if(!aiConfigured()){chk.ia='err';chk.code='auth';return chkDone();}
+  if(!force){
+    var c=null;try{c=JSON.parse(localStorage.getItem(LS_CHK)||'null');}catch(e){}
+    if(c&&c.sig===sig&&Date.now()-c.t<CHK_TTL){chk.ia='ok';chk.code='';chk.t=c.t;return chkDone();}
+  }
+  chk.ia='run';chk.code='';chkDone();
+  var ac=new AbortController(),tm=setTimeout(function(){ac.abort();},35000),code='';
+  try{
+    var out=await Promise.race([aiPing(ac.signal),new Promise(function(r,j){setTimeout(function(){j({code:'timeout'});},36000);})]);
+    if(!out||typeof out!=='object')code='bad';
+  }catch(e){code=(e&&e.name==='AbortError')?'timeout':((e&&e.code)||'net');}
+  clearTimeout(tm);
+  if(my!==chkSeq)return;
+  // Si contesta pero sin JSON, la conexión funciona: se da por buena
+  if(!code||code==='bad'||code==='invalid_json'){chk.ia='ok';chk.code='';chk.t=Date.now();chkCache({sig:sig,t:chk.t});}
+  else{chk.ia='err';chk.code=code;chkCache(null);if(code==='auth'&&cfg.prov==='puter')puterIn=false;}
+  chkDone();
+}
+// Un escaneo que falla por la cuenta, el saldo o el modelo deja la IA como no lista
+function aiFailed(code){
+  if(['auth','quota','model','session_expired','not_granted'].indexOf(code)<0)return;
+  chkCache(null);chkSeq++;chk.ia='err';chk.code=code;
+  if(code==='auth'&&cfg.prov==='puter')puterIn=false;
+  refreshAi();renderChk();renderHeader();renderSet();
+}
+function chkDone(){refreshAi();renderChk();renderHeader();setButtons();if(panelIdle&&!busy)showIdle();}
+// Cámara: si existe y si el navegador la tiene bloqueada (probe = pedirla de verdad)
+async function checkCam(probe){
+  var md=navigator.mediaDevices;
+  if(!window.isSecureContext||!md){chk.cam='unk';return camDone();}
+  if(probe){
+    if(!md.getUserMedia){chk.cam='unk';return camDone();}
+    chk.cam='run';camDone();
+    try{
+      var st=await md.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+      st.getTracks().forEach(function(t){t.stop();});chk.cam='ok';
+    }catch(e){
+      var n=e&&e.name;
+      chk.cam=(n==='NotAllowedError'||n==='SecurityError'||n==='PermissionDeniedError')?'denied'
+        :(n==='NotFoundError'||n==='DevicesNotFoundError'||n==='OverconstrainedError')?'nodev'
+        :(n==='NotReadableError'||n==='TrackStartError'||n==='AbortError')?'busy':'unk';
+    }
+    return camDone();
+  }
+  var perm='',nv=-1;
+  try{
+    if(navigator.permissions&&navigator.permissions.query){
+      var q=await navigator.permissions.query({name:'camera'});perm=q.state;
+      if(!camWatch){camWatch=true;q.onchange=function(){checkCam(false);};}
+    }
+  }catch(e){}
+  try{if(md.enumerateDevices){var ds=await md.enumerateDevices();nv=ds.filter(function(d){return d.kind==='videoinput';}).length;}}catch(e){}
+  // sin permiso, algunos navegadores (Safari) no listan las cámaras: solo se fía de una lista vacía con permiso
+  chk.cam=perm==='denied'?'denied':perm==='granted'?(nv===0?'nodev':'ok'):nv>0?'ask':'unk';
+  camDone();
+}
+function camText(){
+  switch(chk.cam){
+    case 'ok':return ['ok','Lista.'];
+    case 'ask':return ['ok','Hay cámara. El navegador te pedirá permiso la primera vez.'];
+    case 'run':return ['run','Pidiendo acceso…'];
+    case 'denied':return ['err','El navegador tiene bloqueada la cámara para esta página. Permítela en los ajustes del sitio (el candado junto a la dirección) y vuelve a probar. Mientras, usa Galería.'];
+    case 'nodev':return ['err','No encuentro ninguna cámara en este dispositivo. Usa Galería para elegir fotos.'];
+    case 'busy':return ['err','La cámara está ocupada por otra aplicación. Ciérrala y vuelve a probar.'];
+    default:return ['','No se puede comprobar sin pedir permiso. Pulsa «Probar la cámara».'];
+  }
+}
+function camDone(){
+  var c=camText(),n=$('#camNote');
+  if(n){n.hidden=c[0]!=='err';n.textContent=c[0]==='err'?c[1]:'';}
+  renderChk();
+}
+function renderChk(){
+  var el=$('#chkList');if(!el)return;
+  var c=camText(),P=PROVS[cfg.prov];
+  var ia=!P?['err','Elige una IA aquí abajo.']
+    :(cfg.prov==='puter'&&puterPend)?['run','Comprobando tu sesión de Puter…']
+    :!aiConfigured()?['err',whyText()]
+    :chk.ia==='run'?['run','Probando con una foto de prueba…']
+    :chk.ia==='ok'?['ok','Responde'+(cfg.prov==='puter'&&puterName?' (cuenta '+puterName+')':'')+'. Comprobada '+hace(chk.t||Date.now())+'.']
+    :chk.ia==='err'?['err',errorText(chk.code)]:['run','Pendiente de comprobar.'];
+  var li=function(st,tit,txt){return '<li class="'+st+'"><i>'+(st==='ok'?'✓':st==='err'?'✗':st==='run'?'…':'?')+'</i><b>'+esc(tit)+'</b><span>'+esc(txt)+'</span></li>';};
+  el.innerHTML=li(c[0],'Cámara',c[1])+li(ia[0],'IA: '+(P?P.n:'ninguna'),ia[1]);
+  var bt=$('#btnAiTest');if(bt)bt.disabled=!aiConfigured()||chk.ia==='run';
+  var bc=$('#btnCamTest');if(bc)bc.disabled=chk.cam==='run';
 }
 
 /* ---------- OpenRouter ---------- */
@@ -2507,6 +2729,7 @@ function renderOrModels(){
 
 /* ---------- Ajustes ---------- */
 function renderSet(){
+  renderChk();
   var inClaude=!!window.claude;
   var p=cfg.prov||'puter',P=PROVS[p]||PROVS.puter;
   document.querySelectorAll('input[name="prov"]').forEach(function(r){r.checked=(r.value===p);});
@@ -2608,6 +2831,12 @@ function show(v){
 }
 document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){show(b.dataset.v);});});
 $('#btnGear').addEventListener('click',function(){show('set');});
+$('#btnCamTest').addEventListener('click',function(){checkCam(true);});
+$('#btnAiTest').addEventListener('click',function(){
+  if(cfg.prov==='puter')puterRefresh().then(function(){if(aiConfigured())checkAI(true);});
+  else checkAI(true);
+});
+if(navigator.mediaDevices&&navigator.mediaDevices.addEventListener)navigator.mediaDevices.addEventListener('devicechange',function(){checkCam(false);});
 document.addEventListener('paste',function(e){
   var items=(e.clipboardData&&e.clipboardData.files)||[];
   for(var i=0;i<items.length;i++){if(/^image\//.test(items[i].type)){scan(items[i]);break;}}
@@ -2627,7 +2856,8 @@ Promise.all([withTimeout(initStore(),12000),withTimeout(initAI(),12000)]).then(f
   ready=true;
   renderAll();showIdle();setButtons();
   initFirebase();
-  if(window.claude&&cfg.prov==='puter')puterRefresh();
+  if(cfg.prov==='puter')puterRefresh();
+  checkCam(false);renderChk();
 });
 })();
 </script>
