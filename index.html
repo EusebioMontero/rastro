@@ -328,6 +328,9 @@ button{font-family:inherit}
 .sheet-in{width:100%;max-width:528px;max-height:85vh;display:flex;flex-direction:column;gap:12px}
 .sheet .crow{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .ma-log{overflow-y:auto;display:grid;gap:8px;min-height:60px;max-height:45vh}
+.segs.enc{grid-template-columns:repeat(2,minmax(0,1fr))}
+.seg:disabled{opacity:.45;cursor:not-allowed}
+.enc-box{display:grid;gap:6px;border-left:3px solid var(--accent);padding-left:10px}
 .ma-q{justify-self:end;background:var(--accent);color:var(--on-accent);padding:8px 12px;border-radius:12px 12px 2px 12px;max-width:85%;font-size:14px}
 .ma-a{background:var(--bg);border:1px solid var(--line);padding:10px 12px;border-radius:12px 12px 12px 2px;max-width:92%;font-size:15px}
 .plano-sw{background:repeating-linear-gradient(0deg,rgba(255,255,255,.25) 0 1px,transparent 1px 6px),repeating-linear-gradient(90deg,rgba(255,255,255,.25) 0 1px,transparent 1px 6px),#1f4f8a}
@@ -553,13 +556,14 @@ button{font-family:inherit}
 <div id="toast" class="toast" role="status" hidden></div>
 <div id="maestro" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="maTitle">
   <div class="sheet-in card">
-    <div class="crow"><h2 id="maTitle">El maestro del taller</h2><button class="btn sm" id="maClose" type="button">Cerrar</button></div>
+    <div class="crow"><h2 id="maTitle">El maestro del taller <span class="mono" id="maLvl"></span></h2><button class="btn sm" id="maClose" type="button">Cerrar</button></div>
     <div id="maLog" class="ma-log" aria-live="polite"></div>
+    <div id="maEnc" class="provs"></div>
     <form id="maForm" class="provs" novalidate>
       <div class="field"><label for="ma-q">Tu pregunta (opcional)</label><input id="ma-q" type="text" autocomplete="off" maxlength="200" placeholder="¿Qué fabrico primero?"></div>
-      <div class="row"><button class="btn primary" id="maAsk" type="submit">Pedir consejo</button><button class="btn" id="maInv" type="button">Inventa un plano</button></div>
+      <div class="row"><button class="btn primary" id="maAsk" type="submit">Pedir consejo</button><button class="btn" id="maInv" type="button">Encargar un plano</button></div>
     </form>
-    <p class="note">Ve tu inventario, planos, tecnologías y conocimiento. Para un invento puedes escribir tu idea (hasta 3 al día). Cada consulta usa tu IA conectada.</p>
+    <p class="note" id="maNote"></p>
   </div>
 </div>
 <nav class="tabs" aria-label="Secciones" hidden>
@@ -611,6 +615,10 @@ function tech(id){return !!(state&&state.tech&&state.tech[id]);}
 /* ---------- Inventos de la IA: planos únicos con efectos de una lista fija ---------- */
 var BASE_TOOLS=TOOLS.slice();
 var INV_MAX=15;
+var INVC=CAT.inventos||{};
+var GRADOS=(INVC.calidad&&INVC.calidad.length)?INVC.calidad:[{n:'Básico',k:0.5,efectos:1,usos:10},{n:'Sencillo',k:0.75,efectos:1,usos:12},{n:'Bueno',k:1,efectos:2,usos:15},{n:'Excelente',k:1.25,efectos:2,usos:20},{n:'Épico',k:1.5,efectos:3,usos:25}];
+var ENC=(INVC.encargos&&INVC.encargos.length)?INVC.encargos:[{n:'Un rato',tiempo:900,calidad:0,nivel:1},{n:'1 hora',tiempo:3600,calidad:1,nivel:1}];
+var GMAX=GRADOS.length-1,G_OBJ=Math.min(GMAX,INVC.objeto!=null?INVC.objeto:2),G_NIVEL=Math.min(GMAX,INVC.subirNivel||0),G_EPICO=Math.min(GMAX,INVC.epico!=null?INVC.epico:GMAX);
 function isBase(id){var m=MAT_BY[id];return !!m&&!m.rare&&!m.pieza;}
 function clampN(v,a,b){v=Number(v);return isFinite(v)?Math.max(a,Math.min(b,v)):a;}
 function efxText(e){
@@ -629,11 +637,11 @@ function cleanInv(r,id){
   if(!r||typeof r!=='object'||!/^x[a-z0-9]{4,15}$/.test(String(id||'')))return null;
   var n=clean(r.n||r.nombre,32);if(!n)return null;
   var g=['m','f','mp','fp'].indexOf(r.g||r.genero)>=0?(r.g||r.genero):'m';
-  // Épico (de una pieza singular): hasta 3 efectos y topes un 50 % más altos
-  var ep=!!(r.ep||r.epico),kx=ep?1.5:1;
+  // Calidad: cuántos efectos y hasta dónde llegan (los antiguos sin calidad eran "Bueno"; ep = épico)
+  var gr=r.gr!=null?Math.round(clampN(r.gr,0,GMAX)):(r.ep||r.epico)?G_EPICO:G_OBJ,G=GRADOS[gr],kx=G.k||1,ep=gr>=G_EPICO;
   var efx=[],seenK={};
   (Array.isArray(r.efx)?r.efx:Array.isArray(r.efectos)?r.efectos:[]).slice(0,5).forEach(function(e){
-    if(!e||typeof e!=='object'||efx.length>=(ep?3:2))return;
+    if(!e||typeof e!=='object'||efx.length>=(G.efectos||2))return;
     var t=String(e.t||e.tipo||''),v=e.v!=null?e.v:e.valor,x=null;
     if(t==='mat'&&isBase(e.m||e.material))x={t:t,m:e.m||e.material,v:clampN(v,0.15,0.8*kx)};
     else if(t==='todo')x={t:t,v:clampN(v,0.05,0.3*kx)};
@@ -653,14 +661,14 @@ function cleanInv(r,id){
   });
   if(!Object.keys(rec).length)return null;
   var pw=efx.reduce(function(a,e){return a+e.v*({mat:1,todo:3,tiempo:1.5,raro:2,pieza:1.5,rareza:3}[e.t]||1);},0);
-  return {id:id,inv:true,ep:ep,n:n,g:g,desc:clean(r.desc||r.descripcion,200),efx:efx,receta:rec,
+  return {id:id,inv:true,gr:gr,ep:ep,n:n,g:g,desc:clean(r.desc||r.descripcion,200),efx:efx,receta:rec,
     req:TECH_BY[r.req||r.tecnologia]?(r.req||r.tecnologia):'',
-    usos:Math.round(clampN(r.usos,5,ep?25:15)),tiempo:Math.round(clampN(r.tiempo,60,600)),
-    frags:1,afin:[],claves:[],pista:'',precio:Math.round((30+80*pw)*(ep?1.5:1)),
+    usos:Math.round(clampN(r.usos,5,Math.max(5,G.usos||15))),tiempo:Math.round(clampN(r.tiempo,60,600)),
+    frags:1,afin:[],claves:[],pista:'',precio:Math.round(30+80*pw),
     efecto:efx.map(efxText).join('. ').replace(/^./,function(c){return c.toUpperCase();})+'.',
     origen:clean(r.origen,60),creado:Number(r.creado)||Date.now()};
 }
-function invData(t){var d={n:t.n,g:t.g,desc:t.desc,efx:t.efx,receta:t.receta,req:t.req,usos:t.usos,tiempo:t.tiempo,origen:t.origen,creado:t.creado};if(t.ep)d.ep=1;return d;}
+function invData(t){var d={n:t.n,g:t.g,desc:t.desc,efx:t.efx,receta:t.receta,req:t.req,usos:t.usos,tiempo:t.tiempo,origen:t.origen,creado:t.creado,gr:t.gr};return d;}
 function singTag(o){var s=o&&o.sing|0;return s?'<span class="sz sing s'+s+'">'+esc((SING[s]||{}).n||'')+'</span>':'';}
 // Reconstruye la lista de herramientas: las del catálogo más tus inventos
 function syncInv(){
@@ -751,7 +759,7 @@ var PROMPT=[
 ].join('\n');
 
 /* ---------- Estado ---------- */
-var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0}};
+var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0},mlvl:1,mpend:0,enc:null};
 MATS.forEach(function(m){state.inv[m.id]=0;});
 var chk={ia:'',code:'',t:0,cam:''},chkSig=null,chkSeq=0,panelIdle=false,puterPend=false;
 var ready=false,aiOk=false,aiWhy='',visorOk=false,busy=false,sampleFn=null,ctl=null,lastBlob=null,previewUrl=null;
@@ -778,7 +786,7 @@ function hace(ts){
 }
 
 /* ---------- Guardado ---------- */
-function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,tech:state.tech,topen:state.topen,techp:state.techp,planNiv:state.planNiv,pfrag:state.pfrag,tnivel:state.tnivel,texp:state.texp,inventos:state.inventos,visto:state.visto,invc:state.invc,invd:state.invd,t:Date.now()};}
+function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,tech:state.tech,topen:state.topen,techp:state.techp,planNiv:state.planNiv,pfrag:state.pfrag,tnivel:state.tnivel,texp:state.texp,inventos:state.inventos,visto:state.visto,invc:state.invc,invd:state.invd,mlvl:state.mlvl,mpend:state.mpend,enc:state.enc,t:Date.now()};}
 function merge(d){
   if(!d||typeof d!=='object')return;
   var inv={};
@@ -793,6 +801,10 @@ function merge(d){
   var vs={},dv=d.visto||{};MATS.forEach(function(m){if(dv[m.id]||inv[m.id]>0)vs[m.id]=1;});
   Object.keys(state.disc).forEach(function(k){var e=state.disc[k];Object.keys(e&&e.mats||{}).forEach(function(m){if(MAT_BY[m])vs[m]=1;});});
   state.visto=vs;state.invc=Math.max(0,Math.floor(Number(d.invc)||0));
+  // el maestro sube contigo; las partidas antiguas empiezan con el maestro ya a su nivel (sin planos atrasados)
+  var ml=Math.floor(Number(d.mlvl));state.mlvl=ml>=1?ml:levelFor(state.xp);
+  state.mpend=Math.max(0,Math.min(10,Math.floor(Number(d.mpend)||0)));
+  var en=d.enc;state.enc=(en&&Number(en.fin)>0)?{q:clean(en.q,200),gr:Math.max(0,Math.min(GRADOS.length-1,Math.floor(Number(en.gr)||0))),n:clean(en.n,20),fin:Number(en.fin),dur:Math.max(1,Number(en.dur)||1)}:null;
   state.invd=(d.invd&&typeof d.invd.d==='string')?{d:d.invd.d,n:Math.max(0,Math.floor(Number(d.invd.n)||0))}:{d:'',n:0};
   var pl={},dp=d.planos||{},tl={},dt=d.tools||{};
   TOOLS.forEach(function(t){
@@ -881,7 +893,7 @@ function loadScript(src){
   });
 }
 function freshState(){
-  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0}};
+  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0},mlvl:1,mpend:0,enc:null};
   MATS.forEach(function(m){state.inv[m.id]=0;});
   syncInv();
 }
@@ -1315,7 +1327,7 @@ function toolDesc(t){
   if(t.inv){
     var r=invReach(t);
     return (t.desc?'<p>'+esc(t.desc)+'</p>':'')+'<p><b>'+esc(t.efecto)+'</b></p>'+
-      '<p class="mono">'+(t.ep?'Invento épico':'Invento')+' de la IA'+(t.origen?' a partir de '+esc(t.origen):'')+' · '+t.usos+' usos · '+fmtT(t.tiempo)+(t.req?' · requiere '+esc(TECH_BY[t.req]?TECH_BY[t.req].n:t.req):'')+'</p>'+
+      '<p class="mono">Invento '+esc(GRADOS[t.gr].n.toLowerCase())+' de la IA'+(t.origen?(t.origen==='el maestro'?', descubierto por el maestro al subir de nivel':' a partir de '+esc(t.origen)):'')+' · '+t.usos+' usos · '+fmtT(t.tiempo)+(t.req?' · requiere '+esc(TECH_BY[t.req]?TECH_BY[t.req].n:t.req):'')+'</p>'+
       (r.ok?'':'<p>Inalcanzable por ahora: te falta '+esc(r.falta.join(' y '))+'.</p>')+
       '<p>Es único: si lo vendes o lo cambias, dejas de tener el plano. No tiene niveles.</p>';
   }
@@ -1335,7 +1347,7 @@ function toolItem(t){
   var P=planLevel(t),T=tlevel(t.id),lock=!P&&t.tech&&!tech(t.tech),fr=state.planos[t.id]||0;
   var busy=state.cola&&state.cola.id===t.id;
   var tag='';
-  if(t.inv)tag='<span class="pill inv'+(t.ep?' ep':'')+'">'+(t.ep?'Épico':'Invento')+'</span>'+(T?'<em class="mono">'+state.tools[t.id]+' usos</em>':'');
+  if(t.inv)tag='<span class="pill inv'+(t.ep?' ep':'')+'">'+esc(GRADOS[t.gr].n)+'</span>'+(T?'<em class="mono">'+state.tools[t.id]+' usos</em>':'');
   else if(T)tag='<span class="pill r'+T+'">'+adjN(t,T)+'</span><em class="mono">'+state.tools[t.id]+' usos</em>';
   else if(busy)tag='<em class="mono">en el taller</em>';
   else if(P)tag='<span class="pill r'+P+' off">'+adjN(t,P)+'</span>';
@@ -1379,7 +1391,8 @@ function renderTaller(){
   var adv=TOOLS.filter(function(t){return !t.inv&&!planLevel(t)&&t.tech&&!tech(t.tech);});
   h+=grp('Tus herramientas',mine.length+'',mine.length?mine.map(toolItem).join(''):'<p class="sub">Aún no tienes ninguna. Fabrica unos Guantes de trabajo para empezar: el plano ya es tuyo.</p>');
   h+=grp('Inventos de la IA',invs.length+'',(invs.length?invs.map(toolItem).join(''):'<p class="sub">La IA inventa planos únicos al desmontar objetos nuevos. También puedes pedirle uno al maestro.</p>')+
-    '<button class="btn sm" type="button" data-inventar="1"'+(invBusy?' disabled':'')+'>'+(invBusy?'Inventando…':'Pedir un invento a la IA')+'</button>','grp-inv');
+    (state.enc?'<p class="mono">El maestro trabaja en tu encargo ('+esc(GRADOS[state.enc.gr].n.toLowerCase())+'): '+(state.enc.fin>Date.now()?'faltan '+fmtT((state.enc.fin-Date.now())/1000):'lo está terminando')+'.</p>'
+      :'<button class="btn sm" type="button" data-inventar="1">Encargar un plano al maestro</button>'),'grp-inv');
   if(ready.length)h+=grp('Para fabricar',ready.length+'',ready.map(toolItem).join(''));
   if(todo.length)h+=grp('Planos por conseguir',todo.length+'',todo.map(toolItem).join(''));
   if(adv.length)h+=grp('Avanzadas',adv.length+'',adv.map(toolItem).join(''));
@@ -1387,7 +1400,7 @@ function renderTaller(){
   el.innerHTML=h;
   el.querySelectorAll('[data-craft]').forEach(function(b){b.addEventListener('click',function(){craft(b.dataset.craft);});});
   el.querySelectorAll('[data-up]').forEach(function(b){b.addEventListener('click',function(){upgrade(b.dataset.up);});});
-  el.querySelectorAll('[data-inventar]').forEach(function(b){b.addEventListener('click',function(){inventarYa('pedido',null,'');});});
+  el.querySelectorAll('[data-inventar]').forEach(function(b){b.addEventListener('click',function(){openMaestro(true);});});
   el.querySelectorAll('[data-goshop]').forEach(function(b){b.addEventListener('click',function(){show('tienda');});});
   var canMake=!state.cola&&TOOLS.some(function(t){var T=tlevel(t.id);return (known(t)&&!T&&canPay(t,1)&&(!t.inv||invReach(t).ok))||(T&&T<planLevel(t)&&canPay(t,NIV[T].coste||1));});
   $('#tallerDot').hidden=!canMake;
@@ -1579,7 +1592,7 @@ function parsePl(s,inv){var m=String(s||'').split('@'),t=TOOL_BY[m[0]]||(inv&&m.
 function plKey(t,L){return L>=2?t.id+'@'+L:t.id;}
 function offTipo(o){return o.tipo==='plano'?'plano':'mat';}
 function offValid(o){return offTipo(o)==='plano'?!!parsePl(o.mat,o.inv):!!MAT_BY[o.mat];}
-function offName(o){if(offTipo(o)==='plano'){var p=parsePl(o.mat,o.inv);return planName(p.t,p.L)+(p.t.inv?(p.t.ep?' (invento épico)':' (invento)'):'');}return o.cant+' de '+matName(o.mat);}
+function offName(o){if(offTipo(o)==='plano'){var p=parsePl(o.mat,o.inv);return planName(p.t,p.L)+(p.t.inv?' (invento '+GRADOS[p.t.gr].n.toLowerCase()+')':'');}return o.cant+' de '+matName(o.mat);}
 function offSw(o){return offTipo(o)==='plano'?'<span class="sw plano-sw'+(o.inv?' inv-sw':'')+'" aria-hidden="true"></span>':'<span class="sw mat-'+o.mat+'"></span>';}
 function offPide(o){var pq=parsePl(o.pide);return pq?toolName(pq.t,pq.L):'';}
 function offTerms(o){
@@ -2139,7 +2152,7 @@ function collect(id){
     state.disc[o.clave].ent=true;if(o.funciona)state.disc[o.clave].funciona=o.funciona;
   }
   var xpGain=units+(first?5:0)+(y.comp-1)*2+(modo.planos?3:0)+(o.first?(sg.xp||0):0);
-  var lvlBefore=levelFor(state.xp);state.xp+=xpGain;
+  var lvlBefore=levelFor(state.xp);state.xp+=xpGain;maestroSube();
   var real=null,frag=null;
   if(modo.planos){
     var rt=(prev&&prev.herr)?null:realTool(o);
@@ -2187,10 +2200,10 @@ function collect(id){
     ent+'<ul class="gains">'+list+'</ul>'+fxl+
     '<p class="calc">'+sizeById(o.size).base+' base × '+fmt(RAR[y.comp-1].m)+' rareza × '+fmt(o.decay||1)+' repetición × '+fmt(modo.cant)+' '+esc(modo.n.toLowerCase())+(y.mult!==1?' × '+fmt(y.mult)+' herramientas':'')+'</p>'+
     fr+(invTry?'<p class="mono" id="invSlot">'+(invEp?'La IA está pensando un plano épico a partir de esta pieza…':'La IA está pensando un invento a partir de este objeto…')+'</p>':'')+'<p class="xp">+'+xpGain+' XP</p>'+
-    (lvlAfter>lvlBefore?'<p class="lvlup">Subes al nivel '+lvlAfter+'</p>':'')+
+    (lvlAfter>lvlBefore?'<p class="lvlup">Subes al nivel '+lvlAfter+'</p><p class="mono">El maestro sube contigo y va a descubrir un plano básico'+(ENC.some(function(e){return e.nivel>lvlBefore&&e.nivel<=lvlAfter;})?'. Ya acepta encargos más largos.':'.')+'</p>':'')+
     '<button class="btn primary" id="again" type="button">Seguir</button></article>');
   $('#again').addEventListener('click',function(){resetViewfinder();showIdle();});
-  if(invTry)inventarYa('objeto',o,'',invEp);
+  if(invTry)inventarYa('objeto',o,'',invEp?G_EPICO:G_OBJ);
 }
 async function scan(file){
   if(busy||!file)return;
@@ -2301,7 +2314,8 @@ async function aiText(prompt,signal){
 /* ---------- La IA inventa planos ---------- */
 var invBusy=false,INV_DIA=3,INV_CADA=5,INV_PROB=0.2,INV_LEJOS=0.25;
 function lista(ids){return ids.map(function(id){return id+'='+matName(id);}).join(', ');}
-function invPrompt(src,idea,lejos,ep){
+function invPrompt(src,idea,lejos,gr){
+  var G=GRADOS[gr],k=G.k||1,ep=gr>=G_EPICO,top=function(b){return Math.round(b*k*100)/100;};
   var base=MATS.filter(function(m){return !m.rare&&!m.pieza;}).map(function(m){return m.id;});
   var raros=MATS.filter(function(m){return m.rare&&!m.epico;}).map(function(m){return m.id;});
   var piezas=MATS.filter(function(m){return m.pieza;}).map(function(m){return m.id;});
@@ -2314,19 +2328,20 @@ function invPrompt(src,idea,lejos,ep){
   return ['Eres el inventor del taller de Rastro, un juego de crafteo en el que se desmontan objetos reales para sacar materiales.',
   'Inventa UNA herramienta nueva, ingeniosa y verosímil (algo que un manitas podría fabricarse), distinta de estas: '+TOOLS.map(function(t){return t.n;}).join(', ')+'.',
   'Inspírate en '+fuente+'.',
-  'Efectos posibles (elige 1 o 2, con valores moderados y coherentes con la herramienta):',
-  '- {"tipo":"mat","material":ID,"valor":0.15-0.8}: más cantidad de ese material',
-  '- {"tipo":"todo","valor":0.05-0.3}: más de todos los materiales',
-  '- {"tipo":"tiempo","material":ID o "","valor":0.1-0.35}: menos tiempo de extracción (en objetos de ese material o en todos)',
-  '- {"tipo":"raro","raro":ID_RARO,"material":ID,"valor":0.15-0.5}: probabilidad de sacar ese material raro de ese material',
-  '- {"tipo":"pieza","pieza":ID_PIEZA,"valor":0.3-1}: saca esa pieza sin su herramienta habitual',
-  '- {"tipo":"rareza","valor":0.1-0.3}: probabilidad de subir la rareza del objeto',
+  'Calidad del invento: '+G.n.toUpperCase()+' ('+({0:'algo sencillo y modesto, un apaño de taller',1:'algo útil pero sin grandes alardes',2:'algo ingenioso y bien pensado',3:'una pieza de maestro, ingeniosa y potente'}[gr]||'algo memorable')+').',
+  'Efectos posibles (elige '+(G.efectos>1?'de 1 a '+G.efectos:'solo 1')+', coherentes con la herramienta; no pases de estos máximos):',
+  '- {"tipo":"mat","material":ID,"valor":0.15-'+top(0.8)+'}: más cantidad de ese material',
+  '- {"tipo":"todo","valor":0.05-'+top(0.3)+'}: más de todos los materiales',
+  '- {"tipo":"tiempo","material":ID o "","valor":0.1-'+Math.min(0.5,top(0.35))+'}: menos tiempo de extracción (en objetos de ese material o en todos)',
+  '- {"tipo":"raro","raro":ID_RARO,"material":ID,"valor":0.15-'+top(0.5)+'}: probabilidad de sacar ese material raro de ese material',
+  '- {"tipo":"pieza","pieza":ID_PIEZA,"valor":0.3-'+top(1)+'}: saca esa pieza sin su herramienta habitual',
+  '- {"tipo":"rareza","valor":0.1-'+top(0.3)+'}: probabilidad de subir la rareza del objeto',
   'Materiales: '+lista(base)+'. Raros: '+lista(raros)+'. Piezas: '+lista(piezas)+'.',
-  ep?('Este invento es ÉPICO: el jugador acaba de desmontar una pieza singular ('+sgOf(src).n.toLowerCase()+(src.epoca?', '+src.epoca:'')+'). Hazlo memorable, con el sabor de esa época, y más potente de lo normal: 2 o 3 efectos y valores hasta un 50 % por encima de los máximos de la lista. '+
-      'En la receta pon '+(epicoOf(src)?matName(epicoOf(src))+' ('+epicoOf(src)+') y el resto ':'')+'solo materiales que ya ha conseguido ('+(vistos.length?lista(vistos):lista(base.slice(0,4)))+'); en "tecnologia" pon "" o una que ya sabe ('+tn(sabe)+'). Puede durar hasta 25 usos.')
+  ep?('Este invento es ÉPICO: el jugador acaba de desmontar una pieza singular ('+sgOf(src).n.toLowerCase()+(src.epoca?', '+src.epoca:'')+'). Hazlo memorable y con el sabor de esa época. '+
+      'En la receta pon '+(epicoOf(src)?matName(epicoOf(src))+' ('+epicoOf(src)+') y el resto ':'')+'solo materiales que ya ha conseguido ('+(vistos.length?lista(vistos):lista(base.slice(0,4)))+'); en "tecnologia" pon "" o una que ya sabe ('+tn(sabe)+'). Puede durar hasta '+G.usos+' usos.')
   :lejos?('Esta vez inventa algo ambicioso que el jugador todavía NO pueda fabricar y algo más potente: en "tecnologia" pon una que aún no ha aprendido ('+tn(noSabe)+') o usa en la receta algún material que nunca ha conseguido ('+(noVistos.length?lista(noVistos):'ninguno')+').')
     :('Tiene que poder fabricarlo YA: en la receta usa solo materiales que ya ha conseguido ('+(vistos.length?lista(vistos):lista(base.slice(0,4)))+') y en "tecnologia" pon "" o una que ya sabe ('+tn(sabe)+').'),
-  'Responde SOLO con un JSON, sin texto alrededor: {"nombre":"máximo 3 palabras","genero":"m, f, mp o fp (género y número del nombre)","descripcion":"una frase de qué es y cómo se usa","efectos":[...],"receta":{"ID":cantidad de 1 a 8, total 16 como mucho},"tecnologia":"ID o \\"\\"","usos":5-15,"tiempo":segundos de fabricación 60-600}'].join('\n');
+  'Responde SOLO con un JSON, sin texto alrededor: {"nombre":"máximo 3 palabras","genero":"m, f, mp o fp (género y número del nombre)","descripcion":"una frase de qué es y cómo se usa","efectos":[...],"receta":{"ID":cantidad de 1 a 8, total 16 como mucho},"tecnologia":"ID o \\"\\"","usos":5-'+G.usos+',"tiempo":segundos de fabricación 60-600}'].join('\n');
 }
 // Ajusta el alcance: la mayoría se pueden fabricar ya; unos pocos, todavía no
 function fixReach(d,lejos){
@@ -2343,19 +2358,21 @@ function fixReach(d,lejos){
   }
   return d;
 }
-// kind: 'objeto' (al desmontar algo nuevo o cada pocos objetos) o 'pedido' (Taller o maestro, con límite diario)
-async function inventar(kind,src,idea,ep){
+// kind: 'objeto' (al desmontar algo nuevo o cada pocos objetos), 'pedido' (encargo al maestro) o 'nivel' (al subir de nivel)
+// gr: calidad (índice de GRADOS)
+async function inventar(kind,src,idea,gr){
   if(invBusy)return {err:'Ya está inventando algo.'};
   if(!aiOk)return {err:whyText()};
   if(TOOLS.filter(function(t){return t.inv&&planLevel(t)>0;}).length>=INV_MAX)return {err:'Ya tienes '+INV_MAX+' inventos: vende o cambia alguno para que la IA invente más.'};
-  if(kind==='pedido'){var dd=today();if(state.invd.d!==dd)state.invd={d:dd,n:0};if(state.invd.n>=INV_DIA)return {err:'Hoy ya te ha inventado '+INV_DIA+' planos a petición. Mañana más, o desmonta objetos nuevos.'};}
   invBusy=true;renderTaller();
-  ep=!!(ep&&src);
-  var lejos=!ep&&Math.random()<INV_LEJOS,res;
+  gr=gr!=null?Math.max(0,Math.min(GMAX,gr|0)):G_OBJ;
+  var ep=gr>=G_EPICO&&!!src;
+  // encargos y planos de nivel siempre se pueden fabricar; los que inventa sola, a veces no
+  var lejos=kind==='objeto'&&!ep&&Math.random()<INV_LEJOS,res;
   try{
-    var j=parseLoose(await aiText(invPrompt(src,idea,lejos,ep)));
+    var j=parseLoose(await aiText(invPrompt(src,idea,lejos,gr)));
     var d={nombre:j.nombre,genero:j.genero,descripcion:j.descripcion,efectos:j.efectos,receta:j.receta||{},req:TECH_BY[j.tecnologia]?j.tecnologia:'',usos:j.usos,tiempo:j.tiempo,
-      origen:src?src.nombre:(idea?'tu idea':'tu taller'),creado:Date.now(),ep:ep?1:0};
+      origen:src?src.nombre:kind==='nivel'?'el maestro':(idea?'tu idea':'tu taller'),creado:Date.now(),gr:gr};
     var nn=clean(d.nombre,28),k=1,nm=function(){return k>1?nn+' '+k:nn;};
     while(TOOLS.some(function(x){return norm(x.n)===norm(nm());}))k++;
     d.nombre=nm();
@@ -2366,15 +2383,14 @@ async function inventar(kind,src,idea,ep){
     var eid=ep&&epicoOf(src);if(eid&&seen(eid)&&!fd.receta[eid]){var r2={};r2[eid]=2;Object.keys(fd.receta).forEach(function(q){r2[q]=fd.receta[q];});fd.receta=r2;}
     var t=cleanInv(fd,id);if(!t)throw {code:'bad'};
     state.inventos[id]=invData(t);syncInv();setPl(state,TOOL_BY[id],1);
-    if(kind==='pedido')state.invd.n++;
     persist();
     res={t:TOOL_BY[id],ok:invReach(TOOL_BY[id]).ok};
   }catch(e){res={err:'La IA no ha conseguido dibujar un plano ahora. Inténtalo otra vez.'};}
   invBusy=false;renderAll();
   return res;
 }
-function invMsg(r){return r.err?r.err:(r.t.ep?'¡Plano épico! La IA ha inventado: ':'La IA ha inventado: ')+r.t.n+'. '+r.t.efecto+(r.ok?' Ya puedes fabricarlo en el Taller.':' Inalcanzable por ahora: te falta '+invReach(r.t).falta.join(' y ')+'.');}
-function inventarYa(kind,src,idea,ep){return inventar(kind,src,idea,ep).then(function(r){toast(invMsg(r));var sl=$('#invSlot');if(sl&&src){sl.className=r.err?'mono':'fragok';sl.textContent=r.err?'Esta vez a la IA no se le ha ocurrido nada.':invMsg(r);}return r;});}
+function invMsg(r){return r.err?r.err:(r.t.ep?'¡Plano épico! La IA ha inventado: ':'La IA ha inventado: ')+r.t.n+' ('+GRADOS[r.t.gr].n.toLowerCase()+'). '+r.t.efecto+(r.ok?' Ya puedes fabricarlo en el Taller.':' Inalcanzable por ahora: te falta '+invReach(r.t).falta.join(' y ')+'.');}
+function inventarYa(kind,src,idea,gr){return inventar(kind,src,idea,gr).then(function(r){toast(invMsg(r));var sl=$('#invSlot');if(sl&&src){sl.className=r.err?'mono':'fragok';sl.textContent=r.err?'Esta vez a la IA no se le ha ocurrido nada.':invMsg(r);}return r;});}
 
 /* ---------- El maestro del taller ---------- */
 var maLog=[],maBusy=false;
@@ -2388,7 +2404,9 @@ function maestroCtx(){
   var inv={};MATS.forEach(function(m){if(state.inv[m.id])inv[m.n]=state.inv[m.id];});
   var herr={};TOOLS.forEach(function(t){if(has(t.id))herr[toolName(t,tlevel(t.id))]=state.tools[t.id]+' usos, nivel '+NIV[tlevel(t.id)-1].n;});
   return {
-    nivel:levelFor(state.xp),monedas:state.monedas,escaneos_que_quedan_hoy:scansLeft(),
+    nivel:levelFor(state.xp),monedas:state.monedas,
+    encargo_al_maestro:state.enc?{idea:state.enc.q,calidad:GRADOS[state.enc.gr].n,termina:state.enc.fin>Date.now()?'en '+fmtT((state.enc.fin-Date.now())/1000):'ya'}:'ninguno',
+    encargos_posibles:ENC.filter(function(x){return levelFor(state.xp)>=x.nivel;}).map(function(x){return x.n+' → '+GRADOS[x.calidad].n;}),escaneos_que_quedan_hoy:scansLeft(),
     inventario:inv,herramientas:herr,
     planos:TOOLS.map(function(t){
       var k=known(t),lock=t.tech&&!tech(t.tech);
@@ -2415,33 +2433,104 @@ function maestroPrompt(q){
   'Tras escanear elige herramientas y modo de extracción (rápida, media, completa). Solo la completa da fragmentos de plano y, en objetos nuevos, conocimiento de su campo (Mecánica, Electricidad, Óptica, Materiales, Química).',
   'Las tecnologías abiertas solo crecen con ese conocimiento (desmontar por completo objetos nuevos de su campo); al llenarse se aprenden. Desbloquear las siguientes del árbol cuesta monedas y materiales.',
   'Extraer por completo una herramienta básica real da su plano. En la Tienda se venden materiales y se compran planos; hay un mercado entre jugadores.',
+  'Tú, el maestro, subes de nivel con el jugador: en cada subida descubres un plano básico. El jugador te puede encargar un plano (un invento único) dándote tiempo: cuanto más tiempo, mejor calidad (Básico, Sencillo, Bueno, Excelente); con más nivel aceptas encargos más largos.',
   'Las herramientas tienen niveles: Tosca, Fina, Precisa y Perfecta (fuerza ×1, ×1,5, ×2, ×3). Se fabrican toscas y se mejoran en el Taller con el plano del nivel siguiente, pagando la receta ×2, ×3 o ×4. Los planos de nivel superior salen con fragmentos en extracciones completas (más en objetos complejos), en la Tienda, el Mercado, algunas tecnologías y usando mucho la herramienta del nivel actual.',
   'Datos de la partida del jugador (JSON):',
   JSON.stringify(maestroCtx()),
   q?('Pregunta del jugador: '+q):'El jugador pregunta qué le conviene hacer ahora.',
   'Responde en español de España como un maestro artesano cercano, en 2 a 4 frases cortas, sin listas ni markdown. Da una o dos acciones concretas para su siguiente paso: qué objetos cotidianos fotografiar (pon ejemplos reales de casa o de la calle), qué fabricar o qué estudiar, y por qué. Usa solo herramientas, tecnologías y materiales que aparezcan en los datos.'].join('\n');
 }
+/* El maestro sube de nivel contigo: en cada subida descubre un plano básico y acepta encargos más largos */
+var maPick=false,maSel=-1,mtBusy=false,mtWait=0;
+function maestroSube(){
+  var L=levelFor(state.xp);
+  if(L>(state.mlvl||1)){state.mpend=Math.min(10,(state.mpend||0)+(L-(state.mlvl||1)));state.mlvl=L;}
+}
+function invCount(){return TOOLS.filter(function(t){return t.inv&&planLevel(t)>0;}).length;}
+function encargar(i){
+  var e=ENC[i],L=levelFor(state.xp);
+  if(!e||state.enc)return;
+  if(L<e.nivel)return;
+  if(!aiOk){maLog.push({q:'',a:whyText(),err:true});maPick=false;renderMaestro();return;}
+  if(invCount()>=INV_MAX){maLog.push({q:'',a:'Ya tienes '+INV_MAX+' inventos: vende o cambia alguno antes de encargar otro.',err:true});maPick=false;renderMaestro();return;}
+  var q=clean($('#ma-q').value,200),now=Date.now();
+  state.enc={q:q,gr:e.calidad,n:e.n,fin:now+(inst?0:e.tiempo*1000),dur:e.tiempo};
+  maLog.push({q:'Encargo de '+e.n.toLowerCase()+': '+(q||'lo que tú veas'),a:inst?'Manos a la obra…':'Hecho. Dame '+fmtT(e.tiempo)+' y tendrás un plano '+GRADOS[e.calidad].n.toLowerCase()+'.'});
+  if(maLog.length>6)maLog=maLog.slice(-6);
+  $('#ma-q').value='';maPick=false;maSel=-1;
+  persist();renderMaestro();renderTaller();
+  maestroTick();
+}
+// Termina encargos y descubre los planos de nivel pendientes (cuando la IA está lista)
+async function maestroTick(){
+  if(!ready||mode==='none'||mtBusy||invBusy||!aiOk||Date.now()<mtWait)return;
+  var e=state.enc,r;
+  if(e&&Date.now()>=e.fin){
+    mtBusy=true;
+    r=await inventar('pedido',null,e.q,e.gr);
+    mtBusy=false;
+    if(r.err){mtWait=Date.now()+60000;return;}
+    state.enc=null;persist();
+    var m='He terminado tu encargo: '+r.t.n+' ('+GRADOS[r.t.gr].n.toLowerCase()+'). '+r.t.efecto+(r.ok?' Ya puedes fabricarlo en el Taller.':' Te falta '+invReach(r.t).falta.join(' y ')+'.');
+    maLog.push({q:'',a:m});if(maLog.length>6)maLog=maLog.slice(-6);
+    maSay(m,true);renderMaestro();renderTaller();
+    return;
+  }
+  if((state.mpend||0)>0){
+    if(invCount()>=INV_MAX)return;
+    mtBusy=true;
+    r=await inventar('nivel',null,'',G_NIVEL);
+    mtBusy=false;
+    if(r.err){mtWait=Date.now()+60000;return;}
+    state.mpend=Math.max(0,state.mpend-1);persist();
+    var m2='¡He subido de nivel contigo! He descubierto un plano básico: '+r.t.n+'. '+r.t.efecto+(r.ok?' Fabrícalo en el Taller.':'');
+    maLog.push({q:'',a:m2});if(maLog.length>6)maLog=maLog.slice(-6);
+    maSay(m2,true);renderMaestro();renderTaller();
+  }
+}
+setInterval(function(){
+  maestroTick();
+  if(!$('#maestro').hidden&&state.enc){
+    var e=state.enc,lf=$('#encLeft'),br=$('#encBar');
+    if(lf)lf.textContent=e.fin>Date.now()?'Faltan '+fmtT((e.fin-Date.now())/1000):'Terminado: dibujando el plano…';
+    if(br)br.style.width=Math.min(100,100*(1-(e.fin-Date.now())/(e.dur*1000)))+'%';
+  }
+},1000);
+function maSay(m){toast(m);}
+function renderEnc(){
+  var box=$('#maEnc'),e=state.enc,L=levelFor(state.xp),h='';
+  if(e){
+    h='<div class="enc-box"><b>Encargo: '+esc(e.q||'un plano a su gusto')+'</b><span class="mono">Calidad '+esc(GRADOS[e.gr].n.toLowerCase())+' · '+esc(e.n)+'</span>'+
+      '<div class="bar"><i id="encBar" style="width:'+Math.min(100,100*(1-(e.fin-Date.now())/(e.dur*1000)))+'%"></i></div>'+
+      '<span class="mono" id="encLeft">'+(e.fin>Date.now()?'Faltan '+fmtT((e.fin-Date.now())/1000):'Terminado: dibujando el plano…')+'</span>'+
+      '<div class="row"><button class="btn sm" type="button" id="encCancel">Cancelar encargo</button></div></div>';
+  }else if(maPick){
+    h='<p class="sub">¿Cuánto tiempo le das? Cuanto más, mejor sale el plano. Escribe arriba tu idea si quieres.</p><div class="segs enc">'+
+      ENC.map(function(x,i){var ok=L>=x.nivel;return '<button type="button" class="seg'+(i===maSel?' on':'')+'" data-enc="'+i+'"'+(ok?'':' disabled')+'><b>'+esc(x.n)+'</b><span>'+esc(GRADOS[x.calidad].n)+'</span>'+(ok?'':'<span>desde Nv '+x.nivel+'</span>')+'</button>';}).join('')+
+      '</div><div class="row"><button class="btn primary" type="button" id="encGo"'+(maSel<0?' disabled':'')+'>Encargar</button><button class="btn" type="button" id="encNo">Ahora no</button></div>';
+  }
+  box.innerHTML=h;box.hidden=!h;
+  box.querySelectorAll('[data-enc]').forEach(function(b){b.addEventListener('click',function(){maSel=+b.dataset.enc;renderEnc();});});
+  var go=$('#encGo');if(go)go.addEventListener('click',function(){encargar(maSel);});
+  var no=$('#encNo');if(no)no.addEventListener('click',function(){maPick=false;renderMaestro();});
+  var cc=$('#encCancel');if(cc)cc.addEventListener('click',function(){state.enc=null;persist();maLog.push({q:'',a:'Encargo cancelado. Cuando quieras, me pides otro.'});renderMaestro();renderTaller();});
+}
 function renderMaestro(){
+  var L=levelFor(state.xp),nx=ENC.filter(function(x){return x.nivel>L;})[0];
+  $('#maLvl').textContent='· Nv '+L;
+  $('#maNote').textContent='Sube de nivel contigo: en cada subida descubre un plano básico. Encárgale un plano y dale tiempo: cuanto más, mejor sale.'+(nx?' En el nivel '+nx.nivel+' aceptará encargos de '+nx.n+'.':'')+' Cada consulta usa tu IA conectada.';
+  renderEnc();
   $('#maLog').innerHTML=maLog.length?maLog.map(function(m){
     return (m.q?'<p class="ma-q">'+esc(m.q)+'</p>':'')+'<p class="ma-a'+(m.err?' warn':'')+'">'+esc(m.a)+'</p>';
   }).join(''):'<p class="sub">Pregúntale qué hacer a continuación o algo concreto sobre tu partida.</p>';
-  $('#maAsk').disabled=maBusy;$('#maAsk').textContent=maBusy?'Pensando…':'Pedir consejo';$('#maInv').disabled=maBusy||invBusy;
+  $('#maAsk').disabled=maBusy;$('#maAsk').textContent=maBusy?'Pensando…':'Pedir consejo';$('#maInv').hidden=!!state.enc||maPick;
   var lg=$('#maLog');lg.scrollTop=lg.scrollHeight;
 }
-function openMaestro(){$('#maestro').hidden=false;renderMaestro();setTimeout(function(){$('#ma-q').focus();},50);}
+function openMaestro(pick){$('#maestro').hidden=false;maPick=!!pick&&!state.enc;if(maPick)maSel=-1;renderMaestro();if(!maPick)setTimeout(function(){$('#ma-q').focus();},50);}
 function closeMaestro(){$('#maestro').hidden=true;}
-document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-maestro]');if(b)openMaestro();});
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-maestro]');if(b)openMaestro(false);});
 $('#maClose').addEventListener('click',closeMaestro);
-$('#maInv').addEventListener('click',async function(){
-  if(maBusy||invBusy)return;
-  var q=clean($('#ma-q').value,200);
-  maBusy=true;maLog.push({q:q?'Invéntame: '+q:'Invéntame un plano',a:'…'});renderMaestro();
-  var r=await inventar('pedido',null,q);
-  maLog[maLog.length-1].a=r.err?r.err:'Te he dibujado el plano de '+r.t.n+(r.t.desc?': '+r.t.desc:'.')+' '+r.t.efecto+(r.ok?' Ya puedes fabricarlo en el Taller.':' Aún no puedes fabricarlo: te falta '+invReach(r.t).falta.join(' y ')+'.');
-  if(r.err)maLog[maLog.length-1].err=true;else $('#ma-q').value='';
-  if(maLog.length>6)maLog=maLog.slice(-6);
-  maBusy=false;renderMaestro();
-});
+$('#maInv').addEventListener('click',function(){maPick=true;maSel=-1;renderMaestro();});
 $('#maestro').addEventListener('click',function(e){if(e.target===$('#maestro'))closeMaestro();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#maestro').hidden)closeMaestro();});
 $('#maForm').addEventListener('submit',async function(e){
@@ -2536,28 +2625,15 @@ function puterErrCode(e){
 
 /* ---------- Comprobación: cámara e IA ---------- */
 var LS_CHK='rastro.aichk.v1',CHK_TTL=12*3600*1000,camWatch=false;
-var PING='Prueba de conexión del juego Rastro. Mira la imagen y responde SOLO con este JSON, sin texto alrededor: {"ok":true,"color":"color principal de la imagen en una palabra"}';
+var PING='Prueba de conexión del juego Rastro. Responde solo con la palabra: ok';
 function hashS(x){x=String(x||'');var h=0;for(var i=0;i<x.length;i++)h=(h*31+x.charCodeAt(i))|0;return h.toString(36);}
 function aiSig(){
   var p=cfg.prov,P=PROVS[p];if(!P)return '';
   var who=p==='puter'?(puterIn?'in:'+puterName:'out'):p==='visor'?(visorOk?'in':'out'):hashS(clean(cfg.keys[p],400));
   return p+'|'+(p==='visor'?'':modelOf(p))+'|'+who;
 }
-function pingImg(){
-  return new Promise(function(res){
-    try{
-      var cv=document.createElement('canvas');cv.width=cv.height=64;var g=cv.getContext('2d');
-      g.fillStyle='#d03030';g.fillRect(0,0,64,64);g.fillStyle='#ffffff';g.fillRect(18,18,28,28);
-      cv.toBlob(function(b){res(b);},'image/jpeg',0.85);
-    }catch(e){res(null);}
-  });
-}
-// Prueba real: una foto diminuta, igual que un escaneo (también comprueba que el modelo acepta imágenes)
-async function aiPing(signal){
-  var b=await pingImg();if(!b)throw {code:'image_rejected'};
-  if(cfg.prov==='visor')return await sampleFn.json(PING,{images:b,modelTier:'quick',signal:signal});
-  return await identifyRemote(b,signal,PING);
-}
+// Prueba mínima: una consulta de texto de una palabra (la sesión de Puter ya se ha validado con su servidor)
+async function aiPing(signal){return await aiText(PING,signal);}
 function chkCache(v){try{if(v)localStorage.setItem(LS_CHK,JSON.stringify(v));else localStorage.removeItem(LS_CHK);}catch(e){}}
 async function checkAI(force){
   var my=++chkSeq,sig=chkSig;
@@ -2570,7 +2646,7 @@ async function checkAI(force){
   var ac=new AbortController(),tm=setTimeout(function(){ac.abort();},35000),code='';
   try{
     var out=await Promise.race([aiPing(ac.signal),new Promise(function(r,j){setTimeout(function(){j({code:'timeout'});},36000);})]);
-    if(!out||typeof out!=='object')code='bad';
+    if(!clean(out,50))code='bad';
   }catch(e){code=(e&&e.name==='AbortError')?'timeout':((e&&e.code)||'net');}
   clearTimeout(tm);
   if(my!==chkSeq)return;
@@ -2639,7 +2715,7 @@ function renderChk(){
   var ia=!P?['err','Elige una IA aquí abajo.']
     :(cfg.prov==='puter'&&puterPend)?['run','Comprobando tu sesión de Puter…']
     :!aiConfigured()?['err',whyText()]
-    :chk.ia==='run'?['run','Probando con una foto de prueba…']
+    :chk.ia==='run'?['run','Probando con una consulta corta…']
     :chk.ia==='ok'?['ok','Responde'+(cfg.prov==='puter'&&puterName?' (cuenta '+puterName+')':'')+'. Comprobada '+hace(chk.t||Date.now())+'.']
     :chk.ia==='err'?['err',errorText(chk.code)]:['run','Pendiente de comprobar.'];
   var li=function(st,tit,txt){return '<li class="'+st+'"><i>'+(st==='ok'?'✓':st==='err'?'✗':st==='run'?'…':'?')+'</i><b>'+esc(tit)+'</b><span>'+esc(txt)+'</span></li>';};

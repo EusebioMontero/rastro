@@ -58,8 +58,31 @@
 //   invento  probabilidad de que la IA invente un plano épico a partir de él (primera extracción completa)
 //   xp       experiencia extra
 //
+// inventos: planos únicos que dibuja la IA (el maestro del taller).
+//   calidad   grados de potencia: k multiplica el valor máximo de cada efecto, efectos = cuántos como mucho, usos = usos máximos
+//   encargos  pedir un plano al maestro: el tiempo que le das decide la calidad; nivel = nivel del jugador (y del maestro) para poder encargarlo
+//   objeto    calidad de los que inventa solo al desmontar objetos nuevos
+//   subirNivel calidad del plano que descubre el maestro cada vez que subes de nivel
+//   epico     calidad de los que inspiran las antigüedades y piezas de museo
+//
 // epicos: materiales épicos. de = materiales del objeto de los que sale (se elige el que más pese).
 window.RASTRO_CAT = {
+  inventos: {
+    calidad: [
+      { n: 'Básico',    k: 0.5,  efectos: 1, usos: 10 },
+      { n: 'Sencillo',  k: 0.75, efectos: 1, usos: 12 },
+      { n: 'Bueno',     k: 1,    efectos: 2, usos: 15 },
+      { n: 'Excelente', k: 1.25, efectos: 2, usos: 20 },
+      { n: 'Épico',     k: 1.5,  efectos: 3, usos: 25 }
+    ],
+    encargos: [
+      { n: 'Un rato',  tiempo: 900,   calidad: 0, nivel: 1 },
+      { n: '1 hora',   tiempo: 3600,  calidad: 1, nivel: 1 },
+      { n: '4 horas',  tiempo: 14400, calidad: 2, nivel: 3 },
+      { n: '12 horas', tiempo: 43200, calidad: 3, nivel: 6 }
+    ],
+    objeto: 2, subirNivel: 0, epico: 4
+  },
   tiempoTalla: { XS: 15, S: 30, M: 60, L: 120, XL: 240 },
   modos: [
     { id: 'rapida',   n: 'Rápida',   tiempo: 0.2, cant: 0.3, planos: false },
