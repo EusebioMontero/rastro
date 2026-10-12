@@ -50,7 +50,11 @@ Las reglas de `firestore.rules` permiten que cada jugador solo toque su partida 
 
 ## Aspecto y el maestro
 
-Estética de puesto de mercadillo: toldo de rayas, colores vivos (verde azulado, girasol, frambuesa) y la tipografía Bricolage Grotesque, con modo oscuro. Lo secundario (cálculos, efectos, explicaciones) va plegado en «Detalles». El maestro es **Maese Tuerca**, una tuerca con gafas de taller que vive en la esquina: da consejos en un bocadillo, avisa al subir de nivel y cuando termina un encargo, y al tocarlo se abre su diálogo.
+Estética de puesto de mercadillo: toldo de rayas, colores vivos (verde azulado, girasol, frambuesa) y la tipografía Bricolage Grotesque, con modo oscuro. Lo secundario (cálculos, efectos, explicaciones) va plegado en «Detalles». El maestro es **Maese Tuerca**, una tuerca con gafas de taller que vive en la esquina: da consejos en un bocadillo, avisa al subir de nivel y cuando termina un encargo, y al tocarlo da un salto y se abre su diálogo. Es un modelo **3D** (three.js r128 desde cdnjs; sin WebGL se queda el dibujo plano): te sigue con la mirada, se puede **arrastrar** a cualquier parte (recuerda el sitio; en Ajustes se le devuelve a su esquina), pasea de vez en cuando, **camina hasta el botón** que te recomienda y lo señala, piensa mientras se analiza una foto y salta de alegría con los hallazgos. Con «reducir movimiento» del sistema no pasea ni camina.
+
+## Pantallas grandes
+
+En tablet vertical las listas van a dos columnas; en horizontal (desde 900 px) las pestañas pasan a una barra lateral, Escanear muestra el visor a la izquierda y el resultado a la derecha, y la Tienda pone el Mercado al lado.
 
 ## Fragmentos de plano
 
