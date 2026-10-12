@@ -2887,8 +2887,8 @@ var PJS={
     svg:'<svg class="pj-svg" viewBox="0 0 100 100" aria-hidden="true"><path d="M24 22l8 16-14-4zM76 22l-8 16 14-4z" fill="#8a5a3c"/><ellipse cx="50" cy="60" rx="34" ry="36" fill="#8a5a3c"/><ellipse cx="50" cy="72" rx="20" ry="20" fill="#f3dfc1"/><circle cx="38" cy="45" r="13" fill="#f3dfc1"/><circle cx="62" cy="45" r="13" fill="#f3dfc1"/><circle cx="38" cy="45" r="8" fill="#ffc23d"/><circle cx="62" cy="45" r="8" fill="#ffc23d"/><circle cx="38" cy="45" r="4" fill="#1d1933"/><circle cx="62" cy="45" r="4" fill="#1d1933"/><circle cx="38" cy="45" r="11" fill="none" stroke="#c99a2e" stroke-width="2"/><circle cx="62" cy="45" r="11" fill="none" stroke="#c99a2e" stroke-width="2"/><path d="M45 55h10l-5 9z" fill="#f2a33a"/><rect x="70" y="16" width="5" height="22" rx="2" fill="#ffc23d" transform="rotate(30 72 27)"/></svg>'},
   tuerca:{n:'Maese Tuerca',d:'Una tuerca con gafas de taller y bigote.',svg:null}
 };
-var PJ_ORDER=['urraca','trasto','buho','tuerca'];
-function pjId(){return PJS[state.pj]?state.pj:'urraca';}
+var PJ_ORDER=['trasto','urraca','buho','tuerca'];
+function pjId(){return PJS[state.pj]?state.pj:'trasto';}
 function PJ(){return PJS[pjId()];}
 function pjSvg(id){var c=PJS[id]||PJS.urraca;return c.svg||TUERCA_SVG;}
 function pjApply(){
