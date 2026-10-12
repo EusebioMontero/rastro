@@ -1,5 +1,5 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0E5A8A"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Rastro</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0E9683"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Rastro</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap">
 <style>
 /* Concepto: cuaderno de taller sobre papel de delineante. Una columna estrecha pensada para el móvil, pestañas abajo, visor con marcas de recorte y muestras de material como fichas. */
 :root{
@@ -249,7 +249,7 @@ button{font-family:inherit}
 .frag,.fragok{font:600 13px var(--f-mono);padding:8px 10px;border-radius:var(--r);border:1.5px solid var(--accent);color:var(--accent)}
 .fragok{background:var(--accent);color:var(--on-accent)}
 .raro{font:600 10px var(--f-mono);font-style:normal;text-transform:uppercase;color:var(--on-hi);background:var(--hi);padding:1px 5px;border-radius:3px;margin-left:4px}
-.toast{position:fixed;left:16px;right:16px;bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:20;max-width:528px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:var(--r);font-weight:500;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast{position:fixed;left:16px;right:16px;top:calc(12px + env(safe-area-inset-top,0px));bottom:auto;z-index:20;max-width:528px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:var(--r);font-weight:500;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .mat-cobre{background:linear-gradient(120deg,#8a4b22 0,#d98a52 35%,#a85a2c 60%,#e8a070 85%,#7c4220 100%)}
 .mat-silicio{background:linear-gradient(90deg,rgba(255,255,255,.12) 1px,transparent 1px) 0 0/7px 7px,linear-gradient(0deg,rgba(255,255,255,.12) 1px,transparent 1px) 0 0/7px 7px,linear-gradient(135deg,#3b4a63,#6d7f9e 50%,#2f3b50)}
 .mat-resina{background:radial-gradient(circle at 30% 35%,rgba(255,255,255,.55) 0 8%,transparent 9%),linear-gradient(160deg,#f2b33d,#c9761a 60%,#9b5410)}
@@ -394,6 +394,176 @@ button{font-family:inherit}
   .gains li{animation:none}
   .bar i{transition:none}
 }
+/* ===== Tema «puesto de mercadillo»: colores de toldo, tipografía de bricolaje, menos tecnicismo ===== */
+:root{
+  --bg:#EEF3FB;--surface:#FFFFFF;--ink:#26213F;--ink-2:#6E6A88;--line:#DCDDEB;--grid:transparent;
+  --accent:#0E9683;--on-accent:#FFFFFF;--hi:#FFC23D;--on-hi:#3A2600;--pop:#E8467C;--epic:#7C4DFF;
+  --bad:#D63C3C;--good:#1E9E5A;--edge:#C9CBE0;
+  --f-display:'Bricolage Grotesque',system-ui,sans-serif;--f-body:'Bricolage Grotesque',system-ui,sans-serif;--f-mono:'Bricolage Grotesque',system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16132A;--surface:#221E3B;--ink:#F2EFFF;--ink-2:#A9A4C8;--line:#38325C;--grid:transparent;
+    --accent:#2FCBB3;--on-accent:#04231F;--hi:#FFCF5C;--on-hi:#2E1E00;--pop:#FF6E9C;--epic:#B49CFF;--bad:#FF7D73;--good:#5ED69A;--edge:#120F24;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16132A;--surface:#221E3B;--ink:#F2EFFF;--ink-2:#A9A4C8;--line:#38325C;--grid:transparent;
+  --accent:#2FCBB3;--on-accent:#04231F;--hi:#FFCF5C;--on-hi:#2E1E00;--pop:#FF6E9C;--epic:#B49CFF;--bad:#FF7D73;--good:#5ED69A;--edge:#120F24;
+}
+body{background-image:none;font:16px/1.5 var(--f-body);font-variant-numeric:tabular-nums}
+/* nada en mayúsculas ni con espaciado técnico */
+.brand h1,.sec-h h2,.card h2,.busy,.name,.entry h3,.empty b,.grp-h h3,.it .nm,.plano h3,.lvl-h,.inv-h,.entiende h3,.vf .hint b,.gate-brand h1,.lvlup,.pill,.sz,.new,.raro,.field label,.more>summary,.or,.prov .tag,.st-h{text-transform:none;letter-spacing:0}
+.mono,.calc,.xp,.ok-msg,.chip,.entry .info,.lvl,.save,.coins,.step span,.vf .hint span,.field input,.field select,.chk li i,.seg span,.more>summary{font-family:var(--f-body)}
+.mono{font-size:13px;font-weight:400;line-height:1.45}
+
+/* Cabecera con toldo */
+.top{background:var(--surface);border-bottom:0;padding-top:20px;box-shadow:0 1px 0 var(--line)}
+.top::before{content:"";position:absolute;left:0;right:0;top:0;height:12px;
+  background:repeating-linear-gradient(90deg,var(--accent) 0 28px,var(--surface) 28px 56px);
+  -webkit-mask:radial-gradient(circle at 14px 0,#000 13px,transparent 14px) 0 0/28px 12px repeat-x,linear-gradient(#000,#000) 0 0/100% 6px no-repeat;
+          mask:radial-gradient(circle at 14px 0,#000 13px,transparent 14px) 0 0/28px 12px repeat-x,linear-gradient(#000,#000) 0 0/100% 6px no-repeat}
+.brand h1{font:800 30px/1 var(--f-display);font-variation-settings:"wdth" 90}
+.logo{display:none}
+.coins{font:700 15px var(--f-body);background:color-mix(in srgb,var(--hi) 22%,transparent);padding:4px 10px 4px 6px;border-radius:999px}
+.save{font-size:12px}
+.lvl{font-size:13px}
+.lvl #lvl{background:var(--ink);color:var(--surface);padding:2px 9px;border-radius:999px;font-weight:700}
+.bar{height:8px;border-radius:99px;background:color-mix(in srgb,var(--line) 70%,transparent)}
+.bar i{background:linear-gradient(90deg,var(--hi),var(--pop));border-radius:99px}
+.gear{border:0;background:color-mix(in srgb,var(--ink) 7%,transparent)}
+
+/* Secciones y tarjetas: pegatinas con canto, sin sombras grises */
+.view{gap:16px;padding-top:18px}
+.sec-h h2{font:800 32px/1 var(--f-display)}
+.card{border:0;border-radius:18px;padding:16px;box-shadow:0 3px 0 var(--edge)}
+.card h2{font:750 21px/1.15 var(--f-display)}
+.busy{font:750 21px/1.15 var(--f-display)}
+.busy::after{content:"";display:inline-block;width:.9em;height:.9em;margin-left:.4em;vertical-align:-.1em;border-radius:50%;border:3px solid var(--hi);border-right-color:transparent;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sub{font-size:15px}
+
+/* Visor */
+.vf{border:0;border-radius:22px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
+.vf .c{border-color:var(--hi);border-radius:4px}
+.vf .hint b{font:800 24px/1.1 var(--f-display)}
+.vf .hint span{font-size:14px}
+
+/* Botones gordos y pulsables */
+.btn{border:0;border-radius:14px;background:var(--surface);color:var(--ink);font-weight:700;font-size:16px;box-shadow:inset 0 0 0 2px var(--line),0 3px 0 var(--edge);transition:transform .08s}
+.btn.primary{background:var(--accent);color:var(--on-accent);box-shadow:0 3px 0 color-mix(in srgb,var(--accent) 55%,#000)}
+.btn:active:not(:disabled){transform:translateY(2px)}
+.btn.sm{border-radius:11px;font-size:14px}
+#btn-cam{background:var(--pop);color:#fff;box-shadow:0 3px 0 color-mix(in srgb,var(--pop) 55%,#000)}
+
+/* Etiquetas como etiquetas de precio */
+.pill,.sz,.new{font:700 12.5px/1 var(--f-body);padding:5px 10px;border:0;border-radius:999px;background:color-mix(in srgb,currentColor 13%,transparent)}
+.r1{color:var(--ink-2)}
+.r2{color:var(--good)}
+.r3{color:#2F6FE0}
+.r4{color:var(--on-hi);background:var(--hi)}
+.r5{color:#fff;background:linear-gradient(110deg,var(--epic),var(--pop) 60%,var(--hi))}
+.new{color:var(--on-accent);background:var(--accent)}
+.sz{color:var(--ink-2)}
+.sz.sing{color:var(--epic)}
+.sz.sing.s3{color:#fff;background:var(--epic)}
+.sz.est{border-style:none}
+.pill.off{opacity:.6}
+.raro{font:700 11px var(--f-body);border-radius:999px;padding:2px 7px;color:var(--on-hi)}
+.chip{border:0;border-radius:999px;background:color-mix(in srgb,var(--ink) 6%,transparent);font-size:13px;padding:3px 10px 3px 4px}
+.chip i{border:0;border-radius:50%;width:16px;height:16px}
+.chip.rare{box-shadow:inset 0 0 0 2px var(--hi)}
+.chip.ep{box-shadow:inset 0 0 0 2px var(--epic)}
+
+/* Resultado */
+.name{font:800 32px/1.05 var(--f-display);font-variation-settings:"wdth" 92}
+.gains .qty{font:800 26px/1 var(--f-display);color:var(--accent)}
+.sw{border:0;border-radius:10px;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.18)}
+.xp{font-weight:700;color:var(--accent)}
+.lvlup{font:800 20px/1.1 var(--f-display);background:linear-gradient(100deg,var(--hi),#FFE08A);border-radius:14px}
+.fragok{border-radius:12px;font:600 14px var(--f-body);border:0;background:var(--accent)}
+.frag{border-radius:12px;font:600 14px var(--f-body);border:2px dashed var(--accent)}
+.entiende{border:0;border-radius:14px;background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.entiende h3{font:750 17px/1.1 var(--f-display)}
+.toolfx{font-size:14px;border-left-color:var(--hi)}
+.sum{border-left:0;padding-left:0}
+.sum b{font:800 24px/1 var(--f-display)}
+.st-h{font:750 15px var(--f-display);color:var(--ink);margin-top:6px}
+.detalles{border-top:1px solid var(--line);padding-top:6px}
+.detalles>summary{cursor:pointer;color:var(--ink-2);font-weight:600;font-size:14px;padding:6px 0;list-style:none}
+.detalles>summary::-webkit-details-marker{display:none}
+.detalles>summary::before{content:"+ "}
+.detalles[open]>summary::before{content:"− "}
+.detalles>*+*{margin-top:8px}
+
+/* Grupos, elementos y listas */
+.grp-h h3{font:750 19px/1.1 var(--f-display)}
+.it{border:0;border-radius:14px;box-shadow:0 2px 0 var(--edge);padding:8px 12px}
+.it.dash{box-shadow:inset 0 0 0 2px var(--line)}
+.it.rare{box-shadow:0 2px 0 var(--edge),inset 0 0 0 2px var(--hi)}
+.it .nm{font:700 17px/1.15 var(--f-display)}
+.it .tq{font:800 22px/1 var(--f-display)}
+.more>summary{font:600 14px var(--f-body);text-transform:none;letter-spacing:0}
+.entry{border:0;border-radius:16px;box-shadow:0 2px 0 var(--edge)}
+.entry h3{font:750 20px/1.15 var(--f-display)}
+.tile{border:0;border-radius:16px;box-shadow:0 2px 0 var(--edge)}
+.tile .sample{border-bottom:0}
+.empty{border-radius:16px}
+.empty b{font:750 20px/1.1 var(--f-display)}
+.plano{border-radius:14px}
+.plano h3{font:750 20px/1.1 var(--f-display)}
+.lvl-h,.inv-h{font:750 18px/1.1 var(--f-display);color:var(--ink)}
+.prov{border-radius:14px}
+.field label{font:600 14px var(--f-body);color:var(--ink-2)}
+.field input,.field select{border-radius:12px;font-size:16px}
+.seg{border-radius:12px}
+.seg span{font-size:12px}
+.tool-opt{border-radius:12px}
+.chk li i{font-weight:800}
+.lvls i{border-radius:3px}
+.lvls i.on{background:var(--hi);border-color:var(--hi)}
+.pips i{border-color:var(--hi);border-radius:3px}
+.pips i.on{background:var(--hi)}
+
+/* Pestañas */
+.tabs{border-top:0;box-shadow:0 -1px 0 var(--line)}
+.tab{border-top:0;font-size:12px;gap:3px}
+.tab svg{padding:3px 12px;width:46px;height:30px;border-radius:999px;transition:background .15s}
+.tab[aria-selected="true"]{color:var(--ink)}
+.tab[aria-selected="true"] svg{background:color-mix(in srgb,var(--hi) 55%,transparent)}
+.tab .dot{background:var(--pop);top:6px;right:calc(50% - 22px)}
+@media (max-width:420px){.tab svg{width:40px;height:28px;padding:3px 9px}}
+
+/* Diálogo del maestro */
+.sheet{background:rgba(22,19,42,.5)}
+.sheet-in{border-radius:22px 22px 18px 18px}
+.ma-q{border-radius:16px 16px 4px 16px}
+.ma-a{border:0;background:color-mix(in srgb,var(--hi) 18%,var(--surface));border-radius:16px 16px 16px 4px}
+.ma-head{display:flex;align-items:center;gap:10px}
+.ma-head .tuerca{width:56px;height:56px;flex:none}
+.ma-head h2{font:800 22px/1.1 var(--f-display)}
+.ma-head span{display:block;font-size:13px;color:var(--ink-2);font-weight:500}
+
+/* El maestro: Maese Tuerca, en la esquina */
+.app{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+.buddy{position:fixed;right:max(12px,calc(50% - 268px));bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:12;display:flex;align-items:flex-end;gap:6px;pointer-events:none}
+.buddy[hidden]{display:none}
+.buddy .tb{pointer-events:auto;width:64px;height:64px;border:0;padding:0;background:none;cursor:pointer;border-radius:50%;filter:drop-shadow(0 3px 0 var(--edge))}
+.buddy .tb:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.buddy .tuerca{width:100%;height:100%;animation:bob 3.2s ease-in-out infinite}
+.bubble{pointer-events:auto;max-width:min(270px,calc(100vw - 110px));background:var(--surface);color:var(--ink);border-radius:18px 18px 4px 18px;padding:10px 12px;font-size:14px;line-height:1.4;box-shadow:0 3px 0 var(--edge),0 0 0 2px var(--hi);margin-bottom:34px;animation:popin .25s ease-out both;cursor:pointer}
+.bubble[hidden]{display:none}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
+@keyframes popin{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
+.tuerca .ojo{transform-box:fill-box;transform-origin:center;animation:blink 5s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.buddy.talk .tuerca .boca{transform-box:fill-box;transform-origin:center;animation:talk .25s ease-in-out 6 alternate}
+@keyframes talk{to{transform:scale(1.5,.6)}}
+.buddy.joy .tuerca{animation:hop .5s ease-out 2}
+@keyframes hop{50%{transform:translateY(-14px) rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.buddy .tuerca,.tuerca .ojo,.buddy.talk .tuerca .boca,.bubble,.busy::after{animation:none}}
+#diag{display:none}
 </style>
 
 <section id="gate" class="gate" aria-labelledby="gateTitle">
@@ -554,9 +724,10 @@ button{font-family:inherit}
 </div>
 
 <div id="toast" class="toast" role="status" hidden></div>
+<div class="buddy" id="buddy" hidden><p class="bubble" id="bubble" role="status" hidden></p><button class="tb" id="buddyBtn" type="button" aria-label="Hablar con Maese Tuerca, el maestro del taller"><svg class="tuerca" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" fill="#FFC23D" stroke="#7A4E00" stroke-width="4" stroke-linejoin="round"/><polygon points="50,15 80,32 80,66 50,83 20,66 20,32" fill="#FFD772"/><rect x="11" y="33" width="78" height="9" rx="3" fill="#2B2547"/><circle cx="35" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><circle cx="65" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><g class="ojo"><circle cx="37" cy="40" r="4.6" fill="#26213F"/><circle cx="38.6" cy="38.4" r="1.4" fill="#fff"/></g><g class="ojo"><circle cx="63" cy="40" r="4.6" fill="#26213F"/><circle cx="64.6" cy="38.4" r="1.4" fill="#fff"/></g><path d="M50 59c-3-6-13-8-21-1 6 0 9 3 13 4 4 1 7 0 8-3zM50 59c3-6 13-8 21-1-6 0-9 3-13 4-4 1-7 0-8-3z" fill="#6B3E1F"/><ellipse class="boca" cx="50" cy="72" rx="6" ry="4.6" fill="#2B2547"/></svg></button></div>
 <div id="maestro" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="maTitle">
   <div class="sheet-in card">
-    <div class="crow"><h2 id="maTitle">El maestro del taller <span class="mono" id="maLvl"></span></h2><button class="btn sm" id="maClose" type="button">Cerrar</button></div>
+    <div class="crow"><div class="ma-head"><svg class="tuerca" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" fill="#FFC23D" stroke="#7A4E00" stroke-width="4" stroke-linejoin="round"/><polygon points="50,15 80,32 80,66 50,83 20,66 20,32" fill="#FFD772"/><rect x="11" y="33" width="78" height="9" rx="3" fill="#2B2547"/><circle cx="35" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><circle cx="65" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><g class="ojo"><circle cx="37" cy="40" r="4.6" fill="#26213F"/><circle cx="38.6" cy="38.4" r="1.4" fill="#fff"/></g><g class="ojo"><circle cx="63" cy="40" r="4.6" fill="#26213F"/><circle cx="64.6" cy="38.4" r="1.4" fill="#fff"/></g><path d="M50 59c-3-6-13-8-21-1 6 0 9 3 13 4 4 1 7 0 8-3zM50 59c3-6 13-8 21-1-6 0-9 3-13 4-4 1-7 0-8-3z" fill="#6B3E1F"/><ellipse class="boca" cx="50" cy="72" rx="6" ry="4.6" fill="#2B2547"/></svg><h2 id="maTitle">Maese Tuerca<span id="maLvl"></span></h2></div><button class="btn sm" id="maClose" type="button">Cerrar</button></div>
     <div id="maLog" class="ma-log" aria-live="polite"></div>
     <div id="maEnc" class="provs"></div>
     <form id="maForm" class="provs" novalidate>
@@ -964,6 +1135,7 @@ function renderGate(){
   var need=!window.claude&&(!fb.user||fb.busy||!!fb.loadErr);
   $('#gate').hidden=!need;
   document.querySelector('.app').hidden=need;
+  $('#buddy').hidden=need||!$('#maestro').hidden;
   document.querySelector('.tabs').hidden=need;
   if(!need)return;
   var t=$('#gateTxt'),forms=$('#gateForms'),retry=$('#gateRetry');
@@ -1180,9 +1352,8 @@ function showIdle(){
     setPanel('<div class="card"><h2>Límite de hoy</h2><p class="sub">Has hecho '+DAILY+' escaneos hoy. Vuelve mañana con objetos nuevos.</p></div>');panelIdle=true;
     return;
   }
-  setPanel('<div class="card"><h2>Cuanto más grande, más material</h2>'+ladder(null)+
-    '<ul class="tips"><li>Un solo objeto por foto.</li><li>Una mano o una moneda al lado afina el tamaño.</li><li>Repetir el mismo objeto rinde menos cada vez.</li><li>Tras escanear eliges herramientas y modo: la extracción rápida da menos y nunca planos.</li><li>Las herramientas del Taller dan más material y piezas; estudiar Tecnologías te hace sacar aún más.</li><li>La foto no se guarda.</li></ul><button class="btn" type="button" data-maestro="1">¿Qué hago ahora? Pregunta al maestro</button></div>');
-  panelIdle=true;
+  setPanel('<div class="card"><h2>Fotografía un objeto</h2><p class="sub">Uno solo por foto. Te digo de qué está hecho y lo desmontas para sacar materiales. La foto no se guarda.</p></div>');
+  panelIdle=true;maTip();
 }
 function setPreview(blob,scanning){
   if(previewUrl)URL.revokeObjectURL(previewUrl);
@@ -1378,7 +1549,7 @@ function toolItem(t){
 function renderTaller(){
   var el=$('#tallerBody');if(!el)return;
   $('#tallerSum').textContent=state.monedas+' monedas';
-  var h='<button class="btn" type="button" data-maestro="1">Pedir consejo al maestro</button>';
+  var h='';
   if(state.cola&&TOOL_BY[state.cola.id]){
     var t=TOOL_BY[state.cola.id],niv=state.cola.niv||1,dur=state.cola.dur||t.tiempo,pct=Math.min(100,100*(1-(state.cola.fin-Date.now())/(dur*1000)));
     h+='<div class="card cola"><div class="crow"><h2>'+(niv>=2?'Mejorando a ':'Fabricando: ')+esc(toolName(t,niv))+'</h2></div><div class="bar big"><i id="colaBar" style="width:'+pct+'%"></i></div><p class="mono" id="colaLeft">Faltan '+fmtT((state.cola.fin-Date.now())/1000)+'</p></div>';
@@ -1773,8 +1944,11 @@ $('#mkForm').addEventListener('submit',function(e){
 });
 
 // seguro: objetos singulares; siempre dan fragmento y, si puede ser, de un plano de nivel superior
-function dropFragment(r,first,seguro){
-  if(!seguro&&Math.random()>=(first?0.7:0.4))return null;
+var FRAGP=CAT.fragmentos||{prob:[0.1,0.18,0.28,0.42,0.6],repetido:0.5};
+// Probabilidad de fragmento: baja, y más alta cuanto más raro es el objeto
+function fragProb(rar,first){var l=FRAGP.prob||[0.1];return Math.min(1,(l[Math.min(l.length,Math.max(1,rar))-1]||0.1)*(first?1:(FRAGP.repetido||0.5)));}
+function dropFragment(r,first,seguro,rar){
+  if(!seguro&&Math.random()>=fragProb(rar||1,first))return null;
   var build=function(todos){
     var c=[];
     TOOLS.forEach(function(t){
@@ -2074,15 +2248,18 @@ function renderSetup(){
   setPanel('<article class="card setup">'+
     '<div class="meta"><span class="pill r'+rarOf(o)+'">'+rar.n+'</span>'+singTag(o)+'<span class="sz">Talla '+size.id+' · '+fmtLen(o.cm)+'</span><span class="sz est">'+esc(es.n||'Usado')+'</span>'+(o.first?'<span class="new">Nuevo</span>':'')+'</div>'+
     '<h2 class="name">'+esc(o.nombre)+'</h2>'+(o.dato?'<p class="dato">'+esc(o.dato)+'</p>':'')+
-    (o.sing?'<p class="mono sg">'+esc(sg.n)+(o.epoca?' · '+esc(o.epoca):'')+'. '+esc(sg.desc||'')+(o.first?'':' Ya lo habías desmontado: esta vez solo cuenta la rareza.')+'</p>':'')+
-    (es.desc?'<p class="mono">'+esc(es.n)+': '+esc(es.desc)+'</p>':'')+
+    (o.sing?'<p class="sub sg">'+esc(sg.n)+(o.epoca?', '+esc(o.epoca):'')+'.'+(o.first?' ¡Trae sorpresa!':' Ya lo habías desmontado.')+'</p>':'')+
     (pzs?'<h3 class="st-h">Piezas que lleva</h3><ul class="pzl">'+pzs+'</ul>':'')+
     '<h3 class="st-h">Herramientas</h3><div class="tool-opts">'+tl+'</div>'+
     '<h3 class="st-h">Extracción</h3><div class="segs" role="group" aria-label="Modo de extracción">'+md+'</div>'+
     '<div class="sum"><p><b>'+(inst?'Al instante':fmtT(secs))+'</b> · '+esc(modo.n.toLowerCase())+'</p><div class="chips">'+gl+'</div>'+
     (y.pos.length?'<p class="mono">Posible: '+esc(y.pos.join(', '))+'</p>':'')+
-    '<p class="mono">'+(modo.planos&&!(state.disc[o.clave]&&state.disc[o.clave].ent)?'Al desmontarlo del todo entenderás cómo funciona ('+esc(CAMPOS[o.campo]||o.campo)+'): '+(techsFor(o.campo).length?'+'+o.comp+' para '+techsFor(o.campo).map(function(t){return t.n;}).join(', '):'ninguna tecnología abierta usa ese campo')+'. ':'')+(modo.planos?'Puede dar fragmentos de plano'+(function(){var rt=realTool(o);return rt&&rt.basica&&!known(rt)&&!(state.disc[o.clave]&&state.disc[o.clave].herr)?' y el plano de '+rt.n:'';})()+'.':'Sin planos: solo la extracción completa los da.')+(modo.planos&&o.first&&sg.invento?(sg.invento>=1?' La IA inventará un plano épico a partir de él.':' Puede que la IA invente un plano épico a partir de él.'):'')+'</p></div>'+
-    (o.tools.length?'<p class="note">Cada herramienta elegida gasta 1 uso al empezar.</p>':'')+
+    (modo.planos?'<p class="mono">Fragmento de plano: '+(sg.fragSup&&o.first?'seguro':pct(fragProb(rarOf(o),o.first))+' %')+'</p>':'')+
+    '</div><details class="detalles"><summary>Detalles</summary><div class="sub">'+
+    (o.sing&&sg.desc?'<p>'+esc(sg.desc)+'</p>':'')+(es.desc?'<p>'+esc(es.n)+': '+esc(es.desc)+'</p>':'')+
+    '<p>'+(modo.planos&&!(state.disc[o.clave]&&state.disc[o.clave].ent)?'Al desmontarlo del todo entenderás cómo funciona ('+esc(CAMPOS[o.campo]||o.campo)+'): '+(techsFor(o.campo).length?'+'+o.comp+' para '+techsFor(o.campo).map(function(t){return t.n;}).join(', '):'ninguna tecnología abierta usa ese campo')+'. ':'')+(modo.planos?'Puede dar fragmentos de plano'+(function(){var rt=realTool(o);return rt&&rt.basica&&!known(rt)&&!(state.disc[o.clave]&&state.disc[o.clave].herr)?' y el plano de '+rt.n:'';})()+'.':'Sin planos: solo la extracción completa los da.')+(modo.planos&&o.first&&sg.invento?(sg.invento>=1?' La IA inventará un plano épico a partir de él.':' Puede que la IA invente un plano épico a partir de él.'):'')+'</p>'+
+    (o.tools.length?'<p>Cada herramienta elegida gasta 1 uso al empezar.</p>':'')+
+    '</div></details>'+
     '<div class="row"><button class="btn primary" id="exStart" type="button"'+(full?' disabled':'')+'>'+(full?'Ya tienes '+MAXE+' extracciones en marcha':'Empezar extracción')+'</button><button class="btn" id="exDrop" type="button">Descartar</button></div>'+
     '</article>');
   $('#panel').querySelectorAll('[data-tool]').forEach(function(c){c.addEventListener('change',function(){
@@ -2158,7 +2335,7 @@ function collect(id){
     var rt=(prev&&prev.herr)?null:realTool(o);
     if(rt&&rt.basica&&!known(rt)){state.planos[rt.id]=rt.frags;state.disc[o.clave].herr=true;real={t:rt,ok:true};}
     else if(rt&&!rt.basica&&!known(rt))real={t:rt,ok:false};
-    frag=dropFragment(o,first,!!(sg.fragSup&&o.first));
+    frag=dropFragment(o,first,!!(sg.fragSup&&o.first),y.comp);
   }
   // Con el uso se aprende el plano del nivel siguiente (solo ese)
   var aprende=[];
@@ -2187,8 +2364,9 @@ function collect(id){
   if(real&&real.ok)fr+='<p class="fragok">Al desmontarla entiendes cómo funciona: ¡plano de '+esc(real.t.n)+'! Fabrícalo en el Taller.</p>';
   if(real&&!real.ok)fr+='<p class="frag">'+esc(real.t.n)+' es una herramienta avanzada: estudia '+esc(TECH_BY[real.t.tech]?TECH_BY[real.t.tech].n:'su tecnología')+' para entenderla.</p>';
   if(frag)fr+=frag.full?'<p class="fragok">¡'+esc(planName(frag.t,frag.L))+' completo! '+(frag.L>=2?'Mejora tu herramienta en el Taller.':'Fabrícala en el Taller.')+'</p>':'<p class="frag">Fragmento: <b>'+esc(planName(frag.t,frag.L))+'</b> ('+frag.n+'/'+frag.need+')</p>';
-  aprende.forEach(function(a){fr+=a.done?'<p class="fragok">¡'+esc(planName(a.t,a.L))+' aprendido con el uso! Mejora tu herramienta en el Taller.</p>':'<p class="mono">'+esc(toolName(a.t,a.L-1))+': '+a.v+'/'+a.need+' usos para aprender el '+esc(planName(a.t,a.L).toLowerCase())+'.</p>';});
-  if(!modo.planos)fr+='<p class="mono">Extracción '+esc(modo.n.toLowerCase())+': sin planos ni conocimiento.</p>';
+  var frm='';
+  aprende.forEach(function(a){if(!a.done){frm+='<p class="mono">'+esc(toolName(a.t,a.L-1))+': '+a.v+'/'+a.need+' usos para aprender el '+esc(planName(a.t,a.L).toLowerCase())+'.</p>';return;}fr+=a.done?'<p class="fragok">¡'+esc(planName(a.t,a.L))+' aprendido con el uso! Mejora tu herramienta en el Taller.</p>':'<p class="mono">'+esc(toolName(a.t,a.L-1))+': '+a.v+'/'+a.need+' usos para aprender el '+esc(planName(a.t,a.L).toLowerCase())+'.</p>';});
+  if(!modo.planos)frm+='<p class="mono">Extracción '+esc(modo.n.toLowerCase())+': sin planos ni conocimiento.</p>';
   var ent=saberGan?'<div class="entiende"><h3>Cómo funciona</h3><p>'+esc(o.funciona||'Al desmontarlo entiendes cómo está hecho.')+'</p>'+
     (crecen.length?crecen.map(function(c){return '<p class="mono">'+(c.done?'¡Aprendida! '+esc(c.t.n)+techGifts(c.t):esc(c.t.n)+' +'+saberGan+' ('+c.v+'/'+c.t.puntos+')')+'</p>';}).join('')
       :'<p class="mono">+'+saberGan+' de '+esc(CAMPOS[o.campo])+', pero ninguna tecnología abierta usa ese campo.</p>')+'</div>':'';
@@ -2197,13 +2375,15 @@ function collect(id){
   setPanel('<article class="card">'+
     '<div class="meta"><span class="pill r'+y.comp+'">'+RAR[y.comp-1].n+'</span>'+singTag(o)+'<span class="sz">Talla '+o.size+' · '+fmtLen(o.cm)+'</span>'+(first?'<span class="new">Nuevo</span>':'')+'</div>'+
     '<h2 class="name">'+esc(o.nombre)+'</h2>'+(o.sing&&o.epoca?'<p class="mono sg">'+esc(sg.n)+' · '+esc(o.epoca)+'</p>':'')+
-    ent+'<ul class="gains">'+list+'</ul>'+fxl+
-    '<p class="calc">'+sizeById(o.size).base+' base × '+fmt(RAR[y.comp-1].m)+' rareza × '+fmt(o.decay||1)+' repetición × '+fmt(modo.cant)+' '+esc(modo.n.toLowerCase())+(y.mult!==1?' × '+fmt(y.mult)+' herramientas':'')+'</p>'+
+    '<ul class="gains">'+list+'</ul>'+
+    '<details class="detalles"><summary>Cómo se ha calculado</summary>'+fxl+
+    '<p class="calc">'+sizeById(o.size).base+' base × '+fmt(RAR[y.comp-1].m)+' rareza × '+fmt(o.decay||1)+' repetición × '+fmt(modo.cant)+' '+esc(modo.n.toLowerCase())+(y.mult!==1?' × '+fmt(y.mult)+' herramientas':'')+'</p>'+frm+'</details>'+ent+
     fr+(invTry?'<p class="mono" id="invSlot">'+(invEp?'La IA está pensando un plano épico a partir de esta pieza…':'La IA está pensando un invento a partir de este objeto…')+'</p>':'')+'<p class="xp">+'+xpGain+' XP</p>'+
     (lvlAfter>lvlBefore?'<p class="lvlup">Subes al nivel '+lvlAfter+'</p><p class="mono">El maestro sube contigo y va a descubrir un plano básico'+(ENC.some(function(e){return e.nivel>lvlBefore&&e.nivel<=lvlAfter;})?'. Ya acepta encargos más largos.':'.')+'</p>':'')+
     '<button class="btn primary" id="again" type="button">Seguir</button></article>');
   $('#again').addEventListener('click',function(){resetViewfinder();showIdle();});
   if(invTry)inventarYa('objeto',o,'',invEp?G_EPICO:G_OBJ);
+  if(lvlAfter>lvlBefore)setTimeout(function(){maSay('¡Nivel '+lvlAfter+'! Yo también subo: voy a buscarte un plano básico.',true);},600);
 }
 async function scan(file){
   if(busy||!file)return;
@@ -2213,7 +2393,7 @@ async function scan(file){
   ensureDay();
   if(scansLeft()<=0){showIdle();return;}
   if(state.extr.length>=MAXE){showIdle();return;}
-  busy=true;setButtons();
+  busy=true;setButtons();$('#bubble').hidden=true;
   ctl=new AbortController();
   var blob=file;
   try{blob=await prepareImage(file);}catch(e){blob=file;}
@@ -2432,6 +2612,7 @@ function maestroPrompt(q){
   'Objetos singulares (los detecta la IA): curiosos, antigüedades y piezas de museo dan más rareza (las de museo pueden ser Legendarias), materiales épicos (Bronce antiguo, Madera noble, Esmalte, Baquelita) la primera vez que se desmontan y, las antigüedades y piezas de museo, un fragmento de plano seguro y planos épicos inventados por la IA.',
   'Tras escanear elige herramientas y modo de extracción (rápida, media, completa). Solo la completa da fragmentos de plano y, en objetos nuevos, conocimiento de su campo (Mecánica, Electricidad, Óptica, Materiales, Química).',
   'Las tecnologías abiertas solo crecen con ese conocimiento (desmontar por completo objetos nuevos de su campo); al llenarse se aprenden. Desbloquear las siguientes del árbol cuesta monedas y materiales.',
+  'Las extracciones completas pueden dar un fragmento de plano con poca probabilidad, más cuanto más raro es el objeto (Común 10 %, Poco común 18 %, Raro 28 %, Épico 42 %, Legendario 60 %; la mitad si ya lo había desmontado).',
   'Extraer por completo una herramienta básica real da su plano. En la Tienda se venden materiales y se compran planos; hay un mercado entre jugadores.',
   'Tú, el maestro, subes de nivel con el jugador: en cada subida descubres un plano básico. El jugador te puede encargar un plano (un invento único) dándote tiempo: cuanto más tiempo, mejor calidad (Básico, Sencillo, Bueno, Excelente); con más nivel aceptas encargos más largos.',
   'Las herramientas tienen niveles: Tosca, Fina, Precisa y Perfecta (fuerza ×1, ×1,5, ×2, ×3). Se fabrican toscas y se mejoran en el Taller con el plano del nivel siguiente, pagando la receta ×2, ×3 o ×4. Los planos de nivel superior salen con fragmentos en extracciones completas (más en objetos complejos), en la Tienda, el Mercado, algunas tecnologías y usando mucho la herramienta del nivel actual.',
@@ -2496,7 +2677,18 @@ setInterval(function(){
     if(br)br.style.width=Math.min(100,100*(1-(e.fin-Date.now())/(e.dur*1000)))+'%';
   }
 },1000);
-function maSay(m){toast(m);}
+var sayT=null,tipDone=false;
+function maSay(m,joy){
+  var b=$('#buddy'),bb=$('#bubble');
+  if(!b||b.hidden||!$('#maestro').hidden){toast(m);return;}
+  bb.textContent=m;bb.hidden=false;
+  b.classList.remove('talk','joy');void b.offsetWidth;b.classList.add('talk');if(joy)b.classList.add('joy');
+  clearTimeout(sayT);sayT=setTimeout(function(){bb.hidden=true;b.classList.remove('talk','joy');},Math.min(15000,Math.max(6000,m.length*70)));
+}
+var TIPS=['Pon una mano o una moneda al lado del objeto: así calculo mejor su tamaño.','Lo grande da más material. Lo antiguo, o de museo, da cosas épicas.','Solo la extracción completa da planos. La rápida es para ir tirando.','Repetir el mismo objeto rinde menos cada vez. ¡Busca cosas nuevas!','Encárgame un plano: cuanto más tiempo me des, mejor me sale.'];
+function maTip(){if(tipDone)return;tipDone=true;setTimeout(function(){if(panelIdle&&aiOk&&!busy&&$('#bubble').hidden)maSay(TIPS[Math.floor(Math.random()*TIPS.length)]);},5000);}
+$('#buddyBtn').addEventListener('click',function(){$('#bubble').hidden=true;openMaestro(false);});
+$('#bubble').addEventListener('click',function(){$('#bubble').hidden=true;openMaestro(false);});
 function renderEnc(){
   var box=$('#maEnc'),e=state.enc,L=levelFor(state.xp),h='';
   if(e){
@@ -2517,17 +2709,17 @@ function renderEnc(){
 }
 function renderMaestro(){
   var L=levelFor(state.xp),nx=ENC.filter(function(x){return x.nivel>L;})[0];
-  $('#maLvl').textContent='· Nv '+L;
-  $('#maNote').textContent='Sube de nivel contigo: en cada subida descubre un plano básico. Encárgale un plano y dale tiempo: cuanto más, mejor sale.'+(nx?' En el nivel '+nx.nivel+' aceptará encargos de '+nx.n+'.':'')+' Cada consulta usa tu IA conectada.';
+  $('#maLvl').textContent='Maestro del taller, nivel '+L;
+  $('#maNote').textContent='Subo de nivel contigo y en cada subida te descubro un plano básico. Encárgame uno y dame tiempo: cuanto más, mejor me sale.'+(nx?' En el nivel '+nx.nivel+' acepto encargos de '+nx.n+'.':'');
   renderEnc();
   $('#maLog').innerHTML=maLog.length?maLog.map(function(m){
     return (m.q?'<p class="ma-q">'+esc(m.q)+'</p>':'')+'<p class="ma-a'+(m.err?' warn':'')+'">'+esc(m.a)+'</p>';
-  }).join(''):'<p class="sub">Pregúntale qué hacer a continuación o algo concreto sobre tu partida.</p>';
+  }).join(''):'<p class="ma-a">¡Hola! Pregúntame qué hacer ahora o encárgame un plano.</p>';
   $('#maAsk').disabled=maBusy;$('#maAsk').textContent=maBusy?'Pensando…':'Pedir consejo';$('#maInv').hidden=!!state.enc||maPick;
   var lg=$('#maLog');lg.scrollTop=lg.scrollHeight;
 }
-function openMaestro(pick){$('#maestro').hidden=false;maPick=!!pick&&!state.enc;if(maPick)maSel=-1;renderMaestro();if(!maPick)setTimeout(function(){$('#ma-q').focus();},50);}
-function closeMaestro(){$('#maestro').hidden=true;}
+function openMaestro(pick){$('#maestro').hidden=false;$('#buddy').hidden=true;maPick=!!pick&&!state.enc;if(maPick)maSel=-1;renderMaestro();if(!maPick)setTimeout(function(){$('#ma-q').focus();},50);}
+function closeMaestro(){$('#maestro').hidden=true;$('#buddy').hidden=!!document.querySelector('.app').hidden;}
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-maestro]');if(b)openMaestro(false);});
 $('#maClose').addEventListener('click',closeMaestro);
 $('#maInv').addEventListener('click',function(){maPick=true;maSel=-1;renderMaestro();});

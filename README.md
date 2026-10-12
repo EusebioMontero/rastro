@@ -48,6 +48,14 @@ Las reglas de `firestore.rules` permiten que cada jugador solo toque su partida 
 - **Tienda**: vender materiales, piezas y planos (la tienda paga la mitad; vendes tu plano de nivel más alto y te quedas con el anterior), comprar planos y el **Mercado** entre jugadores: se publica material o un plano por monedas, a cambio de otro plano o ambas cosas; otro jugador lo compra o cambia al momento; el vendedor cobra al abrir Rastro. Lo ofrecido queda apartado hasta que se vende o se retira.
 - Todo el equilibrio (tiempos, modos, piezas, herramientas, tecnologías, precios) está en `catalogo.js`.
 
+## Aspecto y el maestro
+
+Estética de puesto de mercadillo: toldo de rayas, colores vivos (verde azulado, girasol, frambuesa) y la tipografía Bricolage Grotesque, con modo oscuro. Lo secundario (cálculos, efectos, explicaciones) va plegado en «Detalles». El maestro es **Maese Tuerca**, una tuerca con gafas de taller que vive en la esquina: da consejos en un bocadillo, avisa al subir de nivel y cuando termina un encargo, y al tocarlo se abre su diálogo.
+
+## Fragmentos de plano
+
+Las extracciones completas dan a veces un fragmento de plano, con poca probabilidad y más cuanto más raro es el objeto: Común 10 %, Poco común 18 %, Raro 28 %, Épico 42 %, Legendario 60 % (la mitad si ese objeto ya lo habías desmontado). Las antigüedades y piezas de museo lo dan seguro la primera vez. Antes de extraer se ve la probabilidad. Se ajusta en `catalogo.js` (`fragmentos`).
+
 ## Comprobación de cámara e IA
 
 Al abrir el juego se comprueba que la IA elegida responde de verdad: con Puter se valida la sesión con su servidor (quién eres) y después, con cualquier proveedor, se hace una consulta de texto mínima («responde ok»). El resultado vale 12 horas en ese dispositivo; si un escaneo falla por la cuenta, el saldo o el modelo, la IA deja de contar como lista. La cámara se comprueba con los permisos del navegador, y en Ajustes → Comprobación se puede probar de verdad.

@@ -90,6 +90,10 @@ window.RASTRO_CAT = {
     { id: 'completa', n: 'Completa', tiempo: 1,   cant: 1,   planos: true }
   ],
   maxExtr: 3,
+  // Fragmentos de plano al escanear (extracción completa): probabilidad según la rareza del objeto
+  //   prob      Común, Poco común, Raro, Épico, Legendario
+  //   repetido  multiplicador si ese objeto ya lo habías desmontado antes
+  fragmentos: { prob: [0.1, 0.18, 0.28, 0.42, 0.6], repetido: 0.5 },
   nivelesHerr: [
     { n: 'Tosca',    fuerza: 1,   usos: 1,   coste: 1, tiempo: 1, precio: 1 },
     { n: 'Fina',     fuerza: 1.5, usos: 1.5, coste: 2, tiempo: 2, precio: 2, frags: 3, porUso: 8 },
