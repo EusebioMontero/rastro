@@ -2897,8 +2897,8 @@ function maTip(){if(tipDone)return;tipDone=true;setTimeout(function(){
 var PJS={
   urraca:{n:'Doña Urraca',d:'Una urraca coleccionista con monóculo: se lleva todo lo que brilla.',
     svg:'<svg class="pj-svg" viewBox="0 0 100 100" aria-hidden="true"><path d="M30 88 18 99h14z" fill="#1f8a9c"/><ellipse cx="50" cy="66" rx="27" ry="28" fill="#1f1d2b"/><ellipse cx="50" cy="71" rx="17" ry="19" fill="#f7f7fb"/><ellipse cx="25" cy="64" rx="9" ry="18" fill="#1f8a9c" transform="rotate(14 25 64)"/><ellipse cx="75" cy="64" rx="9" ry="18" fill="#1f8a9c" transform="rotate(-14 75 64)"/><circle cx="50" cy="33" r="23" fill="#1f1d2b"/><circle cx="41" cy="31" r="7.5" fill="#fff"/><circle cx="59" cy="31" r="7.5" fill="#fff"/><circle cx="42" cy="32" r="3.6" fill="#1d1933"/><circle cx="60" cy="32" r="3.6" fill="#1d1933"/><circle cx="59" cy="31" r="10" fill="none" stroke="#ffc23d" stroke-width="2.6"/><path d="M44 41h12l-6 11z" fill="#3b3557"/></svg>'},
-  trasto:{n:'Don Trasto',d:'Un robot hecho con latas, chapas y un muelle del rastro.',
-    svg:'<svg class="pj-svg" viewBox="0 0 100 100" aria-hidden="true"><line x1="50" y1="6" x2="50" y2="18" stroke="#6e6a88" stroke-width="3"/><circle cx="50" cy="7" r="5" fill="#ffc23d"/><rect x="26" y="18" width="48" height="34" rx="9" fill="#c9d1d9"/><rect x="31" y="24" width="38" height="22" rx="6" fill="#2b2547"/><circle cx="42" cy="34" r="6" fill="#0e9683"/><circle cx="58" cy="34" r="6" fill="#e8467c"/><circle cx="42" cy="34" r="2.4" fill="#fff"/><circle cx="58" cy="34" r="2.4" fill="#fff"/><rect x="44" y="41" width="12" height="3" rx="1.5" fill="#7dfcd9"/><rect x="30" y="55" width="40" height="36" rx="6" fill="#c9d1d9"/><rect x="30" y="64" width="40" height="13" fill="#e8467c"/><circle cx="50" cy="95" r="4" fill="#2b2547"/></svg>'},
+  trasto:{n:'Don Trasto',d:'Un robot de chatarra: lata oxidada, cinta americana, tapones de botella y un muelle por brazo.',
+    svg:'<svg class="pj-svg" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 18l4-8-3-5" fill="none" stroke="#7a3b1f" stroke-width="2.5"/><circle cx="51" cy="5" r="4.5" fill="#fff1b0"/><rect x="26" y="18" width="48" height="34" rx="6" fill="#5f9e8f" transform="rotate(-2 50 35)"/><circle cx="72" cy="20" r="5" fill="#a4532a"/><rect x="31" y="24" width="38" height="22" rx="5" fill="#2b2547"/><rect x="26" y="24" width="6" height="26" fill="#a9a59a" transform="rotate(38 29 37)"/><circle cx="41" cy="34" r="6.5" fill="#c0392b"/><circle cx="59" cy="35" r="7.5" fill="#3d8b4f"/><circle cx="41" cy="34" r="3.5" fill="#f2efe6"/><circle cx="59" cy="35" r="4.5" fill="#f2efe6"/><circle cx="41" cy="34" r="1.8" fill="#1d1933"/><circle cx="59" cy="35" r="2.2" fill="#1d1933"/><rect x="44" y="42" width="12" height="3" rx="1.5" fill="#7dfcd9"/><rect x="30" y="55" width="40" height="34" rx="6" fill="#b7bec4"/><path d="M30 64h28v12H30z" fill="#d0617f"/><circle cx="62" cy="80" r="4" fill="#a4532a"/><rect x="40" y="58" width="5" height="22" fill="#a9a59a" transform="rotate(20 42 69)"/><rect x="45" y="90" width="10" height="6" fill="#e8467c"/><rect x="40" y="95" width="20" height="3" fill="#7a3b1f"/></svg>'},
   buho:{n:'Maese Búho',d:'Un búho sabio con gafas redondas y un lápiz en la oreja.',
     svg:'<svg class="pj-svg" viewBox="0 0 100 100" aria-hidden="true"><path d="M24 22l8 16-14-4zM76 22l-8 16 14-4z" fill="#8a5a3c"/><ellipse cx="50" cy="60" rx="34" ry="36" fill="#8a5a3c"/><ellipse cx="50" cy="72" rx="20" ry="20" fill="#f3dfc1"/><circle cx="38" cy="45" r="13" fill="#f3dfc1"/><circle cx="62" cy="45" r="13" fill="#f3dfc1"/><circle cx="38" cy="45" r="8" fill="#ffc23d"/><circle cx="62" cy="45" r="8" fill="#ffc23d"/><circle cx="38" cy="45" r="4" fill="#1d1933"/><circle cx="62" cy="45" r="4" fill="#1d1933"/><circle cx="38" cy="45" r="11" fill="none" stroke="#c99a2e" stroke-width="2"/><circle cx="62" cy="45" r="11" fill="none" stroke="#c99a2e" stroke-width="2"/><path d="M45 55h10l-5 9z" fill="#f2a33a"/><rect x="70" y="16" width="5" height="22" rx="2" fill="#ffc23d" transform="rotate(30 72 27)"/></svg>'},
   tuerca:{n:'Maese Tuerca',d:'Una tuerca con gafas de taller y bigote.',svg:null}
@@ -2955,29 +2955,54 @@ function pjBuild(T,id){
       var pa=add(g,new T.SphereGeometry(0.2,16,12),white,sd*0.08,-0.05,0.08);pa.scale.set(0.35,0.8,0.7);
     });});
   }else if(id==='trasto'){
-    var tin=M(0xc9d1d9,0.3,0.32),lab=M(0xe8467c,0.15,0.5),dk=M(0x2b2547,0.2,0.5),glow=M(0x7dfcd9,0,0.4,0x2fcbb3),bulb=M(0xffd66e,0,0.3,0xffb300);
-    var bd=add(root,new T.CylinderGeometry(0.62,0.62,1.0,36),tin,0,-0.6,0);
-    add(root,new T.CylinderGeometry(0.625,0.625,0.38,36),lab,0,-0.6,0);
-    [-0.1,-1.1].forEach(function(y){var rr=add(root,new T.TorusGeometry(0.62,0.04,8,36),tin,0,y,0);rr.rotation.x=Math.PI/2;});
-    var wh=add(root,new T.CylinderGeometry(0.2,0.2,0.18,20),dk,0,-1.3,0);wh.rotation.z=Math.PI/2;
-    var spring=add(root,new T.CylinderGeometry(0.12,0.12,0.22,12),M(0x9aa3ab,0.35,0.35),0,0.02,0);
+    // Don Trasto: todo reciclado (lata abollada y oxidada, cinta americana, chapas, un muelle, un carrete)
+    var tin=M(0xb7bec4,0.3,0.5),rust=M(0xa4532a,0.05,0.9),rust2=M(0x7a3b1f,0.05,0.95),paint=M(0x5f9e8f,0.05,0.75),tape=M(0xa9a59a,0,0.95),
+      lab=M(0xd0617f,0.02,0.8),cork=M(0xc89b62,0,0.95),dk=M(0x2b2547,0.2,0.5),glow=M(0x7dfcd9,0,0.4,0x2fcbb3),bulb=M(0xfff1b0,0,0.2,0xffb300),brass=M(0xc99a2e,0.6,0.35),wood=M(0xb07a45,0,0.8);
+    var spot=function(p,mat,r,y,ang,w,h){var m=add(p,new T.SphereGeometry(1,14,10),mat,Math.sin(ang)*r,y,Math.cos(ang)*r);m.scale.set(w,h,0.03);m.rotation.y=ang;return m;};
+    var bd=add(root,new T.CylinderGeometry(0.6,0.64,1.0,30),tin,0,-0.6,0);bd.scale.z=0.92;bd.rotation.z=0.04;
+    var lb=add(root,new T.CylinderGeometry(0.645,0.645,0.36,30,1,true,-1.2,3.9),lab,0,-0.58,0);lb.material.side=T.DoubleSide;lb.scale.z=0.92;
+    spot(root,rust,0.6,-0.95,0.5,0.17,0.12);spot(root,rust2,0.62,-0.3,-0.7,0.12,0.09);spot(root,rust,0.61,-0.85,-0.35,0.08,0.06);
+    var tp=add(root,new T.BoxGeometry(0.17,0.62,0.02),tape,0.18,-0.66,0.58);tp.rotation.z=0.35;
+    for(var k=0;k<4;k++)add(root,new T.SphereGeometry(0.03,8,6),brass,Math.sin(1.05)*0.6,-0.25-k*0.2,Math.cos(1.05)*0.6*0.92);
+    [-0.1,-1.1].forEach(function(y){var rr=add(root,new T.TorusGeometry(0.62,0.035,8,30),rust2,0,y,0);rr.rotation.x=Math.PI/2;rr.scale.y=0.92;});
+    // pie: un carrete de hilo sobre una tapa de bote
+    add(root,new T.CylinderGeometry(0.14,0.14,0.2,16),M(0xe8467c,0,0.9),0,-1.22,0);
+    add(root,new T.CylinderGeometry(0.22,0.22,0.04,20),wood,0,-1.12,0);add(root,new T.CylinderGeometry(0.22,0.22,0.04,20),wood,0,-1.33,0);
+    add(root,new T.CylinderGeometry(0.34,0.34,0.06,24),rust2,0,-1.38,0);
+    var spring=add(root,new T.CylinderGeometry(0.11,0.13,0.2,10),rust2,0,0.02,0);
     head.position.y=0.5;
-    var hd=add(head,new T.BoxGeometry(1.25,0.82,0.85),tin,0,0,0);
-    add(head,new T.BoxGeometry(1.0,0.56,0.06),dk,0,0,0.43);
-    [[-0.26,0x0e9683],[0.26,0xe8467c]].forEach(function(e){
-      var cap=add(head,new T.CylinderGeometry(0.17,0.17,0.07,20),M(e[1],0.5,0.35),e[0],0.06,0.48);cap.rotation.x=Math.PI/2;
-      var cr=add(head,new T.TorusGeometry(0.17,0.025,6,20),M(e[1],0.5,0.35),e[0],0.06,0.5);
-      pupil(head,e[0],0.06,0.55,0.075);
-    });
-    var grill=add(head,new T.BoxGeometry(0.34,0.08,0.04),glow,0,-0.18,0.47);
+    var hd=add(head,new T.BoxGeometry(1.22,0.8,0.82),paint,0,0,0);hd.rotation.z=-0.03;
+    [[0.5,0.32,0.11,0.07],[-0.5,-0.3,0.09,0.06],[0.47,-0.33,0.06,0.05]].forEach(function(c){var r1=add(head,new T.CircleGeometry(1,12),rust,c[0],c[1],0.412);r1.scale.set(c[2],c[3],1);r1.rotation.z=c[0];});
+    add(head,new T.BoxGeometry(0.98,0.54,0.05),dk,0,-0.01,0.42);
+    var t1=add(head,new T.BoxGeometry(0.13,0.42,0.02),tape,-0.55,0.3,0.42);t1.rotation.z=0.8;
+    var t2=add(head,new T.BoxGeometry(0.13,0.5,0.02),tape,0.5,-0.32,0.42);t2.rotation.z=0.7;
+    [[-0.52,0.32],[0.52,0.32],[-0.52,-0.32],[0.52,-0.32]].forEach(function(c){var sc=add(head,new T.CylinderGeometry(0.035,0.035,0.03,8),brass,c[0],c[1],0.43);sc.rotation.x=Math.PI/2;});
+    // ojos: dos tapones distintos
+    var capR=add(head,new T.CylinderGeometry(0.17,0.17,0.07,21),M(0xc0392b,0.5,0.4),-0.25,0.05,0.47);capR.rotation.x=Math.PI/2;
+    add(head,new T.TorusGeometry(0.17,0.03,6,21),M(0xc0392b,0.5,0.4),-0.25,0.05,0.5);
+    var capG=add(head,new T.CylinderGeometry(0.21,0.21,0.05,24),M(0x3d8b4f,0.3,0.5),0.27,0.08,0.46);capG.rotation.x=Math.PI/2;
+    add(head,new T.CircleGeometry(0.15,20),M(0xf2efe6,0,0.7),0.27,0.08,0.49);add(head,new T.CircleGeometry(0.12,20),M(0xf2efe6,0,0.7),-0.25,0.05,0.54);
+    pupil(head,-0.25,0.05,0.57,0.07);pupil(head,0.27,0.08,0.52,0.085);
+    var grill=add(head,new T.BoxGeometry(0.34,0.08,0.04),glow,0,-0.18,0.46);
     talk=function(o){grill.scale.y=0.6+o*1.8;};
-    add(head,new T.CylinderGeometry(0.025,0.025,0.4,8),dk,0,0.6,0);
-    add(head,new T.SphereGeometry(0.1,16,12),bulb,0,0.84,0);
-    [-1,1].forEach(function(sd){var ear=add(head,new T.CylinderGeometry(0.12,0.12,0.1,16),lab,sd*0.66,0,0);ear.rotation.z=Math.PI/2;});
-    [-1,1].forEach(function(sd){arm(sd,sd*0.66,-0.3,0,function(g){
-      var a=add(g,new T.CylinderGeometry(0.05,0.05,0.5,10),M(0x9aa3ab,0.35,0.35),sd*0.18,-0.14,0);a.rotation.z=sd*1.0;
-      add(g,new T.SphereGeometry(0.11,14,10),lab,sd*0.38,-0.3,0);
-    });});
+    // antena torcida con bombilla vieja
+    var a1=add(head,new T.CylinderGeometry(0.022,0.022,0.3,6),rust2,0.12,0.52,0);a1.rotation.z=-0.35;
+    var a2=add(head,new T.CylinderGeometry(0.022,0.022,0.24,6),rust2,0.2,0.74,0);a2.rotation.z=0.4;
+    add(head,new T.CylinderGeometry(0.06,0.06,0.08,10),brass,0.16,0.88,0);
+    add(head,new T.SphereGeometry(0.1,16,12),bulb,0.16,0.99,0);
+    [-1,1].forEach(function(sd){var ear=add(head,new T.CylinderGeometry(0.13,0.13,0.06,21),sd<0?M(0xf2c14e,0.5,0.4):lab,sd*0.63,0,0);ear.rotation.z=Math.PI/2;});
+    // brazos: uno es un muelle con un corcho, el otro una tubería oxidada con una pinza
+    arm(-1,-0.64,-0.3,0,function(g){
+      var pts=[];for(var q=0;q<=80;q++){var u=q/80,a=u*Math.PI*2*7;pts.push(new T.Vector3(Math.cos(a)*0.07,-u*0.5,Math.sin(a)*0.07));}
+      var sg=new T.Group();sg.rotation.z=-1.0;g.add(sg);
+      add(sg,new T.TubeGeometry(new T.CatmullRomCurve3(pts),160,0.016,6),M(0x9aa3ab,0.6,0.35));
+      var ck=add(g,new T.CylinderGeometry(0.1,0.12,0.16,12),cork,-0.43,-0.28,0);ck.rotation.z=-1.0;
+    });
+    arm(1,0.64,-0.3,0,function(g){
+      var a=add(g,new T.CylinderGeometry(0.055,0.055,0.5,10),rust,0.18,-0.14,0);a.rotation.z=1.0;
+      var el=add(g,new T.TorusGeometry(0.07,0.03,6,10),rust2,0.05,-0.04,0);
+      var pz=add(g,new T.BoxGeometry(0.08,0.2,0.06),M(0x3a7bd5,0,0.6),0.42,-0.3,0);pz.rotation.z=0.4;
+    });
   }else if(id==='buho'){
     var br=M(0x8a5a3c,0,0.65),cr2=M(0xf3dfc1,0,0.7),am=M(0xffc23d,0.2,0.35),or=M(0xf2a33a,0.1,0.5),gd=M(0xc99a2e,0.8,0.3),pen=M(0xffc23d,0,0.5);
     var b=add(root,new T.SphereGeometry(0.8,32,24),br,0,-0.4,0);b.scale.set(1,1.08,0.9);
