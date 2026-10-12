@@ -628,6 +628,8 @@ body{background-image:none;font:16px/1.5 var(--f-body);font-variant-numeric:tabu
 .ma-head .pj-ico{width:56px;height:56px}
 .prov.pj{align-items:center}
 .prov.pj input{margin:0}
+
+.bubble,.buddy.left .bubble,.buddy.low .bubble,.buddy.low:not(.left) .bubble{left:0;top:0;right:auto;bottom:auto;border-radius:18px}
 </style>
 
 <section id="gate" class="gate" aria-labelledby="gateTitle">
@@ -2775,8 +2777,22 @@ function budGo(p){p=budClamp(p);BUD.tx=p.x;BUD.ty=p.y;if(RM||BUD.x<-900){BUD.x=p
 function budPlace(){
   var el=budEl();if(!el)return;
   el.style.transform='translate('+Math.round(BUD.x)+'px,'+Math.round(BUD.y-BUD.hop)+'px)';
-  el.classList.toggle('left',BUD.x+BUD.size/2<innerWidth/2);
-  el.classList.toggle('low',BUD.y<170);
+  budBubble();
+}
+// El bocadillo siempre dentro de la ventana: al lado con más sitio, o encima/debajo si no cabe al lado
+function budBubble(){
+  var bb=$('#bubble');if(!bb||bb.hidden)return;
+  var m=8,g=4,s=BUD.size,X=BUD.x,Y=BUD.y-BUD.hop,vw=innerWidth,vh=innerHeight;
+  bb.style.maxWidth=Math.min(280,vw-2*m)+'px';
+  var bw=bb.offsetWidth,bh=bb.offsetHeight,roomL=X-g-m,roomR=vw-(X+s)-g-m,L,T;
+  if(roomL>=bw||roomR>=bw){
+    L=(roomL>=bw&&(roomL>=roomR||roomR<bw))?X-g-bw:X+s+g;
+    T=Y+s*0.4-bh;if(T<m)T=Y+s*0.6;
+  }else{
+    L=X+s/2-bw/2;T=Y-g-bh;if(T<m)T=Y+s+g;
+  }
+  L=Math.max(m,Math.min(vw-m-bw,L));T=Math.max(m,Math.min(vh-m-bh,T));
+  bb.style.left=Math.round(L-X)+'px';bb.style.top=Math.round(T-Y)+'px';
 }
 function budShow(){if(!BUD.on){BUD.on=true;pjApply();var p=budRest();BUD.x=p.x;BUD.y=p.y;BUD.tx=p.x;BUD.ty=p.y;budPlace();budThree();}}
 // Paso de animación (se usa con o sin 3D)
@@ -2806,7 +2822,7 @@ function maSay(m,joy,here){
   var b=budEl(),bb=$('#bubble');
   if(!b||b.hidden||!$('#maestro').hidden){toast(m);return;}
   if(!here)BUD.guide=null;
-  bb.textContent=m;bb.hidden=false;BUD.talk=Math.min(4,0.5+m.length/40);
+  bb.textContent=m;bb.hidden=false;budBubble();BUD.talk=Math.min(4,0.5+m.length/40);
   if(joy)BUD.joyT=BUD.clock?BUD.clock():0;
   b.classList.remove('talk','joy');void b.offsetWidth;b.classList.add('talk');if(joy)b.classList.add('joy');
   clearTimeout(sayT);sayT=setTimeout(budHush,Math.min(15000,Math.max(6000,m.length*70)));
