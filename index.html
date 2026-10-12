@@ -564,6 +564,49 @@ body{background-image:none;font:16px/1.5 var(--f-body);font-variant-numeric:tabu
 @keyframes hop{50%{transform:translateY(-14px) rotate(8deg)}}
 @media (prefers-reduced-motion:reduce){.buddy .tuerca,.tuerca .ojo,.buddy.talk .tuerca .boca,.bubble,.busy::after{animation:none}}
 #diag{display:none}
+
+/* ===== Adaptable: tabletas y pantallas anchas ===== */
+.scan-l,.scan-r{display:grid;gap:16px;min-width:0;align-content:start}
+@media (min-width:640px){
+  .app{max-width:820px}
+  .tabs .in{max-width:820px}
+  .buddy{right:max(12px,calc(50% - 398px))}
+  .toast{max-width:788px}
+  .grp{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));align-items:start;column-gap:12px}
+  .grp>:not(.it){grid-column:1/-1}
+  .more>.grp{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .log{grid-template-columns:repeat(auto-fill,minmax(320px,1fr));align-items:start}
+  .planos{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));align-items:start}
+  .vf{aspect-ratio:auto;height:min(60vh,560px)}
+}
+@media (min-width:900px){
+  /* pestañas en una barra lateral */
+  .tabs{top:0;bottom:0;right:auto;width:100px;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);display:flex;align-items:center;box-shadow:1px 0 0 var(--line)}
+  .tabs .in{grid-template-columns:1fr;gap:6px;width:100%;max-width:none}
+  .tab{min-height:70px;font-size:13px}
+  .app{max-width:none;padding-left:132px;padding-right:32px;padding-bottom:48px}
+  .top{margin-left:-32px;margin-right:-32px;padding-inline:32px}
+  main{max-width:1320px;margin:0 auto}
+  .buddy{right:28px;bottom:24px}
+  .toast{left:132px;right:32px}
+  /* Escanear: visor a la izquierda (fijo) y resultado a la derecha */
+  #v-scan{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px;align-items:start}
+  .scan-l{position:sticky;top:132px}
+  .scan-r{display:grid}
+  .vf{height:min(56vh,520px)}
+  /* Tienda: tienda y mercado lado a lado */
+  #v-tienda{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px;align-items:start}
+  #v-tienda>.sec-h{grid-column:1/-1}
+  #v-tienda>#mercado{grid-column:2;grid-row:2}
+  /* Ajustes: tarjetas en dos columnas */
+  #v-set{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;align-items:start}
+  #v-set>.sec-h{grid-column:1/-1}
+  .sheet{align-items:center}
+  .sheet-in{border-radius:22px}
+}
+@media (min-width:1200px){
+  .grp,.more>.grp{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+}
 </style>
 
 <section id="gate" class="gate" aria-labelledby="gateTitle">
@@ -610,6 +653,7 @@ body{background-image:none;font:16px/1.5 var(--f-body);font-variant-numeric:tabu
 
   <main>
     <section id="v-scan" class="view">
+      <div class="scan-l">
       <div class="vf" id="vf">
         <span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span>
         <div class="hint" id="vfHint"><b>Encuadra un objeto</b><span>Toca «Cámara»</span></div>
@@ -620,9 +664,12 @@ body{background-image:none;font:16px/1.5 var(--f-body);font-variant-numeric:tabu
         <div class="btn pick" id="btn-up"><span>Galería</span><input id="in-up" type="file" accept="image/*" aria-label="Elegir foto de la galería"></div>
       </div>
       <p class="note warn-note" id="camNote" hidden></p>
+      </div>
+      <div class="scan-r">
       <div id="extList" class="tbody"></div>
       <div id="panel" role="status" aria-live="polite"></div>
       <p id="diag" class="mono"></p>
+      </div>
     </section>
 
     <section id="v-inv" class="view" hidden>
