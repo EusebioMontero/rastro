@@ -620,6 +620,14 @@ body{background-image:none;font:16px/1.5 var(--f-body);font-variant-numeric:tabu
 .buddy.low .bubble{bottom:auto;top:62%}
 .buddy.low .bubble{border-radius:4px 18px 18px 18px}
 .buddy.low:not(.left) .bubble{border-radius:18px 4px 18px 18px}
+
+.pj-svg{width:100%;height:100%;display:block}
+.buddy .tb .pj-svg{animation:bob 3.2s ease-in-out infinite}
+.buddy.d3 .pj-svg{display:none}
+.pj-ico{width:52px;height:52px;flex:none;display:block}
+.ma-head .pj-ico{width:56px;height:56px}
+.prov.pj{align-items:center}
+.prov.pj input{margin:0}
 </style>
 
 <section id="gate" class="gate" aria-labelledby="gateTitle">
@@ -736,6 +744,10 @@ body{background-image:none;font:16px/1.5 var(--f-body);font-variant-numeric:tabu
           <button class="btn" id="btnLogout" type="button" hidden>Cerrar sesión</button>
         </div>
       </div>
+      <div class="card">
+        <h2>Tu maestro</h2>
+        <div class="provs" id="pjList"></div>
+      </div>
       <div class="card" id="chkCard">
         <h2>Comprobación</h2>
         <ul class="chk" id="chkList"></ul>
@@ -785,10 +797,10 @@ body{background-image:none;font:16px/1.5 var(--f-body);font-variant-numeric:tabu
 </div>
 
 <div id="toast" class="toast" role="status" hidden></div>
-<div class="buddy" id="buddy" hidden><p class="bubble" id="bubble" role="status" hidden></p><button class="tb" id="buddyBtn" type="button" aria-label="Hablar con Maese Tuerca, el maestro del taller"><svg class="tuerca" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" fill="#FFC23D" stroke="#7A4E00" stroke-width="4" stroke-linejoin="round"/><polygon points="50,15 80,32 80,66 50,83 20,66 20,32" fill="#FFD772"/><rect x="11" y="33" width="78" height="9" rx="3" fill="#2B2547"/><circle cx="35" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><circle cx="65" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><g class="ojo"><circle cx="37" cy="40" r="4.6" fill="#26213F"/><circle cx="38.6" cy="38.4" r="1.4" fill="#fff"/></g><g class="ojo"><circle cx="63" cy="40" r="4.6" fill="#26213F"/><circle cx="64.6" cy="38.4" r="1.4" fill="#fff"/></g><path d="M50 59c-3-6-13-8-21-1 6 0 9 3 13 4 4 1 7 0 8-3zM50 59c3-6 13-8 21-1-6 0-9 3-13 4-4 1-7 0-8-3z" fill="#6B3E1F"/><ellipse class="boca" cx="50" cy="72" rx="6" ry="4.6" fill="#2B2547"/></svg></button></div>
+<div class="buddy" id="buddy" hidden><p class="bubble" id="bubble" role="status" hidden></p><button class="tb" id="buddyBtn" type="button" aria-label="Hablar con el maestro del taller"></button></div>
 <div id="maestro" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="maTitle">
   <div class="sheet-in card">
-    <div class="crow"><div class="ma-head"><svg class="tuerca" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" fill="#FFC23D" stroke="#7A4E00" stroke-width="4" stroke-linejoin="round"/><polygon points="50,15 80,32 80,66 50,83 20,66 20,32" fill="#FFD772"/><rect x="11" y="33" width="78" height="9" rx="3" fill="#2B2547"/><circle cx="35" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><circle cx="65" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><g class="ojo"><circle cx="37" cy="40" r="4.6" fill="#26213F"/><circle cx="38.6" cy="38.4" r="1.4" fill="#fff"/></g><g class="ojo"><circle cx="63" cy="40" r="4.6" fill="#26213F"/><circle cx="64.6" cy="38.4" r="1.4" fill="#fff"/></g><path d="M50 59c-3-6-13-8-21-1 6 0 9 3 13 4 4 1 7 0 8-3zM50 59c3-6 13-8 21-1-6 0-9 3-13 4-4 1-7 0-8-3z" fill="#6B3E1F"/><ellipse class="boca" cx="50" cy="72" rx="6" ry="4.6" fill="#2B2547"/></svg><h2 id="maTitle">Maese Tuerca<span id="maLvl"></span></h2></div><button class="btn sm" id="maClose" type="button">Cerrar</button></div>
+    <div class="crow"><div class="ma-head"><span id="maIco" class="pj-ico"></span><h2 id="maTitle">Maese Tuerca<span id="maLvl"></span></h2></div><button class="btn sm" id="maClose" type="button">Cerrar</button></div>
     <div id="maLog" class="ma-log" aria-live="polite"></div>
     <div id="maEnc" class="provs"></div>
     <form id="maForm" class="provs" novalidate>
@@ -991,7 +1003,7 @@ var PROMPT=[
 ].join('\n');
 
 /* ---------- Estado ---------- */
-var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0},mlvl:1,mpend:0,enc:null};
+var state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0},mlvl:1,mpend:0,enc:null,pj:''};
 MATS.forEach(function(m){state.inv[m.id]=0;});
 var chk={ia:'',code:'',t:0,cam:''},chkSig=null,chkSeq=0,panelIdle=false,puterPend=false;
 var ready=false,aiOk=false,aiWhy='',visorOk=false,busy=false,sampleFn=null,ctl=null,lastBlob=null,previewUrl=null;
@@ -1018,7 +1030,7 @@ function hace(ts){
 }
 
 /* ---------- Guardado ---------- */
-function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,tech:state.tech,topen:state.topen,techp:state.techp,planNiv:state.planNiv,pfrag:state.pfrag,tnivel:state.tnivel,texp:state.texp,inventos:state.inventos,visto:state.visto,invc:state.invc,invd:state.invd,mlvl:state.mlvl,mpend:state.mpend,enc:state.enc,t:Date.now()};}
+function snapshot(){return {v:2,inv:state.inv,disc:state.disc,day:state.day,xp:state.xp,planos:state.planos,tools:state.tools,cola:state.cola,monedas:state.monedas,extr:state.extr,tech:state.tech,topen:state.topen,techp:state.techp,planNiv:state.planNiv,pfrag:state.pfrag,tnivel:state.tnivel,texp:state.texp,inventos:state.inventos,visto:state.visto,invc:state.invc,invd:state.invd,mlvl:state.mlvl,mpend:state.mpend,enc:state.enc,pj:state.pj,t:Date.now()};}
 function merge(d){
   if(!d||typeof d!=='object')return;
   var inv={};
@@ -1036,6 +1048,7 @@ function merge(d){
   // el maestro sube contigo; las partidas antiguas empiezan con el maestro ya a su nivel (sin planos atrasados)
   var ml=Math.floor(Number(d.mlvl));state.mlvl=ml>=1?ml:levelFor(state.xp);
   state.mpend=Math.max(0,Math.min(10,Math.floor(Number(d.mpend)||0)));
+  state.pj=PJS[d.pj]?d.pj:'';
   var en=d.enc;state.enc=(en&&Number(en.fin)>0)?{q:clean(en.q,200),gr:Math.max(0,Math.min(GRADOS.length-1,Math.floor(Number(en.gr)||0))),n:clean(en.n,20),fin:Number(en.fin),dur:Math.max(1,Number(en.dur)||1)}:null;
   state.invd=(d.invd&&typeof d.invd.d==='string')?{d:d.invd.d,n:Math.max(0,Math.floor(Number(d.invd.n)||0))}:{d:'',n:0};
   var pl={},dp=d.planos||{},tl={},dt=d.tools||{};
@@ -1125,7 +1138,7 @@ function loadScript(src){
   });
 }
 function freshState(){
-  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0},mlvl:1,mpend:0,enc:null};
+  state={inv:{},disc:{},day:{d:'',n:0},xp:0,planos:{},tools:{},cola:null,monedas:0,extr:[],tech:{},topen:{},techp:{},planNiv:{},pfrag:{},tnivel:{},texp:{},inventos:{},visto:{},invc:0,invd:{d:'',n:0},mlvl:1,mpend:0,enc:null,pj:''};
   MATS.forEach(function(m){state.inv[m.id]=0;});
   syncInv();
 }
@@ -1189,7 +1202,7 @@ async function onUser(u,again){
   fb.busy=false;
   if(mode==='firebase')mkStart();
   if(cfg.prov==='puter')puterRefresh();
-  refreshAi();renderAcct();renderAll();showIdle();setButtons();renderSet();
+  refreshAi();renderAcct();renderAll();showIdle();setButtons();renderSet();if(BUD.on)pjApply();
   orHandleReturn();
 }
 function renderGate(){
@@ -2742,6 +2755,7 @@ setInterval(function(){
   }
 },1000);
 /* ---------- Maese Tuerca: personaje 3D que se mueve, te mira, te guía y se deja arrastrar ---------- */
+var TUERCA_SVG='<svg class="tuerca pj-svg" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,5 89,27.5 89,72.5 50,95 11,72.5 11,27.5" fill="#FFC23D" stroke="#7A4E00" stroke-width="4" stroke-linejoin="round"/><polygon points="50,15 80,32 80,66 50,83 20,66 20,32" fill="#FFD772"/><rect x="11" y="33" width="78" height="9" rx="3" fill="#2B2547"/><circle cx="35" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><circle cx="65" cy="38" r="13" fill="#E9FBF8" stroke="#0E9683" stroke-width="5"/><g class="ojo"><circle cx="37" cy="40" r="4.6" fill="#26213F"/><circle cx="38.6" cy="38.4" r="1.4" fill="#fff"/></g><g class="ojo"><circle cx="63" cy="40" r="4.6" fill="#26213F"/><circle cx="64.6" cy="38.4" r="1.4" fill="#fff"/></g><path d="M50 59c-3-6-13-8-21-1 6 0 9 3 13 4 4 1 7 0 8-3zM50 59c3-6 13-8 21-1-6 0-9 3-13 4-4 1-7 0-8-3z" fill="#6B3E1F"/><ellipse class="boca" cx="50" cy="72" rx="6" ry="4.6" fill="#2B2547"/></svg>';
 var THREE_JS='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',LS_BUD='rastro.buddy.v1';
 var RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 var BUD={size:84,x:-999,y:-999,tx:0,ty:0,vx:0,rest:null,drag:null,moved:false,on:false,phase:0,hop:0,look:null,lookT:0,
@@ -2764,7 +2778,7 @@ function budPlace(){
   el.classList.toggle('left',BUD.x+BUD.size/2<innerWidth/2);
   el.classList.toggle('low',BUD.y<170);
 }
-function budShow(){if(!BUD.on){BUD.on=true;var p=budRest();BUD.x=p.x;BUD.y=p.y;BUD.tx=p.x;BUD.ty=p.y;budPlace();budThree();}}
+function budShow(){if(!BUD.on){BUD.on=true;pjApply();var p=budRest();BUD.x=p.x;BUD.y=p.y;BUD.tx=p.x;BUD.ty=p.y;budPlace();budThree();}}
 // Paso de animación (se usa con o sin 3D)
 function budStep(dt,t){
   if(BUD.drag)return;
@@ -2797,7 +2811,7 @@ function maSay(m,joy,here){
   b.classList.remove('talk','joy');void b.offsetWidth;b.classList.add('talk');if(joy)b.classList.add('joy');
   clearTimeout(sayT);sayT=setTimeout(budHush,Math.min(15000,Math.max(6000,m.length*70)));
 }
-$('#budReset').addEventListener('click',function(){BUD.rest=null;try{localStorage.removeItem(LS_BUD);}catch(e){}budGo(budRest());toast('Maese Tuerca vuelve a su esquina.');});
+$('#budReset').addEventListener('click',function(){BUD.rest=null;try{localStorage.removeItem(LS_BUD);}catch(e){}budGo(budRest());toast(PJ().n+' vuelve a su esquina.');});
 function budHush(){$('#bubble').hidden=true;budEl().classList.remove('talk','joy');if(BUD.guide){BUD.guide=null;budGo(budRest());}}
 // Ir hasta un elemento de la pantalla y señalarlo
 function maGuide(sel,msg,joy){
@@ -2863,7 +2877,135 @@ function maTip(){if(tipDone)return;tipDone=true;setTimeout(function(){
     if(BUD.three)BUD.three(dt,t);
   })(0);
 })();
-// Modelo 3D (three.js); si no hay WebGL se queda el dibujo plano
+// Personajes del maestro: cada uno con su dibujo plano (respaldo) y su modelo 3D
+var PJS={
+  urraca:{n:'Doña Urraca',d:'Una urraca coleccionista con monóculo: se lleva todo lo que brilla.',
+    svg:'<svg class="pj-svg" viewBox="0 0 100 100" aria-hidden="true"><path d="M30 88 18 99h14z" fill="#1f8a9c"/><ellipse cx="50" cy="66" rx="27" ry="28" fill="#1f1d2b"/><ellipse cx="50" cy="71" rx="17" ry="19" fill="#f7f7fb"/><ellipse cx="25" cy="64" rx="9" ry="18" fill="#1f8a9c" transform="rotate(14 25 64)"/><ellipse cx="75" cy="64" rx="9" ry="18" fill="#1f8a9c" transform="rotate(-14 75 64)"/><circle cx="50" cy="33" r="23" fill="#1f1d2b"/><circle cx="41" cy="31" r="7.5" fill="#fff"/><circle cx="59" cy="31" r="7.5" fill="#fff"/><circle cx="42" cy="32" r="3.6" fill="#1d1933"/><circle cx="60" cy="32" r="3.6" fill="#1d1933"/><circle cx="59" cy="31" r="10" fill="none" stroke="#ffc23d" stroke-width="2.6"/><path d="M44 41h12l-6 11z" fill="#3b3557"/></svg>'},
+  trasto:{n:'Don Trasto',d:'Un robot hecho con latas, chapas y un muelle del rastro.',
+    svg:'<svg class="pj-svg" viewBox="0 0 100 100" aria-hidden="true"><line x1="50" y1="6" x2="50" y2="18" stroke="#6e6a88" stroke-width="3"/><circle cx="50" cy="7" r="5" fill="#ffc23d"/><rect x="26" y="18" width="48" height="34" rx="9" fill="#c9d1d9"/><rect x="31" y="24" width="38" height="22" rx="6" fill="#2b2547"/><circle cx="42" cy="34" r="6" fill="#0e9683"/><circle cx="58" cy="34" r="6" fill="#e8467c"/><circle cx="42" cy="34" r="2.4" fill="#fff"/><circle cx="58" cy="34" r="2.4" fill="#fff"/><rect x="44" y="41" width="12" height="3" rx="1.5" fill="#7dfcd9"/><rect x="30" y="55" width="40" height="36" rx="6" fill="#c9d1d9"/><rect x="30" y="64" width="40" height="13" fill="#e8467c"/><circle cx="50" cy="95" r="4" fill="#2b2547"/></svg>'},
+  buho:{n:'Maese Búho',d:'Un búho sabio con gafas redondas y un lápiz en la oreja.',
+    svg:'<svg class="pj-svg" viewBox="0 0 100 100" aria-hidden="true"><path d="M24 22l8 16-14-4zM76 22l-8 16 14-4z" fill="#8a5a3c"/><ellipse cx="50" cy="60" rx="34" ry="36" fill="#8a5a3c"/><ellipse cx="50" cy="72" rx="20" ry="20" fill="#f3dfc1"/><circle cx="38" cy="45" r="13" fill="#f3dfc1"/><circle cx="62" cy="45" r="13" fill="#f3dfc1"/><circle cx="38" cy="45" r="8" fill="#ffc23d"/><circle cx="62" cy="45" r="8" fill="#ffc23d"/><circle cx="38" cy="45" r="4" fill="#1d1933"/><circle cx="62" cy="45" r="4" fill="#1d1933"/><circle cx="38" cy="45" r="11" fill="none" stroke="#c99a2e" stroke-width="2"/><circle cx="62" cy="45" r="11" fill="none" stroke="#c99a2e" stroke-width="2"/><path d="M45 55h10l-5 9z" fill="#f2a33a"/><rect x="70" y="16" width="5" height="22" rx="2" fill="#ffc23d" transform="rotate(30 72 27)"/></svg>'},
+  tuerca:{n:'Maese Tuerca',d:'Una tuerca con gafas de taller y bigote.',svg:null}
+};
+var PJ_ORDER=['urraca','trasto','buho','tuerca'];
+function pjId(){return PJS[state.pj]?state.pj:'urraca';}
+function PJ(){return PJS[pjId()];}
+function pjSvg(id){var c=PJS[id]||PJS.urraca;return c.svg||TUERCA_SVG;}
+function pjApply(){
+  var c=PJ(),btn=$('#buddyBtn');
+  btn.setAttribute('aria-label','Hablar con '+c.n+', el maestro del taller');
+  var old=btn.querySelector('.pj-svg,.tuerca');if(old)old.remove();
+  btn.insertAdjacentHTML('afterbegin',pjSvg(pjId()));
+  var h=$('#maIco');if(h)h.innerHTML=pjSvg(pjId());
+  $('#maTitle').firstChild.textContent=c.n;
+  $('#budReset').textContent='Devolver a '+c.n+' a su esquina';
+  if(BUD.setChar)BUD.setChar(pjId());
+  renderPjs();
+}
+function renderPjs(){
+  var el=$('#pjList');if(!el)return;
+  el.innerHTML=PJ_ORDER.map(function(id){var c=PJS[id];return '<label class="prov pj"><input type="radio" name="pj" value="'+id+'"'+(id===pjId()?' checked':'')+'><span class="pj-ico">'+pjSvg(id)+'</span><div><b>'+esc(c.n)+'</b><span>'+esc(c.d)+'</span></div></label>';}).join('');
+  el.querySelectorAll('input[name="pj"]').forEach(function(r){r.addEventListener('change',function(){state.pj=r.value;persist();pjApply();setTimeout(function(){maSay('¡Hola! Ahora soy '+PJ().n+'. Si me tocas, hablamos.',true);},400);});});
+}
+// Modelos 3D. Cada uno devuelve: root, head (gira para mirar), eyes (pupilas), arms (se mueven al señalar), talk(abertura 0..1)
+function pjBuild(T,id){
+  var M=function(c,m,r,e){var o={color:c,metalness:m||0,roughness:r==null?0.5:r};if(e)o.emissive=e;return new T.MeshStandardMaterial(o);};
+  var ink=new T.MeshBasicMaterial({color:0x1d1933}),root=new T.Group(),head=new T.Group(),eyes=[],arms=[],talk=function(){};
+  root.add(head);
+  var add=function(p,geo,mat,x,y,z){var m=new T.Mesh(geo,mat);m.position.set(x||0,y||0,z||0);p.add(m);return m;};
+  var pupil=function(p,x,y,z,r){var pu=add(p,new T.SphereGeometry(r||0.1,18,14),ink,x,y,z);add(pu,new T.SphereGeometry((r||0.1)*0.33,10,8),new T.MeshBasicMaterial({color:0xffffff}),(r||0.1)*0.35,(r||0.1)*0.35,(r||0.1)*0.85);eyes.push({m:pu,x:x,y:y});return pu;};
+  var arm=function(sd,x,y,z,mk){var g=new T.Group();g.position.set(x,y,z);root.add(g);mk(g);arms.push({g:g,sd:sd});return g;};
+  if(id==='urraca'){
+    var black=M(0x1f1d2b,0.15,0.45),white=M(0xf7f7fb,0,0.55),irid=M(0x1f8a9c,0.55,0.28),beak=M(0x3b3557,0.2,0.4),gold=M(0xffc23d,0.7,0.25);
+    var body=add(root,new T.SphereGeometry(0.72,32,24),black,0,-0.5,0);body.scale.set(1,1.12,0.9);
+    var belly=add(root,new T.SphereGeometry(0.58,32,24),white,0,-0.6,0.3);belly.scale.set(0.82,0.95,0.6);
+    var tail=add(root,new T.BoxGeometry(0.3,1.3,0.06),irid,0.32,-1.05,-0.35);tail.rotation.x=0.55;tail.rotation.z=0.55;
+    var sid=add(root,new T.SphereGeometry(0.5,24,18),white,0,-0.52,0.12);sid.scale.set(1.25,0.8,0.75);
+    [-1,1].forEach(function(sd){var l=add(root,new T.CylinderGeometry(0.035,0.035,0.32,8),black,sd*0.22,-1.3,0.05);var f=add(root,new T.BoxGeometry(0.18,0.05,0.22),black,sd*0.22,-1.46,0.12);});
+    head.position.y=0.5;
+    add(head,new T.SphereGeometry(0.6,32,24),black);
+    [-1,1].forEach(function(sd){
+      var sc=add(head,new T.SphereGeometry(0.2,24,18),white,sd*0.24,0.1,0.47);sc.scale.z=0.6;
+      pupil(head,sd*0.24,0.1,0.6,0.1);
+    });
+    var mono=add(head,new T.TorusGeometry(0.25,0.035,10,32),gold,0.24,0.1,0.62);
+    var chain=add(head,new T.TorusGeometry(0.5,0.012,6,24,1.6),gold,0.3,-0.35,0.45);chain.rotation.z=-0.2;
+    var up=add(head,new T.ConeGeometry(0.15,0.48,16),beak,0,-0.1,0.72);up.rotation.x=Math.PI/2;
+    var lowG=new T.Group();lowG.position.set(0,-0.17,0.52);head.add(lowG);
+    var lo=add(lowG,new T.ConeGeometry(0.1,0.34,16),beak,0,0,0.17);lo.rotation.x=Math.PI/2;
+    talk=function(o){lowG.rotation.x=o*0.55;};
+    [-1,1].forEach(function(sd){arm(sd,sd*0.66,-0.2,0,function(g){
+      var w=add(g,new T.SphereGeometry(0.42,24,18),irid,sd*0.05,-0.32,0);w.scale.set(0.33,1,0.75);
+      var pa=add(g,new T.SphereGeometry(0.2,16,12),white,sd*0.08,-0.05,0.08);pa.scale.set(0.35,0.8,0.7);
+    });});
+  }else if(id==='trasto'){
+    var tin=M(0xc9d1d9,0.3,0.32),lab=M(0xe8467c,0.15,0.5),dk=M(0x2b2547,0.2,0.5),glow=M(0x7dfcd9,0,0.4,0x2fcbb3),bulb=M(0xffd66e,0,0.3,0xffb300);
+    var bd=add(root,new T.CylinderGeometry(0.62,0.62,1.0,36),tin,0,-0.6,0);
+    add(root,new T.CylinderGeometry(0.625,0.625,0.38,36),lab,0,-0.6,0);
+    [-0.1,-1.1].forEach(function(y){var rr=add(root,new T.TorusGeometry(0.62,0.04,8,36),tin,0,y,0);rr.rotation.x=Math.PI/2;});
+    var wh=add(root,new T.CylinderGeometry(0.2,0.2,0.18,20),dk,0,-1.3,0);wh.rotation.z=Math.PI/2;
+    var spring=add(root,new T.CylinderGeometry(0.12,0.12,0.22,12),M(0x9aa3ab,0.35,0.35),0,0.02,0);
+    head.position.y=0.5;
+    var hd=add(head,new T.BoxGeometry(1.25,0.82,0.85),tin,0,0,0);
+    add(head,new T.BoxGeometry(1.0,0.56,0.06),dk,0,0,0.43);
+    [[-0.26,0x0e9683],[0.26,0xe8467c]].forEach(function(e){
+      var cap=add(head,new T.CylinderGeometry(0.17,0.17,0.07,20),M(e[1],0.5,0.35),e[0],0.06,0.48);cap.rotation.x=Math.PI/2;
+      var cr=add(head,new T.TorusGeometry(0.17,0.025,6,20),M(e[1],0.5,0.35),e[0],0.06,0.5);
+      pupil(head,e[0],0.06,0.55,0.075);
+    });
+    var grill=add(head,new T.BoxGeometry(0.34,0.08,0.04),glow,0,-0.18,0.47);
+    talk=function(o){grill.scale.y=0.6+o*1.8;};
+    add(head,new T.CylinderGeometry(0.025,0.025,0.4,8),dk,0,0.6,0);
+    add(head,new T.SphereGeometry(0.1,16,12),bulb,0,0.84,0);
+    [-1,1].forEach(function(sd){var ear=add(head,new T.CylinderGeometry(0.12,0.12,0.1,16),lab,sd*0.66,0,0);ear.rotation.z=Math.PI/2;});
+    [-1,1].forEach(function(sd){arm(sd,sd*0.66,-0.3,0,function(g){
+      var a=add(g,new T.CylinderGeometry(0.05,0.05,0.5,10),M(0x9aa3ab,0.35,0.35),sd*0.18,-0.14,0);a.rotation.z=sd*1.0;
+      add(g,new T.SphereGeometry(0.11,14,10),lab,sd*0.38,-0.3,0);
+    });});
+  }else if(id==='buho'){
+    var br=M(0x8a5a3c,0,0.65),cr2=M(0xf3dfc1,0,0.7),am=M(0xffc23d,0.2,0.35),or=M(0xf2a33a,0.1,0.5),gd=M(0xc99a2e,0.8,0.3),pen=M(0xffc23d,0,0.5);
+    var b=add(root,new T.SphereGeometry(0.8,32,24),br,0,-0.4,0);b.scale.set(1,1.08,0.9);
+    var bl=add(root,new T.SphereGeometry(0.55,32,24),cr2,0,-0.55,0.38);bl.scale.set(0.85,0.95,0.55);
+    [-1,1].forEach(function(sd){var ft=add(root,new T.SphereGeometry(0.12,14,10),or,sd*0.25,-1.25,0.25);ft.scale.set(1.2,0.6,1.4);});
+    head.position.y=0.55;
+    var h=add(head,new T.SphereGeometry(0.66,32,24),br);h.scale.set(1.12,0.95,0.95);
+    [-1,1].forEach(function(sd){
+      var tf=add(head,new T.ConeGeometry(0.14,0.38,12),br,sd*0.46,0.62,0);tf.rotation.z=-sd*0.45;
+      var fd=add(head,new T.SphereGeometry(0.3,24,18),cr2,sd*0.27,0.02,0.42);fd.scale.z=0.45;
+      var ir=add(head,new T.SphereGeometry(0.18,20,16),am,sd*0.27,0.03,0.52);ir.scale.z=0.55;
+      pupil(head,sd*0.27,0.03,0.62,0.09);
+      add(head,new T.TorusGeometry(0.24,0.022,8,28),gd,sd*0.27,0.03,0.66);
+    });
+    add(head,new T.CylinderGeometry(0.012,0.012,0.12,6),gd,0,0.03,0.7).rotation.z=Math.PI/2;
+    var pc=add(head,new T.CylinderGeometry(0.045,0.045,0.6,8),pen,0.55,0.42,-0.05);pc.rotation.z=-1.0;
+    var bk=add(head,new T.ConeGeometry(0.1,0.24,12),or,0,-0.2,0.62);bk.rotation.x=Math.PI*0.85;
+    var lowB=new T.Group();lowB.position.set(0,-0.3,0.6);head.add(lowB);
+    var lb=add(lowB,new T.ConeGeometry(0.06,0.12,10),or,0,-0.04,0.02);lb.rotation.x=Math.PI;
+    talk=function(o){lowB.rotation.x=o*0.6;bk.rotation.x=Math.PI*0.85-o*0.12;};
+    [-1,1].forEach(function(sd){arm(sd,sd*0.72,-0.15,0,function(g){
+      var w=add(g,new T.SphereGeometry(0.42,24,18),br,sd*0.04,-0.32,0);w.scale.set(0.32,1,0.7);
+    });});
+  }else{
+    // Maese Tuerca
+    var gold2=M(0xffc23d,0.35,0.36),dark=M(0x2b2547,0.1,0.6),teal=M(0x0e9683,0.3,0.35),brown=M(0x6b3e1f,0,0.7);
+    var sh=new T.Shape();
+    for(var i=0;i<6;i++){var a=Math.PI/2+i*Math.PI/3,x=Math.cos(a)*1.25,y=Math.sin(a)*1.25;if(i)sh.lineTo(x,y);else sh.moveTo(x,y);}
+    sh.closePath();var hole=new T.Path();hole.absarc(0,-0.62,0.25,0,Math.PI*2,true);sh.holes.push(hole);
+    var bg=new T.ExtrudeGeometry(sh,{depth:0.5,bevelEnabled:true,bevelThickness:0.1,bevelSize:0.09,bevelSegments:3,curveSegments:28});bg.translate(0,0,-0.25);
+    head.add(new T.Mesh(bg,gold2));var F=0.36;
+    var mouth=add(head,new T.CircleGeometry(0.25,28),ink,0,-0.62,-0.05);
+    add(head,new T.TorusGeometry(0.27,0.045,10,28),M(0xd89a14,0.4,0.35),0,-0.62,F);
+    add(head,new T.BoxGeometry(2.3,0.2,0.08),dark,0,0.32,F);
+    [-0.43,0.43].forEach(function(x){add(head,new T.TorusGeometry(0.3,0.085,14,32),teal,x,0.32,F+0.07);add(head,new T.CircleGeometry(0.3,32),M(0xe9fbf8,0.05,0.12),x,0.32,F+0.05);pupil(head,x,0.32,F+0.1,0.105);});
+    var ms=new T.Shape();ms.moveTo(0,0);ms.bezierCurveTo(-0.12,0.2,-0.5,0.24,-0.68,0.02);ms.bezierCurveTo(-0.48,0.07,-0.3,-0.12,0,-0.06);ms.closePath();
+    var mg=new T.ExtrudeGeometry(ms,{depth:0.07,bevelEnabled:true,bevelThickness:0.02,bevelSize:0.02,bevelSegments:2,curveSegments:16});
+    add(head,mg,brown,0,-0.2,F);var m2=add(head,mg,brown,0,-0.2,F);m2.scale.x=-1;
+    talk=function(o){mouth.scale.set(1,0.3+o*0.8,1);};
+    [-1,1].forEach(function(sd){arm(sd,sd*1.15,-0.25,0,function(g){var am2=add(g,new T.CylinderGeometry(0.06,0.06,0.45,10),dark,sd*0.2,-0.12,0);am2.rotation.z=sd*1.0;add(g,new T.SphereGeometry(0.12,14,10),M(0xffffff,0,0.6),sd*0.4,-0.26,0);});});
+  }
+  return {root:root,head:head,eyes:eyes,arms:arms,talk:talk};
+}
+// Escena 3D: un solo lienzo; al cambiar de personaje se cambia el modelo
 function budThree(){
   if(BUD.loading)return;BUD.loading=true;
   var go=function(){
@@ -2874,54 +3016,18 @@ function budThree(){
     var px=BUD.size*1.5;
     R.setPixelRatio(Math.min(2,window.devicePixelRatio||1));R.setSize(px,px,false);
     cv.className='tuerca3d';cv.setAttribute('aria-hidden','true');
-    var sc=new T.Scene(),cam=new T.PerspectiveCamera(30,1,0.1,50);cam.position.set(0,0.1,7.4);
+    var sc=new T.Scene(),cam=new T.PerspectiveCamera(30,1,0.1,50);cam.position.set(0,0.05,7.6);
     sc.add(new T.HemisphereLight(0xffffff,0x6b5a90,0.85));
     var dl=new T.DirectionalLight(0xffffff,0.95);dl.position.set(2.5,3.5,5);sc.add(dl);
     var rim=new T.DirectionalLight(0x9fe8dc,0.45);rim.position.set(-3,-1,-2);sc.add(rim);
-    var M=function(c,m,r){return new T.MeshStandardMaterial({color:c,metalness:m||0,roughness:r==null?0.5:r});};
-    var gold=M(0xffc23d,0.35,0.36),dark=M(0x2b2547,0.1,0.6),teal=M(0x0e9683,0.3,0.35),brown=M(0x6b3e1f,0,0.7),ink=new T.MeshBasicMaterial({color:0x1d1933});
-    var root=new T.Group(),head=new T.Group();sc.add(root);root.add(head);
-    // cuerpo: tuerca hexagonal con agujero
-    var sh=new T.Shape();
-    for(var i=0;i<6;i++){var a=Math.PI/2+i*Math.PI/3,x=Math.cos(a)*1.25,y=Math.sin(a)*1.25;if(i)sh.lineTo(x,y);else sh.moveTo(x,y);}
-    sh.closePath();
-    var hole=new T.Path();hole.absarc(0,-0.62,0.25,0,Math.PI*2,true);sh.holes.push(hole);
-    var bg=new T.ExtrudeGeometry(sh,{depth:0.5,bevelEnabled:true,bevelThickness:0.1,bevelSize:0.09,bevelSegments:3,curveSegments:28});
-    bg.translate(0,0,-0.25);
-    head.add(new T.Mesh(bg,gold));
-    var F=0.36;
-    // la boca es el agujero de la tuerca: un fondo oscuro que se abre al hablar
-    var mouth=new T.Mesh(new T.CircleGeometry(0.25,28),ink);mouth.position.set(0,-0.62,-0.05);head.add(mouth);
-    var lip=new T.Mesh(new T.TorusGeometry(0.27,0.045,10,28),M(0xd89a14,0.4,0.35));lip.position.set(0,-0.62,F);head.add(lip);
-    // gafas de taller
-    var strap=new T.Mesh(new T.BoxGeometry(2.3,0.2,0.08),dark);strap.position.set(0,0.32,F);head.add(strap);
-    var pupils=[];
-    [-0.43,0.43].forEach(function(x){
-      var rr=new T.Mesh(new T.TorusGeometry(0.3,0.085,14,32),teal);rr.position.set(x,0.32,F+0.07);head.add(rr);
-      var ln=new T.Mesh(new T.CircleGeometry(0.3,32),M(0xe9fbf8,0.05,0.12));ln.position.set(x,0.32,F+0.05);head.add(ln);
-      var pu=new T.Mesh(new T.SphereGeometry(0.105,18,14),ink);pu.position.set(x,0.32,F+0.1);head.add(pu);
-      var gl=new T.Mesh(new T.SphereGeometry(0.035,10,8),new T.MeshBasicMaterial({color:0xffffff}));gl.position.set(0.04,0.04,0.09);pu.add(gl);
-      pupils.push({m:pu,x:x});
-    });
-    // bigote
-    var ms=new T.Shape();ms.moveTo(0,0);ms.bezierCurveTo(-0.12,0.2,-0.5,0.24,-0.68,0.02);ms.bezierCurveTo(-0.48,0.07,-0.3,-0.12,0,-0.06);ms.closePath();
-    var mgeo=new T.ExtrudeGeometry(ms,{depth:0.07,bevelEnabled:true,bevelThickness:0.02,bevelSize:0.02,bevelSegments:2,curveSegments:16});
-    var m1=new T.Mesh(mgeo,brown),m2=new T.Mesh(mgeo,brown);m1.position.set(0,-0.2,F);m2.position.set(0,-0.2,F);m2.scale.x=-1;head.add(m1);head.add(m2);
-    // bracitos (se mueven al señalar y al alegrarse)
-    var arms=[];
-    [-1,1].forEach(function(sd){
-      var g=new T.Group();g.position.set(sd*1.15,-0.25,0);root.add(g);
-      var arm=new T.Mesh(new T.CylinderGeometry(0.06,0.06,0.45,10),dark);arm.position.set(sd*0.2,-0.12,0);arm.rotation.z=sd*1.0;g.add(arm);
-      var hand=new T.Mesh(new T.SphereGeometry(0.12,14,10),M(0xffffff,0,0.6));hand.position.set(sd*0.4,-0.26,0);g.add(hand);
-      arms.push({g:g,sd:sd});
-    });
-    var btn=$('#buddyBtn'),svg=btn.querySelector('svg');if(svg)svg.style.display='none';
-    btn.appendChild(cv);budEl().classList.add('d3');
+    var mdl=null;
+    BUD.setChar=function(id){if(mdl)sc.remove(mdl.root);mdl=pjBuild(T,id);sc.add(mdl.root);};
+    BUD.setChar(pjId());
+    $('#buddyBtn').appendChild(cv);budEl().classList.add('d3');
     var blinkAt=2;
     BUD.three=function(dt,t){
-      // mirar al dedo / ratón o al botón que señala
-      var cx=BUD.x+BUD.size/2,cy=BUD.y+BUD.size/2,lx=0,ly=0;
-      var tgt=null;
+      var root=mdl.root,head=mdl.head;
+      var cx=BUD.x+BUD.size/2,cy=BUD.y+BUD.size/2,lx=0,ly=0,tgt=null;
       if(BUD.guide&&BUD.guide.el){var r=BUD.guide.el.getBoundingClientRect();tgt={x:r.left+r.width/2,y:r.top+r.height/2};}
       else if(BUD.look&&t-BUD.lookT<5)tgt=BUD.look;
       if(tgt){lx=Math.max(-1,Math.min(1,(tgt.x-cx)/260));ly=Math.max(-1,Math.min(1,(tgt.y-cy)/260));}
@@ -2929,20 +3035,15 @@ function budThree(){
       var ry=think?Math.sin(t*2.2)*0.55:lx*0.55,rx=think?-0.15+Math.sin(t*3.1)*0.08:ly*0.35;
       head.rotation.y+=(ry-head.rotation.y)*Math.min(1,dt*8);
       head.rotation.x+=(rx-head.rotation.x)*Math.min(1,dt*8);
-      pupils.forEach(function(p){p.m.position.x=p.x+lx*0.09;p.m.position.y=0.32-ly*0.08;});
-      // parpadeo
-      if(t>blinkAt){var bt=t-blinkAt;var s=bt<0.13?0.15:1;pupils.forEach(function(p){p.m.scale.y=s;});if(bt>0.13)blinkAt=t+2.5+Math.random()*3.5;}
-      // balanceo, inclinación al andar y vuelta de alegría
+      mdl.eyes.forEach(function(p){p.m.position.x=p.x+lx*0.07;p.m.position.y=p.y-ly*0.06;});
+      if(t>blinkAt){var bt=t-blinkAt,s=bt<0.13?0.15:1;mdl.eyes.forEach(function(p){p.m.scale.y=s;});if(bt>0.13)blinkAt=t+2.5+Math.random()*3.5;}
       var bob=RM?0:Math.sin(t*2.1)*0.06,joy=t-BUD.joyT;
       root.position.y=bob;
       root.rotation.z+=((-BUD.vx/520)*0.35-root.rotation.z)*Math.min(1,dt*6);
       root.rotation.y=joy>=0&&joy<0.9?(1-Math.pow(1-joy/0.9,3))*Math.PI*2:0;
-      // boca: habla mientras dura el bocadillo
       var talking=!$('#bubble').hidden&&BUD.talk>0;if(talking)BUD.talk-=dt;
-      var open=talking?0.35+0.65*Math.abs(Math.sin(t*14)):think?0.25:0.45;
-      mouth.scale.set(1,open,1);
-      // brazos: señalar el objetivo, saludar de alegría o colgar
-      arms.forEach(function(a){
+      mdl.talk(talking?Math.abs(Math.sin(t*14)):think?0.15:0);
+      mdl.arms.forEach(function(a){
         var z=0;
         if(BUD.guide&&BUD.guide.arrived&&tgt&&((a.sd>0)===(tgt.x>cx)))z=a.sd*(1.6+0.25*Math.sin(t*6))+(tgt.y<cy?a.sd*0.5:-a.sd*0.4);
         else if(joy>=0&&joy<1.6)z=a.sd*(1.9+0.4*Math.sin(t*16));
@@ -3263,7 +3364,7 @@ function renderOrModels(){
 
 /* ---------- Ajustes ---------- */
 function renderSet(){
-  renderChk();
+  renderChk();renderPjs();
   var inClaude=!!window.claude;
   var p=cfg.prov||'puter',P=PROVS[p]||PROVS.puter;
   document.querySelectorAll('input[name="prov"]').forEach(function(r){r.checked=(r.value===p);});
